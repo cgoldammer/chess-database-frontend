@@ -1,0 +1,40 @@
+{
+  "name": "chess-algos",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "webpack --config webpack.config.js -p"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.0.0",
+    "babel-core": "^6.4.5",
+    "babel-loader": "^6.2.1",
+    "babel-preset-es2015": "^6.3.13",
+    "babel-preset-react": "^6.3.13",
+    "babel-preset-react-native": "^1.9.1",
+    "css-loader": "^0.27.3",
+    "react": "^15.4.2",
+    "react-dom": "^15.4.2",
+    "reactify": "^1.1.0",
+    "style-loader": "^0.13.2",
+    "webpack": "^2.2.1"
+  },
+  "dependencies": {
+    "babel-core": "^6.24.0",
+    "babel-loader": "^6.4.0",
+    "babel-polyfill": "^6.23.0",
+    "bootstrap": "^3.3.7",
+    "classnames": "^2.2.5",
+    "flexboxgrid": "^6.3.1",
+    "jquery": "^3.1.1",
+    "json-loader": "^0.5.4",
+    "postcss-loader": "^1.3.3",
+    "react": "^15.4.2",
+    "react-bootstrap": "^0.30.8",
+    "react-bootstrap-table": "^3.1.1",
+    "react-chessdiagram": "^1.1.8",
+    "react-dom": "^15.4.2",
+    "react-flexbox-grid": "^0.10.2",
+    "style-loader": "^0.13.2",
+    "webpack": "^2.2.1"
+  }
+}

@@ -13,7 +13,7 @@
     "babel-preset-react-native": "^1.9.1",
     "css-loader": "^0.27.3",
     "react": "^15.4.2",
-    "react-dom": "^15.4.2",
+    "react-dom": "^15.4.0",
     "reactify": "^1.1.0",
     "style-loader": "^0.13.2",
     "webpack": "^2.2.1"
@@ -28,11 +28,10 @@
     "jquery": "^3.1.1",
     "json-loader": "^0.5.4",
     "postcss-loader": "^1.3.3",
-    "react": "^15.4.2",
+    "react-toastr": "^2.8.2",
     "react-bootstrap": "^0.30.8",
-    "react-bootstrap-table": "^3.1.1",
+    "react-bootstrap-table": "3.1.6",
     "react-chessdiagram": "^1.1.8",
-    "react-dom": "^15.4.2",
     "react-flexbox-grid": "^0.10.2",
     "style-loader": "^0.13.2",
     "webpack": "^2.2.1"

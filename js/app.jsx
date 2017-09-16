@@ -1,31 +1,81 @@
-import React from 'react'
+import React from 'react';
 import ReactDOM from 'react-dom';
 import { Button } from 'react-bootstrap';
 import { Grid, Row, Col } from 'react-flexbox-grid';
 import { BootstrapTable, TableHeaderColumn } from 'react-bootstrap-table';
-import Chessdiagram from 'react-chessdiagram';
-import myData from '/home/cg/data/output/mates.json';
+
+import myData from '/home/cg/data/output/tests.json';
+import {testVar, axios} from './api.js';
+import { SolutionShow } from "./components/SolutionShow.jsx";
+import { Board } from "./components/Board.jsx";
+import Chess from 'chess.js';
 
 String.prototype.number = function (find) {
   return this.split(find).length - 1;
+}
+
+const prepareData = function(data){
+	for (var x = 0; x < data.length; x++){
+		data[x].id = x;
+		var rand = Math.random();
+		var bestMove = data[x].moveTestBest
+		var actualMove = data[x].moveTestMove
+
+		if (rand < 0.5){
+			data[x].move1 = bestMove
+			data[x].move2 = actualMove
+		}
+		if (rand > 0.5){
+			data[x].move1 = actualMove
+			data[x].move2 = bestMove
+		}
+	}
+	return data
 }
 
 class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
+			data: [],
       selectedIndex: 0,
-      showSolution: false
+			collection: "",
+			correctMove: [],
+			madeMove: false,
     };
-    this._selectRowProp = this._selectRowProp.bind(this);
-    this._onShowSolutionClicked = this._onShowSolutionClicked.bind(this);
   }
-  _onRowSelect(row, isSelected, e){
+
+	hasData = () => {
+		return this.state.data.length > 0;
+	}
+
+	getRowData = () => {
+		var rowData = Object.assign({}, this.state.data[this.state.selectedIndex]);
+		if (this.state.correctMove.length > 0){
+			console.log("Row data before:" + rowData.moveTestFen);
+			console.log("CORECT MOVE");
+			var chess = new Chess(rowData.moveTestFen);
+			var correctMove = this.state.correctMove
+			var from = correctMove[0];
+			var to = correctMove[1];
+			var moveString = from + to;
+			chess.move({from: from, to: to});
+			console.log(moveString);
+			console.log(chess.fen());
+			rowData.moveTestFen = chess.fen()
+			console.log("Row data after:" + rowData.moveTestFen);
+		}
+		console.log(rowData);
+		return rowData;
+	}
+
+  _onRowSelect = (row, isSelected, e) => {
     console.log(row);
-    this.setState({selectedIndex: row.id, showSolution: false});
-    console.log(row.best);
+    this.setState({selectedIndex: row.id, correctMove: [], madeMove: false, moveTried:[]});
+    console.log(row.moveTestBest);
   }
-  _selectRowProp() {
+
+  _selectRowProp = () => {
     return {
       mode: 'radio',
       clickToSelect: true,
@@ -34,56 +84,75 @@ class App extends React.Component {
       hideSelectColumn: true
     }
   }
-  _onShowSolutionClicked(){
-    this.setState((prevState, props) => ({showSolution: !prevState.showSolution}));
-  }
+
+	processResponse = (data) => {
+		console.log("Received data");
+		console.log(data.data);
+		this.setState({'data': prepareData(data.data.Najdorf)});
+		console.log("data updated");
+		console.log("State: " + this.state);
+	}
+
+	componentDidMount = () => {
+		console.log("testVar");
+		console.log(testVar);
+		console.log("testVar after");
+		axios.get('/moves').then(this.processResponse);
+	}
+	tryAnswer = (from, to) => {
+		let message = 'Tried: ' + from + " to " + to + ' !';
+		console.log(message);
+		// Update the solution show component
+		this.setState({'moveTried': [from, to]});
+	}
+	makeMove = (move) => {
+		if (!this.state.madeMove){
+			this.setState({correctMove: move, madeMove: true});
+			console.log("Set correct move");
+		}
+	}
+
+	renderContent() {
+		return (
+			<Grid fluid>
+				<Row>
+						<Col md={6}>
+							<div> HI </div>
+							<PositionTable data={this.state.data} selectedIndex={this.state.selectedIndex} selectRow={this._selectRowProp()}/>
+						</Col>
+					<Col md={6}>
+						<Row>
+							<Board rowData={this.getRowData()} tryAnswer={this.tryAnswer}/>
+						</Row>
+						<Row>
+						<SolutionShow rowData={this.getRowData()} makeMove={this.makeMove} moveTried={this.state.moveTried}/>
+						</Row>
+					</Col>
+				</Row>
+			</Grid>
+		);
+	}
   render() {
-    return (
-      <Grid fluid>
-        <Row>
-          <Col md={6}>
-                <PositionTable selectedIndex={this.state.selectedIndex} selectRow={this._selectRowProp()}/>
-          </Col>
-          <Col md={6}>
-            <Row>
-              <Board selectedIndex={this.state.selectedIndex}/>
-            </Row>
-            <Row>
-              <SolutionShow showSolution={this.state.showSolution} selectedIndex={this.state.selectedIndex} onClick={this._onShowSolutionClicked}/>
-            </Row>
-          </Col>
-        </Row>
-      </Grid>
-    );
+		if (this.hasData()){
+			return this.renderContent();
+		}
+		return <h1> Loading data </h1>;
   }
 }
 
-class SolutionShow extends React.Component {
-  constructor(props){
-    super(props);
-  }
-  render () {
-    var style = {
-      fontSize: 30
-    };
-    return (
-      <div onClick={this.props.onClick} style={style}>{this.props.showSolution ? "Solution is: " + myData[this.props.selectedIndex].best : "Show solution"}</div>
-    )
-  }
-}
 
-function fenName(fen, row){
-  const pieces = ["q", "r", "b", "k"]
-  var str = "White:"
-  for (let piece of pieces){
-    str += " " + piece.toUpperCase() + fen.number(piece.toUpperCase());
-  }
-  str += " | Black:"
-  for (let piece of pieces){
-    str += " " + piece.toUpperCase() + fen.number(piece);
-  }
-  return str;
-}
+// function fenName(fen, row){
+  // const pieces = ["q", "r", "b", "k"]
+  // var str = "White:"
+  // for (let piece of pieces){
+    // str += " " + piece.toUpperCase() + fen.number(piece.toUpperCase());
+  // }
+  // str += " | Black:"
+  // for (let piece of pieces){
+    // str += " " + piece.toUpperCase() + fen.number(piece);
+  // }
+  // return str;
+// }
 
 
 class PositionTable extends React.Component {
@@ -92,39 +161,19 @@ class PositionTable extends React.Component {
     super(props);
   }
   render() {
-    const selectRow = {mode:'radio'};
+    // const selectRow = {mode:'radio'};
+		const data = this.props.data;
+		const selectRow = this.props.selectRow;
     return (
-      <BootstrapTable data={ myData } selectRow={ this.props.selectRow }>
+      <BootstrapTable data={ data } selectRow={ selectRow }>
         <TableHeaderColumn dataField='id' isKey>Id</TableHeaderColumn>
-        <TableHeaderColumn dataField='fen' dataFormat={fenName} width='50%'>Position type</TableHeaderColumn>
-        <TableHeaderColumn dataField='mate' width='10%'>Best Mate</TableHeaderColumn>
+        <TableHeaderColumn dataField='moveTestFen' width='50%'>Position type</TableHeaderColumn>
+        <TableHeaderColumn dataField='move1' width='20%'>Move 1</TableHeaderColumn>
+        <TableHeaderColumn dataField='move2' width='20%'>Move 2</TableHeaderColumn>
       </BootstrapTable>)
   }
 }
 
-const squareSize = 70;
-
-class Board extends React.Component {
-  constructor(props){
-    props.lightSquareColor = props.lightSquareColor || "#2492FF" // light blue
-    props.darkSquareColor = props.darkSquareColor || "#005EBB" // dark blue
-    props.flip = props.flip || false
-    super(props);
-  }
-  render() {
-    return (
-      <Chessdiagram 
-        flip={this.props.flip} 
-        squareSize={squareSize} 
-        lightSquareColor={this.props.lightSquareColor} 
-        darkSquareColor={this.props.darkSquareColor} 
-        fen={myData[this.props.selectedIndex].fen.substring(4)}/>)
-  }
-}
-
+// const squareSize = 70;
 
 ReactDOM.render(<App/>, document.getElementById("world"));
-
-
-
-

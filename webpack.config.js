@@ -1,9 +1,11 @@
+var debug = process.env.NODE_ENV !== "production";
 var path = require('path');
 var webpack = require('webpack');
 
 module.exports = {
   entry: './main.js',
-  output: { path: __dirname, filename: 'lib/bundle.js' },
+	devtool: debug ? "eval-source-map" : false,
+  output: { path: __dirname, filename: debug ? 'lib/bundle.js' : 'lib/bundle.min.js' },
   module: {
     loaders: [
       {
@@ -11,7 +13,7 @@ module.exports = {
         loader: 'babel-loader',
         exclude: /node_modules/,
         query: {
-          presets: ['es2015', 'react']
+          presets: ['es2015', 'react', 'stage-0']
         }
       },
 			{

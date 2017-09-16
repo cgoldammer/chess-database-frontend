@@ -167,9 +167,8 @@ class PositionTable extends React.Component {
     return (
       <BootstrapTable data={ data } selectRow={ selectRow }>
         <TableHeaderColumn dataField='id' isKey>Id</TableHeaderColumn>
-        <TableHeaderColumn dataField='moveTestFen' width='50%'>Position type</TableHeaderColumn>
-        <TableHeaderColumn dataField='move1' width='20%'>Move 1</TableHeaderColumn>
-        <TableHeaderColumn dataField='move2' width='20%'>Move 2</TableHeaderColumn>
+        <TableHeaderColumn dataField='white' width='45%'>White</TableHeaderColumn>
+        <TableHeaderColumn dataField='black' width='45%'>Black</TableHeaderColumn>
       </BootstrapTable>)
   }
 }

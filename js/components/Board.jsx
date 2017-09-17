@@ -5,7 +5,7 @@ import Chess from 'chess.js';
 export class Board extends React.Component {
 	_onMovePiece = (piece, fromSquare, toSquare) => { // user moved a piece
 		var rowData = this.props.rowData;
-		var fen = rowData.moveTestFen;
+		var fen = rowData.fen;
 		console.log("setting up with fen" + fen);
 		var chess = new Chess(fen);
 		var legalMoves = chess.moves({verbose: true});
@@ -16,7 +16,7 @@ export class Board extends React.Component {
 		}
 		var isLegal = legalMoves.filter(isLegalFilter).length == 1;
 
-		var suggestedMoves = [rowData.moveTestMove[1], rowData.moveTestBest[1]];
+		var suggestedMoves = [rowData.move[1], rowData.best[1]];
 		console.log("TRying answer");
 
 		const isSuggestedFilter = function(moveObject){
@@ -46,7 +46,7 @@ export class Board extends React.Component {
         lightSquareColor={this.props.lightSquareColor} 
         darkSquareColor={this.props.darkSquareColor} 
 				onMovePiece={this._onMovePiece}
-        fen={this.props.rowData.moveTestFen}/>)
+        fen={this.props.rowData.fen}/>)
   }
 }
 

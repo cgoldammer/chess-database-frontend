@@ -14,12 +14,20 @@ String.prototype.number = function (find) {
   return this.split(find).length - 1;
 }
 
+const mapOverObject = (obj, f) => {
+	var newObj = {};
+	Object.keys(obj).forEach(function(key) {
+			newObj[key] = f(obj[key]);
+	});
+	return newObj
+}
+
 const prepareData = function(data){
 	for (var x = 0; x < data.length; x++){
 		data[x].id = x;
 		var rand = Math.random();
-		var bestMove = data[x].moveTestBest
-		var actualMove = data[x].moveTestMove
+		var bestMove = data[x].best
+		var actualMove = data[x].move
 
 		if (rand < 0.5){
 			data[x].move1 = bestMove
@@ -34,10 +42,52 @@ const prepareData = function(data){
 }
 
 class App extends React.Component {
+	constructor(props) {
+		super(props);
+		this.state = {
+			allData: {},
+			selectedData: ""
+		}
+	}
+	hasSelection = () => {
+		return this.state.selectedData != "";
+	}
+	processResponse = (data) => {
+		this.setState({'allData': mapOverObject(data.data, prepareData)});
+	}
+	componentDidMount = () => {
+		axios.get('/moves').then(this.processResponse);
+	}
+	collections = () => {
+		return Object.keys(this.state.allData)
+	}
+	hasData = () => {
+		return this.collections().length > 0;
+	}
+	doSelect = (name) => {
+		return () => { this.setState({selectedData: name})};
+	}
+	render = () => {
+		var collections = this.collections();
+		var buttons = collections.map((key) => <Button key={key} onClick={this.doSelect(key)}> {key} </Button>);
+		var showList = <div/>;
+		if (this.hasSelection()){
+			var selectedData = this.state.allData[this.state.selectedData];
+			var showList = <ShowList data={selectedData}/>
+		} 
+		return (
+			<Grid fluid>
+				<Row> {buttons} </Row>
+				<Row> {showList} </Row>
+			</Grid>
+		)
+	}
+}
+
+class ShowList extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-			data: [],
       selectedIndex: 0,
 			collection: "",
 			correctMove: [],
@@ -46,33 +96,25 @@ class App extends React.Component {
   }
 
 	hasData = () => {
-		return this.state.data.length > 0;
+		return this.props.data.length > 0;
 	}
 
 	getRowData = () => {
-		var rowData = Object.assign({}, this.state.data[this.state.selectedIndex]);
+		var rowData = Object.assign({}, this.props.data[this.state.selectedIndex]);
 		if (this.state.correctMove.length > 0){
-			console.log("Row data before:" + rowData.moveTestFen);
-			console.log("CORECT MOVE");
-			var chess = new Chess(rowData.moveTestFen);
+			var chess = new Chess(rowData.fen);
 			var correctMove = this.state.correctMove
 			var from = correctMove[0];
 			var to = correctMove[1];
 			var moveString = from + to;
 			chess.move({from: from, to: to});
-			console.log(moveString);
-			console.log(chess.fen());
-			rowData.moveTestFen = chess.fen()
-			console.log("Row data after:" + rowData.moveTestFen);
+			rowData.fen = chess.fen()
 		}
-		console.log(rowData);
 		return rowData;
 	}
 
   _onRowSelect = (row, isSelected, e) => {
-    console.log(row);
     this.setState({selectedIndex: row.id, correctMove: [], madeMove: false, moveTried:[]});
-    console.log(row.moveTestBest);
   }
 
   _selectRowProp = () => {
@@ -85,51 +127,32 @@ class App extends React.Component {
     }
   }
 
-	processResponse = (data) => {
-		console.log("Received data");
-		console.log(data.data);
-		this.setState({'data': prepareData(data.data.Najdorf)});
-		console.log("data updated");
-		console.log("State: " + this.state);
-	}
-
-	componentDidMount = () => {
-		console.log("testVar");
-		console.log(testVar);
-		console.log("testVar after");
-		axios.get('/moves').then(this.processResponse);
-	}
 	tryAnswer = (from, to) => {
 		let message = 'Tried: ' + from + " to " + to + ' !';
-		console.log(message);
-		// Update the solution show component
 		this.setState({'moveTried': [from, to]});
 	}
 	makeMove = (move) => {
 		if (!this.state.madeMove){
 			this.setState({correctMove: move, madeMove: true});
-			console.log("Set correct move");
 		}
 	}
 
 	renderContent() {
 		return (
-			<Grid fluid>
-				<Row>
-						<Col md={6}>
-							<div> HI </div>
-							<PositionTable data={this.state.data} selectedIndex={this.state.selectedIndex} selectRow={this._selectRowProp()}/>
-						</Col>
+			<Row>
 					<Col md={6}>
-						<Row>
-							<Board rowData={this.getRowData()} tryAnswer={this.tryAnswer}/>
-						</Row>
-						<Row>
-						<SolutionShow rowData={this.getRowData()} makeMove={this.makeMove} moveTried={this.state.moveTried}/>
-						</Row>
+						<div> HI </div>
+						<PositionTable data={this.props.data} selectedIndex={this.state.selectedIndex} selectRow={this._selectRowProp()}/>
 					</Col>
-				</Row>
-			</Grid>
+				<Col md={6}>
+					<Row>
+						<Board rowData={this.getRowData()} tryAnswer={this.tryAnswer}/>
+					</Row>
+					<Row>
+					<SolutionShow rowData={this.getRowData()} makeMove={this.makeMove} moveTried={this.state.moveTried}/>
+					</Row>
+				</Col>
+			</Row>
 		);
 	}
   render() {
@@ -141,23 +164,8 @@ class App extends React.Component {
 }
 
 
-// function fenName(fen, row){
-  // const pieces = ["q", "r", "b", "k"]
-  // var str = "White:"
-  // for (let piece of pieces){
-    // str += " " + piece.toUpperCase() + fen.number(piece.toUpperCase());
-  // }
-  // str += " | Black:"
-  // for (let piece of pieces){
-    // str += " " + piece.toUpperCase() + fen.number(piece);
-  // }
-  // return str;
-// }
-
-
 class PositionTable extends React.Component {
   constructor(props){
-    console.log(props.selectRow);
     super(props);
   }
   render() {
@@ -172,7 +180,5 @@ class PositionTable extends React.Component {
       </BootstrapTable>)
   }
 }
-
-// const squareSize = 70;
 
 ReactDOM.render(<App/>, document.getElementById("world"));

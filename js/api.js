@@ -32,6 +32,8 @@ const data2 = [
 	 "black": "Larry L",
 	 "comparison":-240}]
 
+
+
 const data = {
 	'Najdorf': data1,
 	'Temp': data2

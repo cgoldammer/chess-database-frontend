@@ -1,12 +1,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { Button } from 'react-bootstrap';
+import { Button, DropdownButton, MenuItem } from 'react-bootstrap';
 import { Grid, Row, Col } from 'react-flexbox-grid';
 import { BootstrapTable, TableHeaderColumn } from 'react-bootstrap-table';
 
 import myData from '/home/cg/data/output/tests.json';
 import {testVar, axios} from './api.js';
 import { SolutionShow } from "./components/SolutionShow.jsx";
+import { MoveEvalPage } from "./components/MoveEvalPage.jsx";
 import { Board } from "./components/Board.jsx";
 import Chess from 'chess.js';
 
@@ -42,6 +43,38 @@ const prepareData = function(data){
 }
 
 class App extends React.Component {
+	constructor(props) {
+		super(props);
+		this.state = {
+			moveData: []
+		};
+	}
+	hasData = () => {
+		return this.state.moveData.length > 0;
+	}
+	processResponse = (data) => {
+		this.setState({'moveData': data.data});
+	}
+	componentDidMount = () => {
+		axios.get('/moveEval').then(this.processResponse);
+	}
+	render = () => {
+		var content = <div/>;
+		if (this.hasData()){
+			var content = <MoveEvalPage moveData={this.state.moveData}/>
+		} 
+		return (
+			<Grid fluid>
+				<Row>
+					{ content }
+				</Row>
+			</Grid>
+		);
+	}
+}
+
+
+class ExerciseApp extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = {

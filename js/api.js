@@ -35,16 +35,26 @@ const data2 = [
 
 
 const data = {
-	'Najdorf': data1,
+	'Naj': data1,
 	'Temp': data2
 }
 
+
+const d1 = {
+	'key': 1,
+	'player': 'Anish Giri',
+	'evaluations': {1: 0.05, 2: -0.05, 5: 0.25}
+	}
+
+const d2 = {
+	'key': 2,
+	'player': 'Magnus Carlsen',
+	'evaluations': {1: -0.05, 2: +0.05, 5: -0.25}
+	}
+
+export const moveData = [d1, d2];
+
+
 mock.onGet('/moves').reply(200, data);
+mock.onGet('/moveEval').reply(200, moveData);
 
-export const testVar = "hi";
-
-// var processReponse = function(response){
-// 	console.log(response.data);
-// }
-
-// axios.get('/moves').then(processResponse);

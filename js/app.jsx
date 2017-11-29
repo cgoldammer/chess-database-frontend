@@ -7,7 +7,7 @@ import { BootstrapTable, TableHeaderColumn } from 'react-bootstrap-table';
 import myData from '/home/cg/data/output/tests.json';
 import {testVar, axios} from './api.js';
 import { SolutionShow } from "./components/SolutionShow.jsx";
-import { MoveEvalPage } from "./components/MoveEvalPage.jsx";
+import { TournamentSelector } from "./components/MoveEvalPage.jsx";
 import { Board } from "./components/Board.jsx";
 import Chess from 'chess.js';
 
@@ -45,23 +45,27 @@ const prepareData = function(data){
 class App extends React.Component {
 	constructor(props) {
 		super(props);
+		document.tile = "Chess statistics"
 		this.state = {
-			moveData: []
+			tournamentData: []
 		};
 	}
 	hasData = () => {
-		return this.state.moveData.length > 0;
+		return this.state.tournamentData.length > 0;
 	}
 	processResponse = (data) => {
-		this.setState({'moveData': data.data});
+		this.setState({'tournamentData': data.data});
 	}
 	componentDidMount = () => {
-		axios.get('/moveEval').then(this.processResponse);
+		const data = {"moveRequestTournaments": [2,3,4]};
+		const headers = {"Content-Type": "application/json"};
+		const opts = {'headers': headers};
+		axios.get('/snap/levels/tournaments').then(this.processResponse);
 	}
 	render = () => {
 		var content = <div/>;
 		if (this.hasData()){
-			var content = <MoveEvalPage moveData={this.state.moveData}/>
+			var content = <TournamentSelector tournamentData={this.state.tournamentData}/>
 		} 
 		return (
 			<Grid fluid>
@@ -110,7 +114,7 @@ class ExerciseApp extends React.Component {
 		} 
 		return (
 			<Grid fluid>
-				<Row> {buttons} </Row>
+				<Row> <ButtonGroup > {buttons} </ButtonGroup> </Row>
 				<Row> {showList} </Row>
 			</Grid>
 		)

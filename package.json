@@ -39,6 +39,7 @@
     "react-flexbox-grid": "^0.10.2",
     "react-toastr": "^2.8.2",
     "style-loader": "^0.13.2",
-    "webpack": "^2.2.1"
+    "webpack": "^2.2.1",
+		"react-d3-components": "0.7.1"
   }
 }

@@ -2,7 +2,6 @@
 export var axios = require('axios');
 var MockAdapter = require('axios-mock-adapter');
 
-var mock = new MockAdapter(axios);
 
 const data1 = [
 	{"fen":"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -32,29 +31,26 @@ const data2 = [
 	 "black": "Larry L",
 	 "comparison":-240}]
 
-
-
 const data = {
 	'Naj': data1,
 	'Temp': data2
 }
 
-
 const d1 = {
 	'key': 1,
 	'player': 'Anish Giri',
-	'evaluations': {1: 0.05, 2: -0.05, 5: 0.25}
+	'evaluations': {1: 5, 2: -5, 5: 25}
 	}
 
 const d2 = {
 	'key': 2,
 	'player': 'Magnus Carlsen',
-	'evaluations': {1: -0.05, 2: +0.05, 5: -0.25}
+	'evaluations': {1: -5, 2: +5, 5: -70}
 	}
 
 export const moveData = [d1, d2];
 
-
-mock.onGet('/moves').reply(200, data);
-mock.onGet('/moveEval').reply(200, moveData);
+// var mock = new MockAdapter(axios);
+// mock.onGet('/moves').reply(200, data);
+// mock.onGet('/snap/levels/moveSummary').reply(200, moveData);
 

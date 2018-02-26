@@ -7,9 +7,20 @@ import { BootstrapTable, TableHeaderColumn } from 'react-bootstrap-table';
 import myData from '/home/cg/data/output/tests.json';
 import {testVar, axios} from './api.js';
 import { SolutionShow } from "./components/SolutionShow.jsx";
-import { TournamentSelector } from "./components/MoveEvalPage.jsx";
+import { SearchWindow, TournamentSelector, DBChooser } from "./components/MoveEvalPage.jsx";
 import { Board } from "./components/Board.jsx";
 import Chess from 'chess.js';
+
+import {postRequest} from './api.js';
+
+
+// What to test?
+// A tournamentChooser will return an empty div if provided with no tournaments
+// The games display list contains the data from the /games endpoint that's mocked up
+// If there are no databases received, the app shows an error message
+// If there are databases received, the app should show them
+
+
 
 String.prototype.number = function (find) {
   return this.split(find).length - 1;
@@ -42,41 +53,110 @@ const prepareData = function(data){
 	return data
 }
 
+class AppSummary extends React.Component {
+	constructor(props) {
+		super(props);
+	}
+	render = () => {
+		const data = this.props.data;
+		const style = {
+			marginTop: 50,
+			marginBotton: 50
+		};
+		return (
+			<div style={ style }>
+				<div>Tournaments: {data.numberTournaments}</div>
+				<div>Games in the database: {data.numberGames}</div>
+				<div>Games that are fully evaluated by Stockfish: {data.numberGameEvals}</div>
+				<div>Number of moves that are evaluated: {data.numberMoveEvals}</div>
+			</div>
+		)
+	}
+}
+
+
 class App extends React.Component {
 	constructor(props) {
 		super(props);
-		document.tile = "Chess statistics"
+		document.title = "Chess statistics"
 		this.state = {
-			tournamentData: []
+			dbData: [],
+			db: ""
+		};
+	}
+	componentDidMount = () => {
+		axios.get('/snap/api/databases').then(this.processResponse);
+	}
+	processResponse = (data) => {
+		this.setState({dbData: data.data});
+	}
+	setDB = (db) => { this.setState({db: db}) }
+	render = () => {
+		var setDB = <Row><DBChooser dbData={this.state.dbData} dbAction={this.setDB}/></Row>
+		var appForDB = <div/>
+		if (this.state.db != ""){
+			appForDB = <Row><AppForDB db={this.state.db}/></Row>
+		}
+		return (
+			<Grid fluid>
+				{ setDB }
+				{ appForDB }
+			</Grid>
+		)
+	}
+}
+
+class AppForDB extends React.Component {
+	constructor(props) {
+		super(props);
+		this.state = {
+			tournamentData: [],
+			summaryData: {}
 		};
 	}
 	hasData = () => {
 		return this.state.tournamentData.length > 0;
 	}
+	hasSummary = () => {
+		return Object.keys(this.state.summaryData).length > 0;
+	}
 	processResponse = (data) => {
 		this.setState({'tournamentData': data.data});
 	}
+	processSummaryResponse = (data) => {
+		this.setState({'summaryData': data.data});
+	}
 	componentDidMount = () => {
-		const data = {"moveRequestTournaments": [2,3,4]};
-		const headers = {"Content-Type": "application/json"};
-		const opts = {'headers': headers};
-		axios.get('/snap/levels/tournaments').then(this.processResponse);
+		const data = {searchDB: this.props.db};
+		postRequest('/snap/api/tournaments', data, this.processResponse);
+		postRequest('/snap/api/dataSummary', data, this.processSummaryResponse);
 	}
 	render = () => {
 		var content = <div/>;
+		var search = <Row><SearchWindow db={this.props.db} tournamentData={this.state.tournamentData}/></Row>
 		if (this.hasData()){
 			var content = <TournamentSelector tournamentData={this.state.tournamentData}/>
 		} 
+		var summary = <div/>
+		if (this.hasSummary()){
+			var summary = <AppSummary data={this.state.summaryData}/>
+		}
 		return (
 			<Grid fluid>
-				<Row>
+				{ search }
+				<Row center="xs">
 					{ content }
+				</Row>
+				<Row center="xs">
+					{ summary }
 				</Row>
 			</Grid>
 		);
 	}
 }
 
+// The main app is dependent on the database. So we have an app that consists of a dbSelector
+// and a main app
 
 class ExerciseApp extends React.Component {
 	constructor(props) {
@@ -219,3 +299,5 @@ class PositionTable extends React.Component {
 }
 
 ReactDOM.render(<App/>, document.getElementById("world"));
+
+

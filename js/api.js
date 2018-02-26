@@ -54,3 +54,8 @@ export const moveData = [d1, d2];
 // mock.onGet('/moves').reply(200, data);
 // mock.onGet('/snap/levels/moveSummary').reply(200, moveData);
 
+export const postRequest = (url, data, callback) => {
+	const headers = {"Content-Type": "application/json"};
+	const opts = {'headers': headers};
+	axios.post(url, data, opts).then(callback);
+}

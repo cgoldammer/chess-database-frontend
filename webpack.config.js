@@ -20,12 +20,18 @@ module.exports = {
 				test: /\.css$/,
 				loader: 'style!css!',
 				include: path.join(__dirname, 'node_modules'), // oops, this also includes flexboxgrid
-				exclude: /flexboxgrid/ // so we have to exclude it
+				exclude: [/flexboxgrid/, /react-select/] // so we have to exclude it
 			},
 			{
 				test: /\.css/,
 				loader: 'style-loader!css-loader?modules',
 				include: /flexboxgrid/
+			}
+,
+			{
+				test: /\.css/,
+				loader: 'style-loader!css-loader?modules',
+				include: /react-select/
 			}
     ]
   },

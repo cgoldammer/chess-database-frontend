@@ -1,5 +1,10 @@
-.react-bs-table {
-	margin-bottom: 0;
-	table-layout: auto;
+.moveChart {
+  margin-top: 50;
+}
+.yellow {
+  color: green;
+  font-size: 200%;
+  background-color: blue;
+  margin-top:100;
 }
 

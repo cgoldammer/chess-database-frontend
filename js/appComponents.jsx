@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, DropdownButton, MenuItem } from 'react-bootstrap';
+import { Button, DropdownButton, MenuItem, FormControl } from 'react-bootstrap';
 import { Grid, Row, Col } from 'react-flexbox-grid';
 import { BootstrapTable, TableHeaderColumn } from 'react-bootstrap-table';
 
@@ -90,6 +90,19 @@ export class App extends React.Component {
   updateUser = (user) => {
     this.setState({user: user.data});
   }
+  fileUploadHandler = (text) => {
+    console.log("Obtained text");
+    const data = {
+      uploadName: 'test',
+      uploadText: text
+    };
+    const uploadDone = () => {
+      console.log("Upload done");
+    }
+    postRequest('/snap/api/uploadDB', data, uploadDone);
+  }
+
+  
 	setDB = (db) => { this.setState({db: db}) }
 	render = () => {
 		var setDB = <Row><DBChooser dbData={this.state.dbData} dbAction={this.setDB}/></Row>
@@ -101,7 +114,7 @@ export class App extends React.Component {
 		return (
 			<Grid fluid>
         <Menu userCallback={ this.updateUser } user= { this.state.user }/>
-        <input type="file" id="input"/>
+        <FileReader fileContentCallback={ this.fileUploadHandler }/>
         { userDiv}
 				{ setDB }
 				{ appForDB }
@@ -110,6 +123,54 @@ export class App extends React.Component {
 	}
 }
 
+
+class FileReader extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { file: 0, name: "" };
+  }
+  
+  setFileCallback = () => {
+    const files = document.getElementById('input').files;
+    if (files.length >= 0){
+      const file = files[0];
+      this.setState({ file: file });
+    }
+  }
+
+  submitResultsCallback = () => {
+    var reader = new window.FileReader()
+    reader.onload = (e) => {
+      const data = { uploadName: this.state.name, uploadText: reader.result };
+      this.props.fileContentCallback(data);
+    }
+    reader.readAsText(this.state.file);
+  }
+
+  validateForm = () => this.state.file && this.state.name.length > 0;
+
+  render = () => {
+    var dbNameInput = <div/>
+    if (this.state.file) {
+      dbNameInput = (
+        <div>
+          <FormControl
+          type="text"
+          value={this.state.value}
+          placeholder="Enter name"
+          onChange={(e) => this.setState({ name: e.target.value })}
+        />
+          <Button onClick={ this.submitResultsCallback } disabled={ !this.validateForm() }>Submit</Button>
+        </div>)
+    }
+    return (
+      <div>
+        <input type="file" onChange={ this.setFileCallback } id="input"/>
+        { dbNameInput }
+      </div>
+    )
+  }
+}
 
 class AppForDB extends React.Component {
 	constructor(props) {

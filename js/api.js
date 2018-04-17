@@ -1,7 +1,5 @@
-
 export var axios = require('axios');
 var MockAdapter = require('axios-mock-adapter');
-
 
 const data1 = [
 	{"fen":"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -50,9 +48,29 @@ const d2 = {
 
 export const moveData = [d1, d2];
 
+export const testApis = {
+	empty: 0
+}
+
 // var mock = new MockAdapter(axios);
-// mock.onGet('/moves').reply(200, data);
+
 // mock.onGet('/snap/levels/moveSummary').reply(200, moveData);
+
+// const testApis = {
+// 	empty: 1
+// };
+
+// export const mockApiEmpty = () => {
+// 	mock.onGet('/databases').reply(200, []);
+// }
+
+
+// export const mockApi = (setting) => {
+// 	mock.reset()
+// 	switch (setting) {
+// 		case testApis.empty: mockApiEmpty()
+// 	}
+// }
 
 export const postRequest = (url, data, callback) => {
 	const headers = {"Content-Type": "application/json"};

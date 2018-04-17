@@ -4,6 +4,7 @@ import { Grid, Row, Col } from 'react-flexbox-grid';
 import "../../css/Login.css";
 import { axios } from '../api.js';
 import qs from "qs";
+import ReactModal from 'react-modal';
 
 import { objectIsEmpty } from '../helpers.js';
 
@@ -28,10 +29,16 @@ export class Menu extends Component {
     }
   }
 
+  unsetTypeSelected = () => this.setState({ typeSelected: 0 });
   userIsLoggedIn = () => !objectIsEmpty(this.props.user)
 
   logoutCallback = () => {
-    axios.get('/snap/logout').then(() => this.props.userCallback({}));
+    const handleLogout = () => {
+      this.props.userCallback({});
+      this.unsetTypeSelected();
+    }
+    
+    axios.get('/snap/logout').then(handleLogout);
   }
 
   show = () => {
@@ -44,13 +51,20 @@ export class Menu extends Component {
       showUrl = "register"
     }
     if (showType == consts.login){
-      showText = "Login"
+      showText = "Log in"
       showUrl = "login"
     }
     console.log("Updating with " + showText);
 
+    const loginElement = (
+      <div>
+        <Button onClick={ this.unsetTypeSelected }>Close</Button>
+        <Login text={ showText } url= { showUrl } userCallback={ this.props.userCallback } />
+      </div>
+    );
+
     return (
-      <Login text={ showText } url= { showUrl } userCallback={ this.props.userCallback } />
+      <ReactModal isOpen={ this.state.typeSelected }> { loginElement } </ReactModal>
     )
   }
 

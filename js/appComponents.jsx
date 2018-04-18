@@ -78,37 +78,47 @@ export class App extends React.Component {
 		this.state = {
 			dbData: [],
 			db: "",
+      tournamentData: [],
+      summaryData: {},
       user: {}
 		};
 	}
+  updateDatabases = () => axios.get('/snap/api/databases').then(this.displayDatabases);
 	componentDidMount = () => {
-		axios.get('/snap/api/databases').then(this.displayDatabases);
+    this.updateDatabases();
 	}
 	displayDatabases = (data) => {
 		this.setState({dbData: data.data});
 	}
   updateUser = (user) => {
     this.setState({user: user.data});
+    this.updateDatabases()
   }
-  fileUploadHandler = (text) => {
+  fileUploadHandler = (data) => {
     console.log("Obtained text");
-    const data = {
-      uploadName: 'test',
-      uploadText: text
-    };
     const uploadDone = () => {
       console.log("Upload done");
     }
     postRequest('/snap/api/uploadDB', data, uploadDone);
   }
 
-  
-	setDB = (db) => { this.setState({db: db}) }
+	setDB = (db) => { 
+    this.setState({db: db}) 
+		const data = {searchDB: db};
+		postRequest('/snap/api/tournaments', data, this.processTournamentData);
+		postRequest('/snap/api/dataSummary', data, this.processSummaryResponse);
+  }
+	processTournamentData = (data) => {
+		this.setState({'tournamentData': data.data});
+	}
+	processSummaryResponse = (data) => {
+		this.setState({'summaryData': data.data});
+	}
 	render = () => {
 		var setDB = <Row><DBChooser dbData={this.state.dbData} dbAction={this.setDB}/></Row>
 		var appForDB = <div/>
 		if (this.state.db != ""){
-			appForDB = <Row><AppForDB db={this.state.db}/></Row>
+			appForDB = <Row><AppForDB db={this.state.db} tournamentData={ this.state.tournamentData } summaryData={ this.state.summaryData}/></Row>
 		}
     var userDiv = <div> Not logged in </div>
 		return (
@@ -175,33 +185,18 @@ class FileReader extends React.Component {
 class AppForDB extends React.Component {
 	constructor(props) {
 		super(props);
-		this.state = {
-			tournamentData: [],
-			summaryData: {}
-		};
 	}
 	hasData = () => {
-		return this.state.tournamentData.length > 0;
+		return this.props.tournamentData.length > 0;
 	}
 	hasSummary = () => {
-		return Object.keys(this.state.summaryData).length > 0;
-	}
-	processTournamentData = (data) => {
-		this.setState({'tournamentData': data.data});
-	}
-	processSummaryResponse = (data) => {
-		this.setState({'summaryData': data.data});
-	}
-	componentDidMount = () => {
-		const data = {searchDB: this.props.db};
-		postRequest('/snap/api/tournaments', data, this.processTournamentData);
-		postRequest('/snap/api/dataSummary', data, this.processSummaryResponse);
+		return Object.keys(this.props.summaryData).length > 0;
 	}
 	render = () => {
-		var search = <Row><SearchWindow db={this.props.db} tournamentData={this.state.tournamentData}/></Row>
+		var search = <Row><SearchWindow db={this.props.db} tournamentData={this.props.tournamentData}/></Row>
 		var summary = <div/>
 		if (this.hasSummary()){
-			var summary = <AppSummary data={this.state.summaryData}/>
+			var summary = <AppSummary data={this.props.summaryData}/>
 		}
 		return (
 			<Grid fluid>
@@ -212,6 +207,11 @@ class AppForDB extends React.Component {
 			</Grid>
 		);
 	}
+}
+
+AppForDB.defaultProps = {
+  summaryData: {},
+  tournamentData: []
 }
 
 // The main app is dependent on the database. So we have an app that consists of a dbSelector

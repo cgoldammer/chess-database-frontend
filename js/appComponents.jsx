@@ -17,6 +17,11 @@ import { objectIsEmpty } from './helpers.js';
 
 import {postRequest} from './api.js';
 
+import styles from './App.css';
+console.log("STYLES");
+console.log(styles);
+console.log(styles.pink);
+
 
 
 String.prototype.number = function (find) {
@@ -71,6 +76,7 @@ class AppSummary extends React.Component {
 	}
 }
 
+
 export class App extends React.Component {
 	constructor(props) {
 		super(props);
@@ -83,7 +89,7 @@ export class App extends React.Component {
       user: {}
 		};
 	}
-  updateDatabases = () => axios.get('/snap/api/databases').then(this.displayDatabases);
+  updateDatabases = () => this.props.getDatabaseData().then(this.displayDatabases);
 	componentDidMount = () => {
     this.updateDatabases();
 	}
@@ -123,6 +129,7 @@ export class App extends React.Component {
     var userDiv = <div> Not logged in </div>
 		return (
 			<Grid fluid>
+        <div className={styles.pink}><p>Hello</p></div>
         <Menu userCallback={ this.updateUser } user= { this.state.user }/>
         <FileReader fileContentCallback={ this.fileUploadHandler }/>
         { userDiv}
@@ -132,6 +139,13 @@ export class App extends React.Component {
 		)
 	}
 }
+
+App.defaultProps = {
+  getDatabaseData: () => axios.get('/snap/api/databases')
+}
+
+
+
 
 
 class FileReader extends React.Component {
@@ -181,6 +195,7 @@ class FileReader extends React.Component {
     )
   }
 }
+
 
 class AppForDB extends React.Component {
 	constructor(props) {

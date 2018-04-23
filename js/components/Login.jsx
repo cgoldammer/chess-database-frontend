@@ -6,6 +6,8 @@ import { axios } from '../api.js';
 import qs from "qs";
 import ReactModal from 'react-modal';
 
+ReactModal.setAppElement('body');
+
 import { objectIsEmpty } from '../helpers.js';
 
 const minPasswordLength = 1;
@@ -34,7 +36,7 @@ export class Menu extends Component {
 
   logoutCallback = () => {
     const handleLogout = () => {
-      this.props.userCallback({});
+      this.props.userCallback({data: {}});
       this.unsetTypeSelected();
     }
     
@@ -54,7 +56,6 @@ export class Menu extends Component {
       showText = "Log in"
       showUrl = "login"
     }
-    console.log("Updating with " + showText);
 
     const loginElement = (
       <div>
@@ -64,7 +65,7 @@ export class Menu extends Component {
     );
 
     return (
-      <ReactModal isOpen={ this.state.typeSelected }> { loginElement } </ReactModal>
+      <ReactModal isOpen={ this.state.typeSelected != '' }> { loginElement } </ReactModal>
     )
   }
 
@@ -86,13 +87,16 @@ export class Menu extends Component {
         loginWindow = this.show()
       }
       menu = (
-        <div>
-          <div>
+
+        <Row end="xs">
+          <Col xsOffset={10} xs={1} >
             <Button onClick={ () => this.updateTypeSelected(consts.register) }> Register </Button>
+          </Col>
+          <Col xs={1}>
             <Button onClick={ () => this.updateTypeSelected(consts.login) }> Log in </Button>
-          </div>
+          </Col>
           { loginWindow }
-        </div>
+        </Row>
       
       )
     }
@@ -139,7 +143,6 @@ export class Login extends Component {
   }
 
   registerCallback = () => {
-    console.log("{ this.props.text } ok")
     // Obtain the logged-in user and pass it back to the callback of the mother element
     axios.get('/snap/api/user').then(this.props.userCallback);
   };

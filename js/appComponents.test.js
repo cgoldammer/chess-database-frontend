@@ -1,5 +1,5 @@
 import React from 'react';
-import {App, sum} from './appComponents.jsx';
+import {App, FileReader} from './appComponents.jsx';
 import {Test1, Test2} from './components/testComponents.jsx';
 
 import { configure } from 'enzyme';
@@ -28,12 +28,6 @@ test('If database is selected, the "Tournament" selector shows"', () => {
   wrapper.setState({db: 'test'});
   expect(wrapper.text()).toContain('Tournament');
 });
-
-test('adds 1 + 2 to equal 3', () => {
-  expect(sum(1, 2)).toBe(3);
-});
-
-// test that overriding the database works 
 
 var MockAdapter = require('axios-mock-adapter');
 var mock = new MockAdapter(axios);
@@ -70,4 +64,15 @@ test('If App is started, the databases will eventually show', done => {
     done();
   };
   return promise.then(afterLoad);
+});
+
+
+const fakeUser = {"subscriptionTime":"2018-04-17T15:38:19.739013Z","userId":"a@a.com","name":null}
+
+test('The file reader is shown only if a user is logged in', () => {
+  const wrapper = mount(<App/>);
+  expect(wrapper.find(FileReader)).toHaveLength(0);
+  wrapper.instance().updateUser({data: fakeUser});
+  wrapper.update();
+  expect(wrapper.find(FileReader)).toHaveLength(1);
 });

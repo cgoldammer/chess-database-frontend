@@ -18,11 +18,6 @@ import { objectIsEmpty } from './helpers.js';
 import {postRequest} from './api.js';
 
 import styles from './App.css';
-console.log("STYLES");
-console.log(styles);
-console.log(styles.pink);
-
-
 
 String.prototype.number = function (find) {
   return this.split(find).length - 1;
@@ -83,7 +78,7 @@ export class App extends React.Component {
 		document.title = "Chess statistics"
 		this.state = {
 			dbData: [],
-			db: "",
+			db: null,
       tournamentData: [],
       summaryData: {},
       user: {}
@@ -101,12 +96,11 @@ export class App extends React.Component {
     this.updateDatabases()
   }
   fileUploadHandler = (data) => {
-    console.log("Obtained text");
     const uploadDone = () => {
-      console.log("Upload done");
     }
     postRequest('/snap/api/uploadDB', data, uploadDone);
   }
+  userIsLoggedIn = () => !objectIsEmpty(this.state.user)
 
 	setDB = (db) => { 
     this.setState({db: db}) 
@@ -120,20 +114,28 @@ export class App extends React.Component {
 	processSummaryResponse = (data) => {
 		this.setState({'summaryData': data.data});
 	}
+  leaveDB = () => this.setState({db: null});
 	render = () => {
-		var setDB = <Row><DBChooser dbData={this.state.dbData} dbAction={this.setDB}/></Row>
+    var setDB = <div></div>
+    if (this.state.db == null){
+      setDB = <DBChooser dbData={this.state.dbData} dbAction={this.setDB}/>;
+    }
 		var appForDB = <div/>
-		if (this.state.db != ""){
-			appForDB = <Row><AppForDB db={this.state.db} tournamentData={ this.state.tournamentData } summaryData={ this.state.summaryData}/></Row>
+		if (this.state.db != null){
+			appForDB = <Row><AppForDB db={this.state.db} tournamentData={ this.state.tournamentData } summaryData={ this.state.summaryData} leaveDB={this.leaveDB}/></Row>
 		}
-    var userDiv = <div> Not logged in </div>
+    var fileDiv = <div></div>
+    if (this.userIsLoggedIn()){
+      fileDiv = <FileReader fileContentCallback={ this.fileUploadHandler }/>
+    }
+    
 		return (
 			<Grid fluid>
-        <div className={styles.pink}><p>Hello</p></div>
-        <Menu userCallback={ this.updateUser } user= { this.state.user }/>
-        <FileReader fileContentCallback={ this.fileUploadHandler }/>
-        { userDiv}
-				{ setDB }
+        <Row> <div className={styles.Menu}>
+          <Menu userCallback={ this.updateUser } user= { this.state.user }/>
+        </div></Row>
+        { fileDiv }
+				<Row> { setDB } </Row>
 				{ appForDB }
 			</Grid>
 		)
@@ -145,10 +147,7 @@ App.defaultProps = {
 }
 
 
-
-
-
-class FileReader extends React.Component {
+export class FileReader extends React.Component {
   constructor(props) {
     super(props);
     this.state = { file: 0, name: "" };
@@ -215,6 +214,9 @@ class AppForDB extends React.Component {
 		}
 		return (
 			<Grid fluid>
+        <Row>
+          <Button onClick={this.props.leaveDB}>Leave database</Button>
+        </Row>
 				{ search }
 				<Row center="xs">
 					{ summary }

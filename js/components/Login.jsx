@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Button, FormGroup, FormControl, ControlLabel } from "react-bootstrap";
+import { Button, FormGroup, FormControl, ControlLabel, NavItem, Nav } from "react-bootstrap";
 import { Grid, Row, Col } from 'react-flexbox-grid';
 import "../../css/Login.css";
 import { axios } from '../api.js';
@@ -11,6 +11,10 @@ ReactModal.setAppElement('body');
 import { objectIsEmpty } from '../helpers.js';
 
 const minPasswordLength = 1;
+
+import styles from './Login.css';
+
+const appName = "Chess database";
 
 
 // App stores currently logged in user (can be empty if not logged in).
@@ -70,6 +74,7 @@ export class Menu extends Component {
   }
 
   updateTypeSelected = (type) => this.setState({typeSelected: type})
+  userIsLoggedIn = () => !objectIsEmpty(this.props.user)
 
   render = () => {
     var menu = <div/>
@@ -86,14 +91,20 @@ export class Menu extends Component {
       if (this.state.typeSelected){
         loginWindow = this.show()
       }
+      const userText = this.userIsLoggedIn() ? this.props.user.id : "Not logged in";
       menu = (
-
         <Row end="xs">
-          <Col xsOffset={10} xs={1} >
-            <Button onClick={ () => this.updateTypeSelected(consts.register) }> Register </Button>
+          <Col xs={4}>
+            <span>{appName}</span>
           </Col>
-          <Col xs={1}>
-            <Button onClick={ () => this.updateTypeSelected(consts.login) }> Log in </Button>
+          <Col xs={4}>
+            <span>{userText}</span>
+          </Col>
+          <Col xsOffset={2} xs={1} >
+            <div className={styles.nav} onClick={() => this.updateTypeSelected(consts.register)}>Register</div>
+          </Col>
+          <Col xs={1} >
+            <div className={styles.nav} onClick={() => this.updateTypeSelected(consts.login)}>Log in</div>
           </Col>
           { loginWindow }
         </Row>
@@ -111,16 +122,29 @@ Menu.defaultProps = {
 export class UserDetail extends React.Component {
 	constructor(props) {
     super(props);
+    this.state = {open: false}
 	}
+  showPopup = () => this.setState({open: true})
+  closePopup = () => this.setState({open: false})
 
   render = () => {
-    return (
-      <Grid>
-        <Button onClick={ this.props.logoutCallback }> Log out </Button>
+    const inside = <Grid>
+        <Row>
+          <Button onClick={ this.closePopup }>Close User Details</Button>
+        </Row>
+        <Row>
+          <Button onClick={ this.props.logoutCallback }> Log out </Button>;
+        </Row>
       </Grid>
+    return (
+      <div>
+        <div className={styles.nav} onClick={this.showPopup}>Show user details</div>
+        <ReactModal isOpen={ this.state.open }> { inside } </ReactModal>
+      </div>
     )
   }
 }
+
 
 export class Login extends Component {
   constructor(props) {

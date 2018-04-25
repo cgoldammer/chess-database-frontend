@@ -1,3 +1,22 @@
 .pink p {
-  color: blue;
+  color: green;
+}
+
+.Menu {
+  background-color: lightgray;
+  padding: 5px 5px 5px 5px;
+  margin: 0px 0px 10px 0px;
+}
+
+.button {
+  display: inline-block;
+  cursor: pointer;
+  -webkit-appearance:button;
+  position: relative;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.buttondiv {
+  text-align: center;
 }

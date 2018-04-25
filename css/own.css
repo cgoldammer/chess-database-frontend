@@ -8,3 +8,13 @@
   margin-top:100;
 }
 
+.nav {
+	background-color: pink;
+	color: yellow;
+}
+
+a {
+  color: black;
+	background-color: yellow;
+  text-decoration: none;
+}

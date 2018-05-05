@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, DropdownButton, MenuItem, FormControl } from 'react-bootstrap';
+import { Button, DropdownButton, MenuItem, FormControl, Breadcrumb } from 'react-bootstrap';
 import { Grid, Row, Col } from 'react-flexbox-grid';
 import { BootstrapTable, TableHeaderColumn } from 'react-bootstrap-table';
 
@@ -9,9 +9,12 @@ import { SolutionShow } from "./components/SolutionShow.jsx";
 import { Menu } from './components/Login.jsx';
 import { TournamentSelector } from "./components/MoveEvalPage.jsx";
 import { DBChooser } from './components/DBChooser.jsx';
+import { EvaluationWindow } from './components/AdminComponents.jsx';
 import { SearchWindow } from './components/SearchWindow.jsx';
 import { Board } from "./components/Board.jsx";
 import Chess from 'chess.js';
+
+import { Link, Route } from 'react-router-dom';
 
 import { objectIsEmpty } from './helpers.js';
 
@@ -72,6 +75,8 @@ class AppSummary extends React.Component {
 }
 
 
+
+
 export class App extends React.Component {
 	constructor(props) {
 		super(props);
@@ -81,15 +86,16 @@ export class App extends React.Component {
 			db: null,
       tournamentData: [],
       summaryData: {},
-      user: {}
+      user: {},
+      locationList: []
 		};
 	}
   updateDatabases = () => this.props.getDatabaseData().then(this.displayDatabases);
 	componentDidMount = () => {
-    this.updateDatabases();
+    axios.get('/snap/api/user').then(this.updateUser).then(this.updateDatabases);
 	}
 	displayDatabases = (data) => {
-		this.setState({dbData: data.data});
+		this.setState({dbData: data.data}, () => this.setDB(this.state.dbData[0], true));
 	}
   updateUser = (user) => {
     this.setState({user: user.data});
@@ -97,16 +103,40 @@ export class App extends React.Component {
   }
   fileUploadHandler = (data) => {
     const uploadDone = () => {
+      this.updateDatabases();
     }
     postRequest('/snap/api/uploadDB', data, uploadDone);
   }
   userIsLoggedIn = () => !objectIsEmpty(this.state.user)
-
-	setDB = (db) => { 
-    this.setState({db: db}) 
-		const data = {searchDB: db};
-		postRequest('/snap/api/tournaments', data, this.processTournamentData);
-		postRequest('/snap/api/dataSummary', data, this.processSummaryResponse);
+  setLocation = loc => this.setState({ locationList: loc }, this.navigateToLocation);
+  navigateToLocation = () => {
+    const locList = this.state.locationList;
+    if (locList.length == 0){
+      this.leaveDB();
+    }
+    if (locList.length >= 1){
+      const dbLoc = locList[0];
+      this.setDB(dbLoc.data, false);
+      if (locList.length >= 2){
+      }
+    }
+  }
+  /* When setting a database, we also updte the tournaments. This is necessary to 
+  ensure that the search window works correctly, because it expects the tournaments to
+  correspond to the database */
+	setDB = (db, doUpdateLocation) => { 
+    const furtherUpdates = () => {
+      if (doUpdateLocation) { 
+        this.setLocation([{ url: db.name, name: db.name, data: db}])
+      }
+      postRequest('/snap/api/dataSummary', {searchDB: db.id}, this.processSummaryResponse);
+    }
+    const stateUpdater = tournaments => {
+      const data = {db: db.id, tournamentData: tournaments.data};
+      console.log(data);
+      this.setState(data, furtherUpdates);
+    }
+    postRequest('/snap/api/tournaments', {searchDB: db.id}, stateUpdater);
   }
 	processTournamentData = (data) => {
 		this.setState({'tournamentData': data.data});
@@ -122,7 +152,7 @@ export class App extends React.Component {
     }
 		var appForDB = <div/>
 		if (this.state.db != null){
-			appForDB = <Row><AppForDB db={this.state.db} tournamentData={ this.state.tournamentData } summaryData={ this.state.summaryData} leaveDB={this.leaveDB}/></Row>
+			appForDB = <Row><AppForDB db={this.state.db} tournamentData={ this.state.tournamentData } summaryData={ this.state.summaryData} leaveDB={this.leaveDB} user={this.state.user}/></Row>
 		}
     var fileDiv = <div></div>
     if (this.userIsLoggedIn()){
@@ -134,6 +164,9 @@ export class App extends React.Component {
         <Row> <div className={styles.Menu}>
           <Menu userCallback={ this.updateUser } user= { this.state.user }/>
         </div></Row>
+        <Row>
+          <BreadcrumbNavigator setLocation={this.setLocation} locationList={this.state.locationList}/>
+        </Row>
         { fileDiv }
 				<Row> { setDB } </Row>
 				{ appForDB }
@@ -196,6 +229,28 @@ export class FileReader extends React.Component {
 }
 
 
+class BreadcrumbNavigator extends React.Component {
+	constructor(props) {
+		super(props);
+	}
+  sendLocation = level => () => {
+    const chosen = this.props.locationList.slice(0, level);
+    this.props.setLocation(chosen)
+  }
+  render = () => {
+    const crumb = loc => <Breadcrumb.Item key={loc.url} onClick={ this.sendLocation(1) }> {loc.name} </Breadcrumb.Item>;
+    return (
+      <Breadcrumb>
+        <Breadcrumb.Item href="#" onClick={this.sendLocation(0)} >Home</Breadcrumb.Item>
+        { this.props.locationList.map(crumb) }
+      </Breadcrumb>
+    )
+  }
+}
+
+
+const isAdmin = true;
+
 class AppForDB extends React.Component {
 	constructor(props) {
 		super(props);
@@ -212,10 +267,11 @@ class AppForDB extends React.Component {
 		if (this.hasSummary()){
 			var summary = <AppSummary data={this.props.summaryData}/>
 		}
+    var adminWindow = isAdmin ? <EvaluationWindow db={this.props.db}/> : <div/>
 		return (
 			<Grid fluid>
         <Row>
-          <Button onClick={this.props.leaveDB}>Leave database</Button>
+          { adminWindow }
         </Row>
 				{ search }
 				<Row center="xs">

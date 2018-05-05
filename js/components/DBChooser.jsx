@@ -14,11 +14,11 @@ export class DBChooser extends React.Component {
 	}
 	selectDB = (selected) => {
 		this.setState({ selected });
-		this.props.dbAction(selected);
+		this.props.dbAction(selected, true);
 	};
 	hasData = () => this.props.dbData.length > 0;
 
-  getButton = (data) => <ListGroupItem key={data.id} onClick={() => this.selectDB(data.id)}>{data.name} </ListGroupItem>
+  getButton = (data) => <ListGroupItem key={data.id} onClick={() => this.selectDB(data)}>{data.name} </ListGroupItem>
 
 	render = () => {
 		return (

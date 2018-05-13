@@ -53,7 +53,6 @@ export const testApis = {
 }
 
 // var mock = new MockAdapter(axios);
-
 // mock.onGet('/snap/levels/moveSummary').reply(200, moveData);
 
 // const testApis = {

@@ -1,8 +1,7 @@
 import React from 'react';
-import { Grid, Row, Col} from 'react-flexbox-grid';
-import Select from 'react-select';
-import { Button, DropdownButton, MenuItem, FormControl, Panel, ListGroup, ListGroupItem } from 'react-bootstrap';
+import { Grid, Row, Col, Button, DropdownButton, MenuItem, FormControl, Panel, ListGroup, ListGroupItem } from 'react-bootstrap';
 import styles from '../App.css';
+import { Link } from 'react-router-dom';
 
 
 export class DBChooser extends React.Component {
@@ -14,24 +13,21 @@ export class DBChooser extends React.Component {
 	}
 	selectDB = (selected) => {
 		this.setState({ selected });
-		this.props.dbAction(selected, true);
+    const newLoc = {db: selected};
+    this.props.locSetter(newLoc);
 	};
 	hasData = () => this.props.dbData.length > 0;
 
-  getButton = (data) => <ListGroupItem key={data.id} onClick={() => this.selectDB(data)}>{data.name} </ListGroupItem>
+  getButton = (data) => <ListGroupItem key={data.id} onClick={() => this.selectDB(data)}>{data.name}</ListGroupItem>
 
 	render = () => {
 		return (
-      <Row>
-        <Col mdOffset={3} md={6}>
-          <Panel>
-            <Panel.Heading>Pick a database</Panel.Heading>
-            <ListGroup>
-              { this.props.dbData.map(this.getButton) }
-            </ListGroup>
-          </Panel>
-        </Col>
-      </Row>
+      <Panel>
+        <Panel.Heading>Pick a database</Panel.Heading>
+        <ListGroup>
+          { this.props.dbData.map(this.getButton) }
+        </ListGroup>
+      </Panel>
 		)
 	}
 }

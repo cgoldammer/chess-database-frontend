@@ -1,14 +1,11 @@
 import React, { Component } from "react";
-import { Button, FormGroup, FormControl, ControlLabel, NavItem, Nav } from "react-bootstrap";
-import { Grid, Row, Col } from 'react-flexbox-grid';
-import "../../css/Login.css";
+import { Navbar, Grid, Row, Col, Button, FormGroup, FormControl, ControlLabel, NavItem, Nav, Modal } from "react-bootstrap";
 import { axios } from '../api.js';
-import qs from "qs";
 import ReactModal from 'react-modal';
 
 ReactModal.setAppElement('body');
 
-import { objectIsEmpty } from '../helpers.js';
+import { objectIsEmpty, loginConsts, loginData, loginOrRegisterUser, logout, getUser } from '../helpers.jsx';
 
 const minPasswordLength = 1;
 
@@ -22,10 +19,8 @@ const appName = "Chess database";
 // Register, Log in (if not logged in). If logged in, show "user settings" with "log out" button.
 
 
-const consts = {
-  register: 1,
-  login: 2
-}
+
+
 
 export class Menu extends Component {
   constructor(props) {
@@ -43,33 +38,22 @@ export class Menu extends Component {
       this.props.userCallback({data: {}});
       this.unsetTypeSelected();
     }
-    
-    axios.get('/snap/logout').then(handleLogout);
+    logout(handleLogout);
   }
 
   show = () => {
     const showType = this.state.typeSelected;
-    var showText;
-    var showUrl;
-  
-    if (showType == consts.register){
-      showText = "Register"
-      showUrl = "register"
-    }
-    if (showType == consts.login){
-      showText = "Log in"
-      showUrl = "login"
-    }
 
     const loginElement = (
       <div>
-        <Button onClick={ this.unsetTypeSelected }>Close</Button>
-        <Login text={ showText } url= { showUrl } userCallback={ this.props.userCallback } />
+        <Login loginType={ showType } userCallback={ this.props.userCallback } />
       </div>
     );
 
     return (
-      <ReactModal isOpen={ this.state.typeSelected != '' }> { loginElement } </ReactModal>
+      <Modal show={ this.state.typeSelected != '' } logoutCallback={this.logoutCallback} unsetTypeSelected={ this.unserTypeSelected }> 
+        { loginElement }
+      </Modal>
     )
   }
 
@@ -93,22 +77,28 @@ export class Menu extends Component {
       }
       const userText = this.userIsLoggedIn() ? this.props.user.id : "Not logged in";
       menu = (
-        <Row end="xs">
-          <Col xs={4}>
-            <span>{appName}</span>
-          </Col>
-          <Col xs={4}>
-            <span>{userText}</span>
-          </Col>
-          <Col xsOffset={2} xs={1} >
-            <div className={styles.nav} onClick={() => this.updateTypeSelected(consts.register)}>Register</div>
-          </Col>
-          <Col xs={1} >
-            <div className={styles.nav} onClick={() => this.updateTypeSelected(consts.login)}>Log in</div>
-          </Col>
+        <Navbar inverse collapseOnSelect>
+          <Navbar.Header>
+            <Navbar.Brand>
+              {appName}
+            </Navbar.Brand>
+            <Navbar.Toggle />
+          </Navbar.Header>
+          <Navbar.Collapse>
+            <Navbar.Text>
+              <span>{userText}</span>
+            </Navbar.Text>
+            <Nav pullRight>
+              <NavItem eventKey={loginConsts.login}>
+                Log in
+              </NavItem>
+              <NavItem eventKey={loginConsts.login}>
+                Register
+              </NavItem>
+            </Nav>
+          </Navbar.Collapse>
           { loginWindow }
-        </Row>
-      
+        </Navbar>
       )
     }
     return menu;
@@ -128,14 +118,15 @@ export class UserDetail extends React.Component {
   closePopup = () => this.setState({open: false})
 
   render = () => {
-    const inside = <Grid>
+    const inside = 
+      <div>
         <Row>
           <Button onClick={ this.closePopup }>Close User Details</Button>
         </Row>
         <Row>
           <Button onClick={ this.props.logoutCallback }> Log out </Button>;
         </Row>
-      </Grid>
+      </div>
     return (
       <div>
         <div className={styles.nav} onClick={this.showPopup}>Show user details</div>
@@ -166,46 +157,52 @@ export class Login extends Component {
     });
   }
 
-  registerCallback = () => {
-    // Obtain the logged-in user and pass it back to the callback of the mother element
-    axios.get('/snap/api/user').then(this.props.userCallback);
-  };
+  registerCallback = () => getUser(this.props.userCallback);
 
   handleSubmit = event => {
     event.preventDefault();
-    axios.post('/snap/' + this.props.url, qs.stringify(this.state)).then(this.registerCallback);
+    loginOrRegisterUser(this.props.loginType, this.state.email, this.state.password, this.registerCallback);
   }
 
   render() {
+    console.log("TYPE" + this.props.loginType);
+    const name = loginData[this.props.loginType].name;
     return (
-      <div className="{ this.props.text }">
-        <form onSubmit={this.handleSubmit}>
-          <FormGroup controlId="email" bsSize="large">
-            <ControlLabel>Email</ControlLabel>
-            <FormControl
-              autoFocus
-              type="email"
-              value={this.state.email}
-              onChange={this.handleChange}
-            />
-          </FormGroup>
-          <FormGroup controlId="password" bsSize="large">
-            <ControlLabel>Password</ControlLabel>
-            <FormControl
-              value={this.state.password}
-              onChange={this.handleChange}
-              type="password"
-            />
-          </FormGroup>
-          <Button
-            block
-            bsSize="large"
-            disabled={!this.validateForm()}
-            type="submit"
-          >
-          { this.props.text }
-          </Button>
-        </form>
+      
+      <div>
+        <Modal.Header>{ name }</Modal.Header>
+        <Modal.Body>
+          <form onSubmit={this.handleSubmit}>
+            <FormGroup controlId="email" bsSize="large">
+              <ControlLabel>Email</ControlLabel>
+              <FormControl
+                autoFocus
+                type="email"
+                value={this.state.email}
+                onChange={this.handleChange}
+              />
+            </FormGroup>
+            <FormGroup controlId="password" bsSize="large">
+              <ControlLabel>Password</ControlLabel>
+              <FormControl
+                value={this.state.password}
+                onChange={this.handleChange}
+                type="password"
+              />
+            </FormGroup>
+            <Button
+              block
+              bsSize="large"
+              disabled={!this.validateForm()}
+              type="submit"
+            >
+            { name }
+            </Button>
+          </form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button onClick={ this.props.unsetTypeSelected }>Close</Button>
+        </Modal.Footer>
       </div>
     );
   }

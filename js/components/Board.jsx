@@ -1,4 +1,5 @@
 import React from 'react';
+// import Chessdiagram from '../../external/chess-diagram2/dev.chessdiagram.jsx';
 import Chessdiagram from 'react-chessdiagram';
 import Chess from 'chess.js';
 
@@ -15,22 +16,24 @@ export class Board extends React.Component {
   render() {
 		console.log('rendering board');
     return (
-      <Chessdiagram 
-        squareSize={this.props.squareSize} 
-        lightSquareColor={this.props.lightSquareColor} 
-        darkSquareColor={this.props.darkSquareColor} 
-				gameHistory={this.props.gameHistory}
-				pgn={this.fakePgn()}
-			/>
+			<div>
+				<Chessdiagram 
+					squareSize={this.props.squareSize} 
+					lightSquareColor={this.props.lightSquareColor} 
+					darkSquareColor={this.props.darkSquareColor} 
+					gameHistory={this.props.gameHistory}
+					pgn={this.fakePgn()}
+				/>
+			</div>
 		)
   }
 }
 
 Board.defaultProps = {
-	lightSquareColor: "rgb(200, 200, 200)",
-	darkSquareColor: "rgb(100, 100, 100)",
-	squareSize: 40,
-	gameHistory: true
+ 	lightSquareColor: "rgb(200, 200, 200)"
+,	darkSquareColor: "rgb(100, 100, 100)"
+,	squareSize: 40
+, gameHistory: true
 }
 
 

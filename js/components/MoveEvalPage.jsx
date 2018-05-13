@@ -1,23 +1,24 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { Grid, Row, Col } from 'react-flexbox-grid';
-import { Button, DropdownButton, MenuItem, ButtonGroup, ToggleButton, ToggleButtonGroup } from 'react-bootstrap';
+import { Panel, Grid, Row, Col, Button, DropdownButton, MenuItem, ButtonGroup, ToggleButton, ToggleButtonGroup } from 'react-bootstrap';
 
 import d3 from 'd3'
 import { LineChart } from 'react-d3-components'
+import Select from 'react-select';
 
 import { Board } from "./Board.jsx";
 import {testVar, axios, postRequest} from '../api.js';
+
 
 export class MoveEvalGraph extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = { 
-			selectedPlayers: [1],
+			selectedPlayers: [],
 		};
 	}
-	onChange = (selectedPlayers) => {
-		this.setState({ selectedPlayers });
+	onChange = (selected) => {
+		this.setState({ selectedPlayers: selected.map(x => x.value) });
 	};
 	hasData = () => this.props.moveData.length > 0;
 	getChartData = () => prepareForChart(this.props.moveData, this.state.selectedPlayers);
@@ -25,6 +26,7 @@ export class MoveEvalGraph extends React.Component {
 	getAllData = () => prepareForChart(this.props.moveData, this.getAllPlayers());
 	getExtents = () => extentsForData(this.getAllData());
 	getChartSeries = () => this.props.moveData.map((x) => ({field: 'eval' + x.key, name: x.player}));
+	getSelectOptions = () => this.props.moveData.map((x) => ({value: x.key, label: x.player}));
 	render = () => {
 		const margins = {left: 100, right: 100, top: 50, bottom: 50}
 		const extents = this.getExtents()
@@ -45,21 +47,21 @@ export class MoveEvalGraph extends React.Component {
 				yAxis={{label: "Average evaluation for the player"}}
 			/>
 
+			const options = this.getSelectOptions();
+			const { selectedPlayers } = this.state;
 			return (
-				<div style={style}>
-					<Grid fluid>
+				<div>
+					<h2>Evaluation by Move</h2>
+					<div style={style}>
 						<Row>
 							<Col md={4}>
-								<div>Select players</div>
-								<ToggleButtonGroup vertical type="checkbox" value={this.state.selectedPlayers} onChange={this.onChange}>
-									{this.props.moveData.map((x) => <ToggleButton key={x.key} value={x.key}>{x.player}</ToggleButton>)}
-								</ToggleButtonGroup>
+								<Select multi={true} value={selectedPlayers} onChange={this.onChange} options={options}/>
 							</Col>
 							<Col md={8}>
 								{chartArea} 
 							</Col>
 						</Row>
-					</Grid>
+					</div>
 				</div>
 			);
 		}

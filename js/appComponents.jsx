@@ -13,7 +13,7 @@ import { Board } from "./components/Board.jsx";
 import Chess from 'chess.js';
 import { dummyTable } from './components/DummyTable.jsx';
 import { withRouter, Link, Route } from 'react-router-dom';
-import { HOC, exposeRouter, objectIsEmpty, loginDummyUser, logout, getUser, ThemeContext, contextComp, defaultLoc} from './helpers.jsx';
+import { HOC, exposeRouter, objectIsEmpty, loginDummyUser, logout, getUser, ThemeContext, contextComp, defaultLoc, resultPanels, updateLoc} from './helpers.jsx';
 import {postRequest} from './api.js';
 import styles from './App.css';
 
@@ -73,6 +73,30 @@ class AppSummary extends React.Component {
 }
 
 
+class BreadcrumbNavigator extends React.Component {
+  constructor(props) {
+    super(props);
+  }
+  sendLocation = (name, value) => () => this.props.locSetter(updateLoc(this.props.loc, name, value));
+  render = () => {
+    const crumb = (key, value, name) => <Breadcrumb.Item key={key} onClick={ this.sendLocation(key, value) }> {name} </Breadcrumb.Item>;
+    const loc = this.props.loc;
+    console.log("LOC");
+    console.log(this.props);
+    const homeCrumb = crumb("db", null, "home");
+    const dbCrumb = loc.db != null ? crumb("db", loc.db, loc.db.name) : null;
+    const showCrumb = loc.showType != null ? crumb("showType", loc.showType, loc.showType) : null;
+    const gameCrumb = loc.game != null ? crumb("game", loc.game, loc.game) : null;
+    return (
+      <Breadcrumb>
+        { homeCrumb }
+        { dbCrumb }
+        { showCrumb }
+        { gameCrumb }
+      </Breadcrumb>
+    )
+  }
+}
 
 export class App extends React.Component {
   constructor(props) {
@@ -113,31 +137,27 @@ export class App extends React.Component {
     postRequest('/snap/api/uploadDB', data, uploadDone);
   }
   userIsLoggedIn = () => !objectIsEmpty(this.state.user)
-  setLocation = loc => this.setState({ locationList: loc }, this.navigateToLocation);
-  navigateToLocation = () => {
-    const locList = this.state.locationList;
-    if (locList.length == 0){
+  navigateToLoc = () => {
+    const locList = this.state.loc;
+    if (locList.db == null){
       this.leaveDB();
     }
-    if (locList.length >= 1){
-      const dbLoc = locList[0];
-      this.setDB(dbLoc.data, false);
-      if (locList.length >= 2){
-      }
+    else {
+      console.log("Setting DB");
+      const dbLoc = locList.db;
+      this.setDB(dbLoc);
     }
   }
   /* When setting a database, we also updte the tournaments. This is necessary to 
   ensure that the search window works correctly, because it expects the tournaments to
   correspond to the database */
-  setDB = (db, doUpdateLocation) => { 
+  setDB = db => { 
     const furtherUpdates = () => {
-      if (doUpdateLocation) { 
-        this.setLocation([{ url: db.name, name: db.name, data: db}])
-      }
       postRequest('/snap/api/dataSummary', {searchDB: db.id}, this.processSummaryResponse);
     }
     const stateUpdater = tournaments => {
       const data = {db: db.id, tournamentData: tournaments.data};
+      console.log("updating db state");
       console.log(data);
       this.setState(data, furtherUpdates);
     }
@@ -149,44 +169,47 @@ export class App extends React.Component {
   processSummaryResponse = (data) => {
     this.setState({'summaryData': data.data});
   }
-  leaveDB = () => {
-    this.context.router.history.push('/');
-    this.setState({db: null});
-  }
   routeForDB = (route) => {
     routeStart = route[0];
   }
+  locSetter = loc => this.setState({loc: loc}, this.navigateToLoc)
+  leaveDB = () => {
+    // this.context.router.history.push('/');
+    this.locSetter(updateLoc("db", null));
+    // this.setState({db: null});
+  }
   contextData = () => {
-    const locSetter: loc => {
-      this.setState(loc: loc, this.navigateToLoc)
-    }
+    const locSetter = this.locSetter
     return {loc: this.state.loc, locSetter: locSetter}
-  });
+  }
   render = () => {
 
     var setDB = <div></div>
     var fileDiv = <div></div>
-    if (this.state.db == null){
+    if (this.state.loc.db == null){
       const DBChooserLoc = contextComp(DBChooser);
       setDB = <DBChooserLoc dbData={this.state.dbData} dbAction={this.setDB}/>;
       if (this.userIsLoggedIn()){
         fileDiv = <FileReader fileContentCallback={ this.fileUploadHandler }/>
       }
     }
-    const appForDB = <div/>
-    if (this.state.db != null){
-      const db = this.state.db;
+    var appForDB = <div/>
+    if (this.state.loc.db != null){
+      console.log("Now showing app");
+      const db = this.state.loc.db.id;
       const url = "/db/" + db;
       const AppForDBLoc = contextComp(AppForDB);
-      const appForDB = <AppForDBLoc db={db} tournamentData={ this.state.tournamentData } summaryData={ this.state.summaryData} leaveDB={this.leaveDB} user={this.state.user} router={this.routeForDB}/>;
+      appForDB = <AppForDBLoc db={db} tournamentData={ this.state.tournamentData } summaryData={ this.state.summaryData} leaveDB={this.leaveDB} user={this.state.user} router={this.routeForDB}/>;
     }
+    const Navigator = contextComp(BreadcrumbNavigator);
+    const nav = <Navigator/>;
     
     return (
       <ThemeContext.Provider value={this.contextData()}>
         <Menu userCallback={ this.updateUser } user= { this.state.user }/>
         <Grid fluid>
           <Row>
-            <BreadcrumbNavigator setLocation={this.setLocation} locationList={this.state.locationList}/>
+            { nav } 
           </Row>
           <Row>
             { appForDB }
@@ -272,24 +295,6 @@ export class FileReader extends React.Component {
 }
 
 
-class BreadcrumbNavigator extends React.Component {
-  constructor(props) {
-    super(props);
-  }
-  sendLocation = level => () => {
-    const chosen = this.props.locationList.slice(0, level);
-    this.props.setLocation(chosen)
-  }
-  render = () => {
-    const crumb = loc => <Breadcrumb.Item key={loc.url} onClick={ this.sendLocation(1) }> {loc.name} </Breadcrumb.Item>;
-    return (
-      <Breadcrumb>
-        <Breadcrumb.Item href="#" onClick={this.sendLocation(0)} >Home</Breadcrumb.Item>
-        { this.props.locationList.map(crumb) }
-      </Breadcrumb>
-    )
-  }
-}
 
 const isAdmin = false;
 
@@ -311,7 +316,6 @@ class AppForDB extends React.Component {
     }
     var adminWindow = isAdmin ? <EvaluationWindow db={this.props.db}/> : <div/>
 
-    console.log("APPLOC: " + this.props.loc);
     return (
       <div>
         { search }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Grid, Row, Col } from 'react-flexbox-grid';
+import { Grid, Row, Col } from 'react-bootstrap';
 import Select from 'react-select';
 
 export class TournamentSelector extends React.Component {
@@ -21,7 +21,7 @@ export class TournamentSelector extends React.Component {
 	render = () => {
 
 		return (
-			<Grid>
+			<div>
 				<Row>
 					<Col xs={12} mdOffset={3} md={6}>
 						<span>Tournament</span>
@@ -35,7 +35,7 @@ export class TournamentSelector extends React.Component {
 							onChange={this.selectTournament}/>
 					</Col>
 				</Row>
-			</Grid> 
+			</div> 
 		)
 	}
 }

@@ -2,6 +2,8 @@ import {App} from './appComponents.jsx'
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-ReactDOM.render(<App/>, document.getElementById("world"));
+import { BrowserRouter } from 'react-router-dom';
+
+ReactDOM.render(<BrowserRouter><App/></BrowserRouter>, document.getElementById("world"));
 
 module.hot.accept();

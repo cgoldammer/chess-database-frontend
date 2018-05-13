@@ -1,7 +1,5 @@
 import React, { Component } from "react";
-import { Button, FormGroup, FormControl, ControlLabel, NavItem, Nav, Checkbox } from "react-bootstrap";
-import { Grid, Row, Col } from 'react-flexbox-grid';
-import "../../css/Login.css";
+import { Grid, Row, Col, Button, FormGroup, FormControl, ControlLabel, NavItem, Nav, Checkbox } from "react-bootstrap";
 import { axios, postRequest } from '../api.js';
 import qs from "qs";
 import ReactModal from 'react-modal';

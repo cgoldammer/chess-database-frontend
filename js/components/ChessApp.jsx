@@ -9,7 +9,7 @@ const lightSquareColor = '#2492FF'; // light blue
 const darkSquareColor = '#005EBB'; // dark blue
 const currentPosition =  'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'; // starting position
 const flip = false;
-const squareSize = 30;
+const squareSize = 35;
 const pgn = "1. e4 e5 2. Nf3 Nc6";
 
 const cols = [
@@ -72,12 +72,14 @@ export class ChessApp extends React.Component {
 				</div>
 				<div>
 					<ReactTable className={styles.gameTable} pageSize={data.length} showPagination={false} data={data} columns={moveColumns} getTdProps={this.onRowClick}/>
-					<ButtonGroup>
-						<Button onClick={() => this.setMove(0)}>Start</Button>
-						<Button onClick={this.changeMove(-1)}>Previous</Button>
-						<Button onClick={this.changeMove(1)}>Next</Button>
-						<Button onClick={this.setToEnd}>End</Button>
-					</ButtonGroup>
+          <div class="text-center">
+            <ButtonGroup>
+              <Button onClick={() => this.setMove(0)}>Start</Button>
+              <Button onClick={this.changeMove(-1)}>Previous</Button>
+              <Button onClick={this.changeMove(1)}>Next</Button>
+              <Button onClick={this.setToEnd}>End</Button>
+            </ButtonGroup>
+          </div>
 				</div>
 			</div>
 		)

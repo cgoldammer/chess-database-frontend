@@ -79,14 +79,12 @@ class BreadcrumbNavigator extends React.Component {
   }
   sendLocation = (name, value) => () => this.props.locSetter(updateLoc(this.props.loc, name, value));
   render = () => {
-    const crumb = (key, value, name) => <Breadcrumb.Item key={key} onClick={ this.sendLocation(key, value) }> {name} </Breadcrumb.Item>;
+    const crumb = (key, value, name) => <Breadcrumb.Item key={name} onClick={ this.sendLocation(key, value) }> {name} </Breadcrumb.Item>;
     const loc = this.props.loc;
-    console.log("LOC");
-    console.log(this.props);
     const homeCrumb = crumb("db", null, "home");
     const dbCrumb = loc.db != null ? crumb("db", loc.db, loc.db.name) : null;
     const showCrumb = loc.showType != null ? crumb("showType", loc.showType, loc.showType) : null;
-    const gameCrumb = loc.game != null ? crumb("game", loc.game, loc.game) : null;
+    const gameCrumb = loc.game != null ? crumb("game", loc.game, loc.game.id) : null;
     return (
       <Breadcrumb>
         { homeCrumb }
@@ -137,15 +135,18 @@ export class App extends React.Component {
     postRequest('/snap/api/uploadDB', data, uploadDone);
   }
   userIsLoggedIn = () => !objectIsEmpty(this.state.user)
-  navigateToLoc = () => {
+  navigateToLoc = oldLoc => () => {
     const locList = this.state.loc;
     if (locList.db == null){
-      this.leaveDB();
+      if (locList.db != oldLoc.db) {
+        this.leaveDB();
+      }
     }
     else {
-      console.log("Setting DB");
-      const dbLoc = locList.db;
-      this.setDB(dbLoc);
+      if (locList.db != oldLoc.db) {
+        const dbLoc = locList.db;
+        this.setDB(dbLoc);
+      }
     }
   }
   /* When setting a database, we also updte the tournaments. This is necessary to 
@@ -157,8 +158,6 @@ export class App extends React.Component {
     }
     const stateUpdater = tournaments => {
       const data = {db: db.id, tournamentData: tournaments.data};
-      console.log("updating db state");
-      console.log(data);
       this.setState(data, furtherUpdates);
     }
     postRequest('/snap/api/tournaments', {searchDB: db.id}, stateUpdater);
@@ -172,7 +171,10 @@ export class App extends React.Component {
   routeForDB = (route) => {
     routeStart = route[0];
   }
-  locSetter = loc => this.setState({loc: loc}, this.navigateToLoc)
+  locSetter = loc => {
+    const oldLoc = this.state.loc;
+    this.setState({loc: loc}, this.navigateToLoc(oldLoc))
+  }
   leaveDB = () => {
     // this.context.router.history.push('/');
     this.locSetter(updateLoc("db", null));
@@ -195,7 +197,6 @@ export class App extends React.Component {
     }
     var appForDB = <div/>
     if (this.state.loc.db != null){
-      console.log("Now showing app");
       const db = this.state.loc.db.id;
       const url = "/db/" + db;
       const AppForDBLoc = contextComp(AppForDB);
@@ -320,7 +321,6 @@ class AppForDB extends React.Component {
       <div>
         { search }
         { adminWindow }
-        { summary }
       </div>
     );
   }

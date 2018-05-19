@@ -6,7 +6,7 @@ import { TournamentSelector } from './TournamentSelector.jsx';
 import { GamesTable } from './GamesTable.jsx';
 import { dummyTable } from './DummyTable.jsx';
 import { postRequest } from '../api.js';
-import { avg, playerName, resultPanels, contextComp} from '../helpers.jsx';
+import { avg, playerName, resultPanels, contextComp, updateLoc} from '../helpers.jsx';
 import { StatWindow } from './StatWindows.jsx';
 import { Redirect } from 'react-router'
 
@@ -62,14 +62,14 @@ class ResultTable extends React.Component {
   setPanel = key => {
     const base = window.location.pathname;
     const newUrl = base + "/" + key;
-    const newLoc = { ...this.props.loc, showType: key}
+    const newLoc = updateLoc(this.props.loc, "showType", key);
     this.props.locSetter(newLoc);
   }
   render = () => {
     var gamesTable = <div/>;
-    console.log("GAMES DATA: " + this.props.gamesData.length);
     if (this.props.gamesData.length > 0){
-      gamesTable = <GamesTable gamesData={this.props.gamesData}/>
+      const GamesTableLoc = contextComp(GamesTable);
+      gamesTable = <GamesTableLoc gamesData={this.props.gamesData}/>
     }
 
     return (

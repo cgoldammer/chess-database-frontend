@@ -80,9 +80,11 @@ export const resultPanels = {
 }
 
 export const updateLoc = (loc, name, value) => {
-  const newLoc = { ...loc, name: value}
-  if (name == "db"){
-    newLoc.showType = null;
+  const newLoc = { ...loc} 
+  newLoc[name] = value;
+  console.log("UPdating " + name + " to be " + value);
+  if (name == "db" && value != null){
+    newLoc.showType = resultPanels.gameList;;
     newLoc.game = null;
   }
   if (name == "showType"){

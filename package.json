@@ -60,6 +60,8 @@
     "react-d3-basic": "1.6.11",
     "react-d3-components": "0.7.1",
     "react-flexbox-grid": "^2.0.0",
+    "react-media": "^1.8.0",
+    "react-modal": "^3.4.4",
     "react-router-dom": "^4.2.2",
     "react-select": "^1.1.0",
     "react-toastr": "^2.8.2",

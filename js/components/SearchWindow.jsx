@@ -122,6 +122,11 @@ export class SearchWindow extends React.Component {
   updateChoice = ( selection ) => { 
     this.setState({selection: selection}, this.getGamesForSearch);
   }
+  shouldComponentUpdate = (nextProps, nextState) => {
+    const gamesDataChanged = this.state.gamesData.length != nextState.gamesData.length;
+    const hasChanged = gamesDataChanged;
+    return hasChanged;
+  }
 	hasGames = () => this.state.gamesData.length > 0
   render = () => {
     var resultRow = <div/>;
@@ -131,7 +136,12 @@ export class SearchWindow extends React.Component {
 		}
     return (
       <div>
-        { resultRow }
+        <Row>
+          <SearchChoice onChangeSelection={this.updateChoice} tournamentData={this.props.tournamentData}/>
+        </Row>
+        <Row>
+          { resultRow }
+        </Row>
       </div>
     )
   }

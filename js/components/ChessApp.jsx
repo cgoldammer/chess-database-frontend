@@ -72,7 +72,7 @@ export class ChessApp extends React.Component {
 				</div>
 				<div>
 					<ReactTable className={styles.gameTable} pageSize={data.length} showPagination={false} data={data} columns={moveColumns} getTdProps={this.onRowClick}/>
-          <div class="text-center">
+          <div className="text-center">
             <ButtonGroup>
               <Button onClick={() => this.setMove(0)}>Start</Button>
               <Button onClick={this.changeMove(-1)}>Previous</Button>

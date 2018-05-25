@@ -28,6 +28,7 @@ export class GamesTable extends React.Component {
       hideSelectColumn: true
     }
   }
+
   gameIsSelected = () => this.props.loc.game != null;
   onRowSelect = (e, row) => {
     this.props.locSetter(updateLoc(this.props.loc, "game", row));

@@ -1,3 +1,5 @@
 node_modules/
 lib/
 *.sw*
+*.lock
+package-lock.json

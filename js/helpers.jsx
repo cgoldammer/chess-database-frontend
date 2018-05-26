@@ -41,7 +41,6 @@ export const exposeRouter = ComponentClass => {
       super(props); 
     }
     render = () => {
-      console.log("exposes");
       return <ComponentClass {...this.props} router={this.context.router}/>;
     }
   };
@@ -83,11 +82,14 @@ export const updateLoc = (loc, name, value) => {
   const newLoc = { ...loc} 
   newLoc[name] = value;
   if (name == "db" && value != null){
-    newLoc.showType = resultPanels.gameList;;
+    newLoc.showType = resultPanels.gameList;
     newLoc.game = null;
   }
   if (name == "showType"){
     newLoc.game = null;
+  }
+  if (name == "game"){
+    newLoc.showType = resultPanels.gameList;
   }
   return newLoc;
 }

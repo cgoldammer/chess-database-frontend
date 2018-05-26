@@ -4,7 +4,6 @@ import { Panel, Grid, Row, Col, Button, DropdownButton, MenuItem, FormControl, B
 
 import { TournamentSelector } from './TournamentSelector.jsx';
 import { GamesTable } from './GamesTable.jsx';
-import { dummyTable } from './DummyTable.jsx';
 import { postRequest } from '../api.js';
 import { avg, playerName, resultPanels, contextComp, updateLoc} from '../helpers.jsx';
 import { StatWindow } from './StatWindows.jsx';
@@ -15,17 +14,17 @@ const defaultSearch = { tournaments:[] };
 
 /* A search window is used to select games from the database */
 export class SearchChoice extends React.Component {
-	constructor(props) {
-		super(props);
+  constructor(props) {
+    super(props);
     this.state = { tournaments: [] }
-	}
+  }
   updateTournaments = (tournament) => {
     const newTournaments = tournament == null ? [] : [tournament];
     const updater = () => this.props.onChangeSelection(this.state);
     this.setState({tournaments: newTournaments}, updater);
   }
-	render = () => {
-		return (
+  render = () => {
+    return (
       <Panel>
         <Panel.Heading>Search for games</Panel.Heading>
         <Panel.Body>
@@ -34,8 +33,8 @@ export class SearchChoice extends React.Component {
           </Row>
         </Panel.Body>
       </Panel>
-		)
-	}
+    )
+  }
 }
 
 const cleanGameData = (data) => {
@@ -103,20 +102,20 @@ export class SearchWindow extends React.Component {
     const ids = all.map(data => data.id);
     return selected.length == 0 ? ids : selected
   }
-	processGameData = (data) => {
-		this.setState({'gamesData': data.data.map(cleanGameData)});
-	}
+  processGameData = (data) => {
+    this.setState({'gamesData': data.data.map(cleanGameData)});
+  }
   getGameSearchData = () => {
-		const data = { 
+    const data = { 
       gameRequestDB: this.props.db
     , gameRequestTournaments: this.getSelectedTournaments()
     };
     return data
   }
-	getGamesForSearch = () => {
-		postRequest('/snap/api/games', this.getGameSearchData(), this.processGameData);
-	};
-	componentDidMount = () => {
+  getGamesForSearch = () => {
+    postRequest('/snap/api/games', this.getGameSearchData(), this.processGameData);
+  };
+  componentDidMount = () => {
     this.setState(startingStateForSearch, this.getGamesForSearch);
   }
   updateChoice = ( selection ) => { 
@@ -127,13 +126,13 @@ export class SearchWindow extends React.Component {
     const hasChanged = gamesDataChanged;
     return hasChanged;
   }
-	hasGames = () => this.state.gamesData.length > 0
+  hasGames = () => this.state.gamesData.length > 0
   render = () => {
     var resultRow = <div/>;
     const ResultTableLoc = contextComp(ResultTable);
-		if (this.hasGames()){
-			resultRow = <ResultTableLoc db={this.props.db} selection={this.state.selection} gamesData={this.state.gamesData} />;
-		}
+    if (this.hasGames()){
+      resultRow = <ResultTableLoc db={this.props.db} selection={this.state.selection} gamesData={this.state.gamesData} />;
+    }
     return (
       <div>
         <Row>

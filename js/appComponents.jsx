@@ -1,19 +1,16 @@
 import React from 'react';
 import { Grid, Row, Col, Button, DropdownButton, MenuItem, FormControl, Breadcrumb, Modal } from 'react-bootstrap';
+import Chess from 'chess.js';
 
-import myData from '/home/cg/data/output/tests.json';
-import {testVar, axios} from './api.js';
-import { SolutionShow } from "./components/SolutionShow.jsx";
 import { Menu } from './components/Login.jsx';
 import { TournamentSelector } from "./components/MoveEvalPage.jsx";
 import { DBChooser } from './components/DBChooser.jsx';
 import { EvaluationWindow } from './components/AdminComponents.jsx';
 import { SearchWindow } from './components/SearchWindow.jsx';
-import { Board } from "./components/Board.jsx";
-import Chess from 'chess.js';
-import { dummyTable } from './components/DummyTable.jsx';
-import { withRouter, Link, Route } from 'react-router-dom';
 import { HOC, exposeRouter, objectIsEmpty, loginDummyUser, logout, getUser, ThemeContext, contextComp, defaultLoc, resultPanels, updateLoc} from './helpers.jsx';
+
+import myData from '/home/cg/data/output/tests.json';
+import {testVar, axios} from './api.js';
 import {postRequest} from './api.js';
 import styles from './App.css';
 

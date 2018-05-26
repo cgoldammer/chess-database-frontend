@@ -3,7 +3,6 @@ import { ChessApp } from './ChessApp.jsx';
 import { Grid, Row, Col } from 'react-bootstrap';
 import BootstrapTable from 'react-bootstrap-table-next';
 import paginationFactory from 'react-bootstrap-table2-paginator';
-import { data, dummyTable } from './DummyTable.jsx';
 import { objectIsEmpty, updateLoc } from '../helpers.jsx';
 import Media from "react-media";
 
@@ -16,9 +15,9 @@ const columns = [ {dataField: 'id', text: 'Id', hidden: true}
 
 
 export class GamesTable extends React.Component {
-	constructor(props) {
-		super(props);
-	}
+  constructor(props) {
+    super(props);
+  }
   selectRow = () => {
     return {
       mode: 'radio',
@@ -56,11 +55,11 @@ export class GamesTable extends React.Component {
     return view
   }
   render() {
-		const data = this.props.gamesData.slice(0, 10);
-		var board = <div/>;
-		if (this.gameIsSelected()){
-			board = <ChessApp pgn={this.props.loc.game.pgn}/>;
-		}
+    const data = this.props.gamesData.slice(0, 10);
+    var board = <div/>;
+    if (this.gameIsSelected()){
+      board = <ChessApp pgn={this.props.loc.game.pgn}/>;
+    }
 
     const rowEvents = { onClick: this.onRowSelect }
     const table = <BootstrapTable keyField="id" data={ data } rowEvents={rowEvents} columns={columns}/>

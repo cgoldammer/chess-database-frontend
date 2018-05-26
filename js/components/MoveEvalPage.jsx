@@ -6,13 +6,12 @@ import d3 from 'd3'
 import { LineChart } from 'react-d3-components'
 import Select from 'react-select';
 
-import { Board } from "./Board.jsx";
 import {testVar, axios, postRequest} from '../api.js';
 
 class Legend extends React.Component {
-	constructor(props) {
-		super(props);
-	}
+  constructor(props) {
+    super(props);
+  }
   render = () => {
     const legendEntry = (selected, index) => {
       const color = this.props.colorScale(selected.index);
@@ -45,25 +44,25 @@ const colorScaleWithRepeat = label => {
 }
 
 export class MoveEvalGraph extends React.Component {
-	constructor(props) {
-		super(props);
-		this.state = { 
-			selectedPlayers: [],
+  constructor(props) {
+    super(props);
+    this.state = { 
+      selectedPlayers: [],
       showStdError: false,
-		};
-	}
+    };
+  }
   toggleStdError = () => this.setState((state, props) => ({showStdError: !state.showStdError}))
-	onChange = selected => this.setState({ selectedPlayers: selected.map(x => ({value:x.value, name: x.label, index: x.index}))})
-	hasData = () => this.props.moveData.length > 0;
-	getChartData = () => prepareForChart(this.props.moveData, this.state.selectedPlayers.map(p => p.value), this.state.showStdError)
-	getAllPlayers = () => this.props.moveData.map(x => x.key)
-	getAllData = () => prepareForChart(this.props.moveData, this.getAllPlayers(), this.state.showStdError)
-	getExtents = () => extentsForData(this.getAllData())
-	getChartSeries = () => this.props.moveData.map((x) => ({field: 'eval' + x.key, name: x.player}));
-	getSelectOptions = () => this.props.moveData.map((x, index) => ({value: x.key, label: x.player, index: index}));
-	render = () => {
-		const margins = {left: 100, right: 100, top: 50, bottom: 50}
-		const extents = this.getExtents()
+  onChange = selected => this.setState({ selectedPlayers: selected.map(x => ({value:x.value, name: x.label, index: x.index}))})
+  hasData = () => this.props.moveData.length > 0;
+  getChartData = () => prepareForChart(this.props.moveData, this.state.selectedPlayers.map(p => p.value), this.state.showStdError)
+  getAllPlayers = () => this.props.moveData.map(x => x.key)
+  getAllData = () => prepareForChart(this.props.moveData, this.getAllPlayers(), this.state.showStdError)
+  getExtents = () => extentsForData(this.getAllData())
+  getChartSeries = () => this.props.moveData.map((x) => ({field: 'eval' + x.key, name: x.player}));
+  getSelectOptions = () => this.props.moveData.map((x, index) => ({value: x.key, label: x.player, index: index}));
+  render = () => {
+    const margins = {left: 100, right: 100, top: 50, bottom: 50}
+    const extents = this.getExtents()
     window.color = colorScaleWithRepeat;
     const colorScaleForChart = colorScaleWithRepeat
     const options = this.getSelectOptions();
@@ -76,80 +75,75 @@ export class MoveEvalGraph extends React.Component {
       return null
     }
 
-		if (!this.hasData()) {
-      return <div/> } else { var style = { 'marginTop': 50, 'marginBottom': 50,
-			};
+    if (!this.hasData()) {
+      return <div/>
+    } 
+    else { 
+      var style = { 'marginTop': 50, 'marginBottom': 50};
 
       const maxWidth = 600;
       const width = Math.min(window.innerWidth - 50, maxWidth);
       const height = width;
-			var chartArea = <LineChart data={this.getChartData()} width={width} height={height}
-				xScale={d3.scale.linear().domain(extents[0]).range([0, width])}
-				yScale={d3.scale.linear().domain(extents[1]).range([0, height])}
+      var chartArea = <LineChart data={this.getChartData()} width={width} height={height}
+        xScale={d3.scale.linear().domain(extents[0]).range([0, width])}
+        yScale={d3.scale.linear().domain(extents[1]).range([0, height])}
         colorScale={colorScaleForChart}
         stroke={{strokeDasharray: dashFunc}}
-				margin={{top: 10, bottom: 5, left: 50, right: 10}}
-				xAxis={{innerTickSize: 1, zero:width/2, label: "Move"}}
-				yAxis={{label: "Average evaluation for the player"}}
-			/>
+        margin={{top: 10, bottom: 5, left: 50, right: 10}}
+        xAxis={{innerTickSize: 1, zero:width/2, label: "Move"}}
+        yAxis={{label: "Average evaluation for the player"}}
+      />
 
-			const { selectedPlayers } = this.state;
+      const { selectedPlayers } = this.state;
       const toggleButton = this.state.selectedPlayers.length > 0 ? (<Button onClick={this.toggleStdError}>Toggle standard errors</Button>) : <div/>
-			return (
-				<div>
-					<h2>Evaluation by Move</h2>
-					<div style={style}>
-						<Row>
-							<Col md={4}>
-								<Select multi={true} value={selectedPlayers.map(p => p.value)} onChange={this.onChange} options={options}/>
-							</Col>
-							<Col md={8}>
-								{chartArea} 
+      return (
+        <div>
+          <h2>Evaluation by Move</h2>
+          <div style={style}>
+            <Row>
+              <Col md={4}>
+                <Select multi={true} value={selectedPlayers.map(p => p.value)} onChange={this.onChange} options={options}/>
+              </Col>
+              <Col md={8}>
+                {chartArea} 
                 {legend}
                 { toggleButton }
-							</Col>
-						</Row>
-					</div>
-				</div>
-			);
-		}
-	}
+              </Col>
+            </Row>
+          </div>
+        </div>
+      );
+    }
+  }
 }
 
 MoveEvalGraph.defaultProps = {
-	moveData: []
+  moveData: []
 }
 
-var fakeGameData = {
-	'id': 10,
-	'White': 'Anna A',
-	'Black': 'Bo B',
-	'pgn': '1. e4 e5 2. Nf3 Nc6',
-	'date': '2014-01-02'}
-
 const extentsForData = (moveData) => {
-	const maxMove = 60;
-	var xmin = d3.min(moveData, (x) => d3.min(x.values, (row) => row.x));
-	var xmax = d3.max(moveData, (x) => d3.max(x.values, (row) => row.x));
-	var ymin = d3.min(moveData, (x) => d3.min(x.values, (row) => row.y));
-	var ymax = d3.max(moveData, (x) => d3.max(x.values, (row) => row.y));
-	
-	return [[xmin, Math.min(maxMove, xmax)], [+3, -3]];
+  const maxMove = 60;
+  var xmin = d3.min(moveData, (x) => d3.min(x.values, (row) => row.x));
+  var xmax = d3.max(moveData, (x) => d3.max(x.values, (row) => row.x));
+  var ymin = d3.min(moveData, (x) => d3.min(x.values, (row) => row.y));
+  var ymax = d3.max(moveData, (x) => d3.max(x.values, (row) => row.y));
+  
+  return [[xmin, Math.min(maxMove, xmax)], [+3, -3]];
 }
 
 const prepareForChart = (moveData, selectedPlayers, showStdError) => {
-	const playerSet = new Set(selectedPlayers);
-	const moveDataForPlayers = moveData.filter(x => playerSet.has(x.key));
-	const reshapeMoves = moves => {
-		const keys = Object.keys(moves)
+  const playerSet = new Set(selectedPlayers);
+  const moveDataForPlayers = moveData.filter(x => playerSet.has(x.key));
+  const reshapeMoves = moves => {
+    const keys = Object.keys(moves)
     const tstat = 1.96
     const evals = keys.map(k => ({x: +k, y: + moves[k][0] / 100}));
     const confLow = keys.map(k => ({x: +k, y: + (moves[k][0] - tstat*moves[k][1]) / 100}));
     const confHigh = keys.map(k => ({x: +k, y: + (moves[k][0] + tstat*moves[k][1]) / 100}));
     return {evals: evals, confLow: confLow, confHigh: confHigh}
-	}
+  }
 
-	const formatRow = x => {
+  const formatRow = x => {
     const reshaped = reshapeMoves(x.evaluations);
     const valuesEvals = ({ label: x.player, values: reshaped.evals })
     if (!showStdError){
@@ -162,8 +156,8 @@ const prepareForChart = (moveData, selectedPlayers, showStdError) => {
     }
   }
 
-	const formatted = moveDataForPlayers.map(formatRow);
+  const formatted = moveDataForPlayers.map(formatRow);
   const flattened = [].concat.apply([], formatted);
-	return flattened
+  return flattened
 }
 

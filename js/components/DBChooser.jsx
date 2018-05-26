@@ -5,31 +5,31 @@ import { Link } from 'react-router-dom';
 
 
 export class DBChooser extends React.Component {
-	constructor(props) {
-		super(props);
-		this.state = {
-			selected: '',
-		};
-	}
-	selectDB = (selected) => {
-		this.setState({ selected });
+  constructor(props) {
+    super(props);
+    this.state = {
+      selected: '',
+    };
+  }
+  selectDB = (selected) => {
+    this.setState({ selected });
     const newLoc = {db: selected};
     this.props.locSetter(newLoc);
-	};
-	hasData = () => this.props.dbData.length > 0;
+  };
+  hasData = () => this.props.dbData.length > 0;
 
   getButton = (data) => <ListGroupItem key={data.id} onClick={() => this.selectDB(data)}>{data.name}</ListGroupItem>
 
-	render = () => {
-		return (
+  render = () => {
+    return (
       <Panel>
         <Panel.Heading>Pick a database</Panel.Heading>
         <ListGroup>
           { this.props.dbData.map(this.getButton) }
         </ListGroup>
       </Panel>
-		)
-	}
+    )
+  }
 }
 
 DBChooser.defaultProps = {

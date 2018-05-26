@@ -13,15 +13,6 @@ import styles from './Login.css';
 
 const appName = "Chess database";
 
-
-// App stores currently logged in user (can be empty if not logged in).
-// The top bar shows thw folowing options:
-// Register, Log in (if not logged in). If logged in, show "user settings" with "log out" button.
-
-
-
-
-
 export class Menu extends Component {
   constructor(props) {
     super(props);

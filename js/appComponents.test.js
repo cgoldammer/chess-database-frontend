@@ -9,10 +9,6 @@ configure({ adapter: new Adapter() });
 import { shallow, mount, render } from 'enzyme';
 import { axios } from './api.js';
 
-// test('if there are no databases in the api, the app displays an error message', () => {
-//   mockApi(testApis.empty);
-// });
-
 test('test displays correctly', () => {
   const wrapper = shallow(<Test1 />);
   expect(wrapper.find('p').text()).toEqual('hi');

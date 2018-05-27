@@ -2,12 +2,12 @@ import React from 'react';
 import { Grid, Row, Col, Button, DropdownButton, MenuItem, FormControl, Breadcrumb, Modal } from 'react-bootstrap';
 import Chess from 'chess.js';
 
-import { Menu } from './components/Login.jsx';
+import { Menu } from './components/Menu.jsx';
 import { TournamentSelector } from "./components/MoveEvalPage.jsx";
 import { DBChooser } from './components/DBChooser.jsx';
 import { EvaluationWindow } from './components/AdminComponents.jsx';
 import { SearchWindow } from './components/SearchWindow.jsx';
-import { HOC, exposeRouter, objectIsEmpty, loginDummyUser, logout, getUser, ThemeContext, contextComp, defaultLoc, resultPanels, updateLoc} from './helpers.jsx';
+import { HOC, exposeRouter, objectIsEmpty, loginDummyUser, logout, getUser, ThemeContext, contextComp, defaultLoc, resultPanels, updateLoc, getUrl} from './helpers.jsx';
 
 import myData from '/home/cg/data/output/tests.json';
 import {testVar, axios} from './api.js';
@@ -109,7 +109,7 @@ export class App extends React.Component {
   }
   updateDatabases = () => this.props.getDatabaseData().then(this.displayDatabases);
   componentDidMount = () => {
-    const updateUser = () => axios.get('/snap/api/user').then(this.updateUser);
+    const updateUser = () => axios.get(getUrl('api/user')).then(this.updateUser);
     updateUser();
     debugFunctions.login = () => loginDummyUser(updateUser);
     debugFunctions.logout = () => {
@@ -135,7 +135,7 @@ export class App extends React.Component {
     const uploadDone = () => {
       this.updateDatabases();
     }
-    postRequest('/snap/api/uploadDB', data, uploadDone);
+    postRequest(getUrl('api/uploadDB'), data, uploadDone);
   }
   userIsLoggedIn = () => !objectIsEmpty(this.state.user)
   navigateToLoc = oldLoc => () => {
@@ -162,13 +162,13 @@ export class App extends React.Component {
   correspond to the database */
   setDB = db => { 
     const furtherUpdates = () => {
-      postRequest('/snap/api/dataSummary', {searchDB: db.id}, this.processSummaryResponse);
+      postRequest(getUrl('api/dataSummary'), {searchDB: db.id}, this.processSummaryResponse);
     }
     const stateUpdater = tournaments => {
       const data = {db: db.id, tournamentData: tournaments.data};
       this.setState(data, furtherUpdates);
     }
-    postRequest('/snap/api/tournaments', {searchDB: db.id}, stateUpdater);
+    postRequest(getUrl('api/tournaments'), {searchDB: db.id}, stateUpdater);
   }
   processTournamentData = (data) => {
     this.setState({'tournamentData': data.data});
@@ -212,7 +212,7 @@ export class App extends React.Component {
     
     return (
       <ThemeContext.Provider value={this.contextData()}>
-        <Menu userCallback={ this.updateUser } user= { this.state.user }/>
+        <Menu userCallback={ this.updateUser } user= { this.state.user } showUserElements={this.props.features.showUsers}/>
         <Grid fluid>
           <Row>
             { nav } 
@@ -233,7 +233,7 @@ export class App extends React.Component {
 }
 
 App.defaultProps = {
-  getDatabaseData: () => axios.get('/snap/api/databases')
+  getDatabaseData: () => axios.get(getUrl('api/databases'))
 }
 // App.contextTypes = {
 //   router: React.PropTypes.function.isRequired

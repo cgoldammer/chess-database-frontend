@@ -1,9 +1,11 @@
 {
   "name": "chess-algos",
-  "version": "1.0.0",
+  "sideEffects": false,
+  "version": "0.0.1",
   "scripts": {
-    "build": "webpack --config webpack.config.js",
-    "start": "webpack-dev-server --config ./webpack.config.js --mode development",
+    "build_dev": "webpack --config webpack.dev.js",
+    "build_prod": "webpack --config webpack.prod.js",
+    "start": "webpack-dev-server --config ./webpack.dev.js --mode development",
     "test": "jest"
   },
   "jest": {
@@ -66,6 +68,7 @@
     "react-select": "^1.1.0",
     "react-toastr": "^2.8.2",
     "react-toggle": "^4.0.2",
-    "style-loader": "^0.13.2"
+    "style-loader": "^0.13.2",
+    "webpack-merge": "^4.1.2"
   }
 }

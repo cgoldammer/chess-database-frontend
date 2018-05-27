@@ -1,7 +1,7 @@
 import React from 'react';
 import BootstrapTable from 'react-bootstrap-table-next';
 
-import { avg, playerName } from '../helpers.jsx';
+import { avg, playerName, getUrl } from '../helpers.jsx';
 import { postRequest } from '../api.js';
 import { MoveEvalGraph } from './MoveEvalPage.jsx';
 import { Panel, Col } from 'react-bootstrap';
@@ -42,7 +42,7 @@ const getPlayerAverages = (evaluations, players) => {
 }
 
 
-class ResultByEvaluationWindow extends React.Component {
+class EvaluationWindow extends React.Component {
   constructor(props){
     super(props);
     this.state = { 
@@ -50,7 +50,7 @@ class ResultByEvaluationWindow extends React.Component {
   }
 
   render = () => {
-    const data = getPlayerAverages(this.props.resultByEvaluation, this.props.players);
+    const data = getPlayerAverages(this.props.gameEvaluations, this.props.players);
     var table = <div/>;
 
     const columns = [{dataField: 'name', text: 'Player'}
@@ -75,7 +75,7 @@ export class StatWindow extends React.Component {
   constructor(props){
     super(props);
     this.state = { 
-      resultByEvaluation: [],
+      gameEvaluations: [],
       players: [],
       moveData: []
     };
@@ -85,27 +85,27 @@ export class StatWindow extends React.Component {
   }
   loadByEvaluation = () => {
     const ids = this.props.gamesData.map(g => g.id);
-    const setResultByEvaluation = data => this.setState({resultByEvaluation: data.data});
+    const setEvaluation = data => this.setState({gameEvaluations: data.data});
     const setPlayers = data => this.setState({players: data.data});
-    postRequest('/snap/api/getResultByEvaluation', ids, setResultByEvaluation);
+    postRequest(getUrl('api/gameEvaluations'), ids, setEvaluation);
 
     const moveRequest = { 
       moveRequestDB: this.props.db
     , moveRequestTournaments: this.props.selection.tournaments
     }
 
-    postRequest('/snap/api/moveSummary', moveRequest, this.setMoveSummary);
+    postRequest(getUrl('api/moveSummary'), moveRequest, this.setMoveSummary);
     const playerRequest = { searchDB: this.props.db };
-    postRequest('/snap/api/players', playerRequest, setPlayers)
+    postRequest(getUrl('api/players'), playerRequest, setPlayers)
   }
-	componentDidMount = () => {
-		this.loadByEvaluation();
-	}
+  componentDidMount = () => {
+    this.loadByEvaluation();
+  }
 
   render = () => {
     return (
       <div>
-        <ResultByEvaluationWindow resultByEvaluation={this.state.resultByEvaluation} players={this.state.players}/>
+        <EvaluationWindow gameEvaluations={this.state.gameEvaluations} players={this.state.players}/>
         <hr/>
         <MoveEvalGraph moveData={this.state.moveData}/>
       </div>

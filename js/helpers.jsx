@@ -27,13 +27,13 @@ loginData[loginConsts.login] = {url: "login", name: "Log in"};
 
 export const loginOrRegisterUser = (loginType, email, password, callback) => {
   const data = {email: email, password: password}
-  const url = '/snap/' + loginData[loginType].url
+  const url = getUrl(loginData[loginType].url);
   axios.post(url, qs.stringify(data)).then(callback);
 };
 
 export const loginDummyUser = callback => loginOrRegisterUser(loginConsts.login, "a@a.com", "a", callback);
-export const logout = callback => axios.get('/snap/logout').then(callback);
-export const getUser = callback => axios.get('/snap/api/user').then(callback);
+export const logout = callback => axios.get(getUrl('logout')).then(callback);
+export const getUser = callback => axios.get(getUrl('api/user')).then(callback);
 
 export const exposeRouter = ComponentClass => {
   return class extends React.Component {
@@ -92,4 +92,8 @@ export const updateLoc = (loc, name, value) => {
     newLoc.showType = resultPanels.gameList;
   }
   return newLoc;
+}
+
+export const getUrl = (loc) => {
+  return '/' + BACKENDURL + '/' + loc
 }

@@ -67,15 +67,10 @@ export class Menu extends Component {
         loginWindow = this.show()
       }
       const userText = this.userIsLoggedIn() ? this.props.user.id : "Not logged in";
-      menu = (
-        <Navbar inverse collapseOnSelect>
-          <Navbar.Header>
-            <Navbar.Brand>
-              {appName}
-            </Navbar.Brand>
+      var allUserElements = null;
+      if (this.props.showUserElements){
+        allUserElements = (<Navbar.Collapse>
             <Navbar.Toggle />
-          </Navbar.Header>
-          <Navbar.Collapse>
             <Navbar.Text>
               <span>{userText}</span>
             </Navbar.Text>
@@ -87,8 +82,18 @@ export class Menu extends Component {
                 Register
               </NavItem>
             </Nav>
+            { loginWindow }
           </Navbar.Collapse>
-          { loginWindow }
+        )
+      }
+      menu = (
+        <Navbar inverse collapseOnSelect>
+          <Navbar.Header>
+            <Navbar.Brand>
+              {appName}
+            </Navbar.Brand>
+          </Navbar.Header>
+          { allUserElements }
         </Navbar>
       )
     }

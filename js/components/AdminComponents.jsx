@@ -4,6 +4,8 @@ import { axios, postRequest } from '../api.js';
 import qs from "qs";
 import ReactModal from 'react-modal';
 
+import { getUrl } from '../helpers.jsx'
+
 export class EvaluationWindow extends Component {
   constructor(props) {
     super(props);
@@ -18,7 +20,7 @@ export class EvaluationWindow extends Component {
     const data = { evaluationDB: this.props.db, evaluationOverwrite: this.state.overwrite };
     console.log("Subbmitting data");
     console.log(data);
-    postRequest('/snap/api/addEvaluations', data, callback)
+    postRequest(getUrl('api/addEvaluations'), data, callback)
   }
 
   render = () => {

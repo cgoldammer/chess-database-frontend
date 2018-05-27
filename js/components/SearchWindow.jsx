@@ -5,7 +5,7 @@ import { Panel, Grid, Row, Col, Button, DropdownButton, MenuItem, FormControl, B
 import { TournamentSelector } from './TournamentSelector.jsx';
 import { GamesTable } from './GamesTable.jsx';
 import { postRequest } from '../api.js';
-import { avg, playerName, resultPanels, contextComp, updateLoc} from '../helpers.jsx';
+import { avg, playerName, resultPanels, contextComp, updateLoc, getUrl} from '../helpers.jsx';
 import { StatWindow } from './StatWindows.jsx';
 import { Redirect } from 'react-router'
 
@@ -113,7 +113,7 @@ export class SearchWindow extends React.Component {
     return data
   }
   getGamesForSearch = () => {
-    postRequest('/snap/api/games', this.getGameSearchData(), this.processGameData);
+    postRequest(getUrl('api/games'), this.getGameSearchData(), this.processGameData);
   };
   componentDidMount = () => {
     this.setState(startingStateForSearch, this.getGamesForSearch);

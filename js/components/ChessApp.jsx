@@ -5,8 +5,8 @@ import { ButtonGroup, Panel, ListGroup, ListGroupItem, Navbar, Nav, NavItem, Nav
 import Chessdiagram from 'react-chessdiagram'; 
 import { defaultGetRows, calculateMoveNumber } from "./helpers.jsx";
 
-const lightSquareColor = '#2492FF'; // light blue
-const darkSquareColor = '#005EBB'; // dark blue
+const lightSquareColor = '#f2f2f2'
+const darkSquareColor = '#bfbfbf'
 const currentPosition =  'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'; // starting position
 const flip = false;
 const squareSize = 35;

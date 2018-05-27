@@ -5,6 +5,7 @@ import BootstrapTable from 'react-bootstrap-table-next';
 import paginationFactory from 'react-bootstrap-table2-paginator';
 import { objectIsEmpty, updateLoc } from '../helpers.jsx';
 import Media from "react-media";
+import styles from './GamesTable.css';
 
 const columns = [ {dataField: 'id', text: 'Id', hidden: true}
 , {dataField: 'white', text: 'White'}
@@ -33,7 +34,7 @@ export class GamesTable extends React.Component {
     this.props.locSetter(updateLoc(this.props.loc, "game", row));
   }
   getView = (table, board, screenIsBig) => {
-    var view = <div>HI</div>
+    var view = <div/>
     if (!screenIsBig){
       if(this.gameIsSelected()){
         view = board;
@@ -62,7 +63,7 @@ export class GamesTable extends React.Component {
     }
 
     const rowEvents = { onClick: this.onRowSelect }
-    const table = <BootstrapTable keyField="id" data={ data } rowEvents={rowEvents} columns={columns}/>
+    const table = <div className={styles.table}><BootstrapTable keyField="id" data={ data } rowEvents={rowEvents} columns={columns}/></div>
     const result = matches => this.getView(table, board, !matches);
     return <Media query="(max-width: 599px)">
           { result }

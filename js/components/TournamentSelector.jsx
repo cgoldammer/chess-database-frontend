@@ -19,7 +19,7 @@ export class TournamentSelector extends React.Component {
               options={this.props.tournamentData} 
               valueKey={'id'}
               labelKey={'name'}
-              placeholder={'pick a tournament'}
+              placeholder={'pick a tournament or multiple tournaments'}
               onChange={this.props.callback}/>
           </Col>
         </Row>

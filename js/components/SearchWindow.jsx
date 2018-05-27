@@ -24,14 +24,7 @@ export class SearchChoice extends React.Component {
   }
   render = () => {
     return (
-      <Panel>
-        <Panel.Heading>Search for games</Panel.Heading>
-        <Panel.Body>
-          <Row>
-            <TournamentSelector selected={this.props.selected} tournamentData={this.props.tournamentData} callback={this.updateTournaments}/>
-          </Row>
-        </Panel.Body>
-      </Panel>
+      <TournamentSelector selected={this.props.selected} tournamentData={this.props.tournamentData} callback={this.updateTournaments}/>
     )
   }
 }
@@ -112,6 +105,7 @@ export class SearchWindow extends React.Component {
   getGamesForSearch = () => {
     postRequest(getUrl('api/games'), this.getGameSearchData(), this.processGameData);
   };
+  components = {ResultTable: contextComp(ResultTable)}
   componentDidMount = () => {
     this.setState(startingStateForSearch, this.getGamesForSearch);
   }
@@ -120,18 +114,17 @@ export class SearchWindow extends React.Component {
   }
   hasGames = () => this.state.gamesData.length > 0
   render = () => {
-    window.s = this.state
     var resultRow = <div/>;
-    const ResultTableLoc = contextComp(ResultTable);
+    const ResultTableLoc = this.components.ResultTable;
     if (this.hasGames()){
       resultRow = <ResultTableLoc db={this.props.db} selection={this.state.selection} gamesData={this.state.gamesData} />;
     }
     return (
       <div>
-        <Row>
+        <Row style={{ marginLeft: 0, marginRight: 0 }}>
           <SearchChoice onChangeSelection={this.updateChoice} selected={this.state.selection.tournaments} tournamentData={this.props.tournamentData}/>
         </Row>
-        <Row>
+        <Row style={{ marginLeft: 0, marginRight: 0 }}>
           { resultRow }
         </Row>
       </div>

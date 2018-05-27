@@ -79,7 +79,7 @@ export const resultPanels = {
 }
 
 export const updateLoc = (loc, name, value) => {
-  const newLoc = { ...loc} 
+  var newLoc = { ...loc} 
   newLoc[name] = value;
   if (name == "db" && value != null){
     newLoc.showType = resultPanels.gameList;

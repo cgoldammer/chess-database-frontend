@@ -161,7 +161,6 @@ export class Login extends Component {
   }
 
   render() {
-    console.log("TYPE" + this.props.loginType);
     const name = loginData[this.props.loginType].name;
     return (
       

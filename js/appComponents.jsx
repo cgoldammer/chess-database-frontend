@@ -170,9 +170,6 @@ export class App extends React.Component {
     }
     postRequest(getUrl('api/tournaments'), {searchDB: db.id}, stateUpdater);
   }
-  processTournamentData = (data) => {
-    this.setState({'tournamentData': data.data});
-  }
   processSummaryResponse = (data) => {
     this.setState({'summaryData': data.data});
   }
@@ -184,7 +181,7 @@ export class App extends React.Component {
     this.setState({loc: loc}, this.navigateToLoc(oldLoc))
   }
   leaveDB = () => {
-    this.locSetter(updateLoc("db", null));
+    this.locSetter(updateLoc(this.state.loc, "db", null));
   }
   contextData = () => {
     const locSetter = this.locSetter

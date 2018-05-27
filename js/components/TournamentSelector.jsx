@@ -5,34 +5,22 @@ import Select from 'react-select';
 export class TournamentSelector extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {
-      selected: null,
-    };
   }
-  processResponse = (data) => {
-    this.setState({'moveData': data.data});
-  }
-  selectTournament = (selected) => {
-    this.setState({ selected });
-    this.props.callback(selected);
-  };
   hasData = () => this.props.tournamentData.length > 0;
-
   render = () => {
-
     return (
       <div>
         <Row>
           <Col xs={12} mdOffset={3} md={6}>
             <span>Tournament</span>
             <Select 
-              value={this.state.selected}
+              value={this.props.selected}
+              multi={true}
               options={this.props.tournamentData} 
               valueKey={'id'}
               labelKey={'name'}
-              simpleValue={true}
               placeholder={'pick a tournament'}
-              onChange={this.selectTournament}/>
+              onChange={this.props.callback}/>
           </Col>
         </Row>
       </div> 

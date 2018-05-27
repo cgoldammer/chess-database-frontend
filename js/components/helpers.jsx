@@ -2,7 +2,6 @@
 export const defaultGetRows = (movetext, newlineChar) => { // eslint-diable-line no-unused-vars
   newlineChar;
   let ms = movetext;
-  // console.log('movetext ==', movetext);
   if (!ms) {
     return [];
   }

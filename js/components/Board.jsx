@@ -6,7 +6,6 @@ export class Board extends React.Component {
   fakePgn = () => '[Event "X"]\n[Result "0-1"]\n\n' + this.props.pgn
     
   render() {
-    console.log('rendering board');
     return (
       <div>
         <Chessdiagram 

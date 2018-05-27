@@ -19,9 +19,9 @@ devExports = {
     disableHostCheck: true,
     watchOptions: { aggregateTimeout: 300, poll: 1000 },
     proxy: {
-      "/snap": {
+      "/snap_dev": {
         target: "http://0.0.0.0:8000",
-        pathRewrite: {"^/snap": ""}
+        pathRewrite: {"^/snap_dev": ""}
       }
     },
     headers: {

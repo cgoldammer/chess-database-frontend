@@ -18,8 +18,6 @@ export class EvaluationWindow extends Component {
   submit = () => {
     const callback = () => this.console.log('evaluations complete');
     const data = { evaluationDB: this.props.db, evaluationOverwrite: this.state.overwrite };
-    console.log("Subbmitting data");
-    console.log(data);
     postRequest(getUrl('api/addEvaluations'), data, callback)
   }
 

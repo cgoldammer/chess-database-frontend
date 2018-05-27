@@ -18,8 +18,8 @@ export class SearchChoice extends React.Component {
     super(props);
     this.state = { tournaments: [] }
   }
-  updateTournaments = (tournament) => {
-    const newTournaments = tournament == null ? [] : [tournament];
+  updateTournaments = (tournaments) => {
+    const newTournaments = tournaments == null ? [] : tournaments.map(t => t.id);
     const updater = () => this.props.onChangeSelection(this.state);
     this.setState({tournaments: newTournaments}, updater);
   }
@@ -29,7 +29,7 @@ export class SearchChoice extends React.Component {
         <Panel.Heading>Search for games</Panel.Heading>
         <Panel.Body>
           <Row>
-            <TournamentSelector tournamentData={this.props.tournamentData} callback={this.updateTournaments}/>
+            <TournamentSelector selected={this.state.tournaments} tournamentData={this.props.tournamentData} callback={this.updateTournaments}/>
           </Row>
         </Panel.Body>
       </Panel>
@@ -120,11 +120,6 @@ export class SearchWindow extends React.Component {
   }
   updateChoice = ( selection ) => { 
     this.setState({selection: selection}, this.getGamesForSearch);
-  }
-  shouldComponentUpdate = (nextProps, nextState) => {
-    const gamesDataChanged = this.state.gamesData.length != nextState.gamesData.length;
-    const hasChanged = gamesDataChanged;
-    return hasChanged;
   }
   hasGames = () => this.state.gamesData.length > 0
   render = () => {

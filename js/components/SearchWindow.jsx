@@ -16,12 +16,11 @@ const defaultSearch = { tournaments:[] };
 export class SearchChoice extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { tournaments: [] }
   }
   updateTournaments = (tournaments) => {
     const newTournaments = tournaments == null ? [] : tournaments.map(t => t.id);
-    const updater = () => this.props.onChangeSelection(this.state);
-    this.setState({tournaments: newTournaments}, updater);
+    const newState = {tournaments: newTournaments}
+    const updater = this.props.onChangeSelection(newState);
   }
   render = () => {
     return (
@@ -29,7 +28,7 @@ export class SearchChoice extends React.Component {
         <Panel.Heading>Search for games</Panel.Heading>
         <Panel.Body>
           <Row>
-            <TournamentSelector selected={this.state.tournaments} tournamentData={this.props.tournamentData} callback={this.updateTournaments}/>
+            <TournamentSelector selected={this.props.selected} tournamentData={this.props.tournamentData} callback={this.updateTournaments}/>
           </Row>
         </Panel.Body>
       </Panel>
@@ -98,9 +97,7 @@ export class SearchWindow extends React.Component {
   }
   getSelectedTournaments = () => {
     const selected = this.state.selection.tournaments;
-    const all = this.props.tournamentData;
-    const ids = all.map(data => data.id);
-    return selected.length == 0 ? ids : selected
+    return selected;
   }
   processGameData = (data) => {
     this.setState({'gamesData': data.data.map(cleanGameData)});
@@ -118,11 +115,12 @@ export class SearchWindow extends React.Component {
   componentDidMount = () => {
     this.setState(startingStateForSearch, this.getGamesForSearch);
   }
-  updateChoice = ( selection ) => { 
+  updateChoice = selection => { 
     this.setState({selection: selection}, this.getGamesForSearch);
   }
   hasGames = () => this.state.gamesData.length > 0
   render = () => {
+    window.s = this.state
     var resultRow = <div/>;
     const ResultTableLoc = contextComp(ResultTable);
     if (this.hasGames()){
@@ -131,7 +129,7 @@ export class SearchWindow extends React.Component {
     return (
       <div>
         <Row>
-          <SearchChoice onChangeSelection={this.updateChoice} tournamentData={this.props.tournamentData}/>
+          <SearchChoice onChangeSelection={this.updateChoice} selected={this.state.selection.tournaments} tournamentData={this.props.tournamentData}/>
         </Row>
         <Row>
           { resultRow }

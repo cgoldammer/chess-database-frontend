@@ -126,7 +126,7 @@ export class App extends React.Component {
     , Navigator: contextComp(BreadcrumbNavigator)
   }
   displayDatabases = (data) => {
-    this.setState({dbData: data.data}); //, () => this.setDB(this.state.dbData[0], true));
+    this.setState({dbData: data.data});
   }
   updateUser = (user) => {
     this.setState({user: user.data}, this.updateDatabases);
@@ -166,6 +166,8 @@ export class App extends React.Component {
     }
     const stateUpdater = tournaments => {
       const data = {db: db.id, tournamentData: tournaments.data};
+      console.log("updating db and tournaments");
+      console.log(data);
       this.setState(data, furtherUpdates);
     }
     postRequest(getUrl('api/tournaments'), {searchDB: db.id}, stateUpdater);
@@ -312,7 +314,7 @@ class AppForDB extends React.Component {
     return Object.keys(this.props.summaryData).length > 0;
   }
   render = () => {
-    const search = <SearchWindow db={this.props.db} tournamentData={this.props.tournamentData}/>
+    const search = <SearchWindow key={this.props.db} db={this.props.db} tournamentData={this.props.tournamentData}/>
     var summary = <div/>
     if (this.hasSummary()){
       var summary = <AppSummary data={this.props.summaryData}/>

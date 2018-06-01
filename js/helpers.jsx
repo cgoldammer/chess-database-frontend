@@ -76,6 +76,7 @@ export const contextComp = Component => {
 export const resultPanels = {
   gameList: "Games"
 , statistics: "Statistics"
+, blunders: "Blunders"
 }
 
 export const updateLoc = (loc, name, value) => {

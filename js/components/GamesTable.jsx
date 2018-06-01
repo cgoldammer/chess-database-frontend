@@ -10,6 +10,7 @@ import styles from './GamesTable.css';
 const columns = [ {dataField: 'id', text: 'Id', hidden: true}
 , {dataField: 'white', text: 'White'}
 , {dataField: 'black', text: 'Black'}
+, {dataField: 'result', text: 'Result'}
 , {dataField: 'tournament', text: 'Tournament'}
 , {dataField: 'date', text: 'Date'}];
 
@@ -56,16 +57,16 @@ export class GamesTable extends React.Component {
     return view
   }
   render() {
-    const data = this.props.gamesData.slice(0, 10);
+    const data = this.props.gamesData;
     var board = <div/>;
     if (this.gameIsSelected()){
       board = <ChessApp pgn={this.props.loc.game.pgn}/>;
     }
 
     const rowEvents = { onClick: this.onRowSelect }
-    const table = <div className={styles.table}><BootstrapTable keyField="id" data={ data } rowEvents={rowEvents} columns={columns}/></div>
+    const table = <div className={styles.table}><BootstrapTable keyField="id" data={ data } rowEvents={rowEvents} columns={columns} pagination={ paginationFactory() }/></div>
     const result = matches => this.getView(table, board, !matches);
-    return <Media query="(max-width: 599px)">
+    return <Media query="(max-width: 992px)">
           { result }
         </Media>
   }

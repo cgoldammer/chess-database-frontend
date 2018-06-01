@@ -30,11 +30,12 @@ const getPlayerAverages = (evaluations, players) => {
     const combineWithNumber = (av, num) => "" + av + " (" + num + " game" + (num > 1 ? "s" : "") + ")";
 
     const data = { 
-      playerId: playerId,
-      name: playerName(player),
-      avgEval: isNaN(avgEval) ? "" : combineWithNumber(avgEval, gameEvals.length),
-      avgWinEval: isNaN(avgWinEval) ? "" : combineWithNumber(avgWinEval, wins.length),
-      avgLossEval: isNaN(avgLossEval) ? "" : combineWithNumber(avgLossEval, losses.length)
+      playerId: playerId
+    , name: playerName(player)
+    ,	number: gameEvals.length
+    , avgEval: isNaN(avgEval) ? "" : avgEval
+    , avgWinEval: isNaN(avgWinEval) ? "" : combineWithNumber(avgWinEval, wins.length)
+    , avgLossEval: isNaN(avgLossEval) ? "" : combineWithNumber(avgLossEval, losses.length)
     }
     return data
   }
@@ -54,12 +55,15 @@ class EvaluationWindow extends React.Component {
     var table = <div/>;
 
     const columns = [{dataField: 'name', text: 'Player'}
+    , {dataField: 'number', text: 'Number of games', sort: true}
     , {dataField: 'avgEval', text: 'Average CP Loss'}
     , {dataField: 'avgWinEval', text: 'Average CP Loss for Wins'}
     , {dataField: 'avgLossEval', text: 'Average CP Loss for Losses'}];
 
+    const sort = [{dataField: "number", order:"desc"}];
+
     if (data.length > 0){
-      table = <BootstrapTable keyField="name" data={ data } columns={columns}/>;
+      table = <BootstrapTable defaultSorted={sort} keyField="name" data={ data } columns={columns}/>;
     }
     return (
       <div>

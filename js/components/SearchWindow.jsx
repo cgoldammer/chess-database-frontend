@@ -1,13 +1,15 @@
 import React from 'react';
 
 import { Panel, Grid, Row, Col, Button, DropdownButton, MenuItem, FormControl, Breadcrumb, Modal, Tabs, Tab } from 'react-bootstrap';
+import { Redirect } from 'react-router'
 
 import { TournamentSelector } from './TournamentSelector.jsx';
 import { GamesTable } from './GamesTable.jsx';
+import { StatWindow } from './StatWindows.jsx';
+import { BlunderWindow } from './BlunderWindow.jsx';
 import { postRequest } from '../api.js';
 import { avg, playerName, resultPanels, contextComp, updateLoc, getUrl} from '../helpers.jsx';
-import { StatWindow } from './StatWindows.jsx';
-import { Redirect } from 'react-router'
+
 
 
 const defaultSearch = { tournaments:[] };
@@ -29,6 +31,8 @@ export class SearchChoice extends React.Component {
   }
 }
 
+const gameResult = resultInt => resultInt == -1 ? "0-1" : resultInt == 0 ? "1/2-1/2" : "1-0";
+
 const cleanGameData = (data) => {
   const getByAttribute = type => data => {
     const results = data.filter(att => att.attribute == type)
@@ -38,18 +42,28 @@ const cleanGameData = (data) => {
     'id': data.gameDataGame.id,
     'white': playerName(data.gameDataPlayerWhite),
     'black': playerName(data.gameDataPlayerBlack),
+		'result': gameResult(data.gameDataGame.gameResult),
     'tournament': data.gameDataTournament.name,
     'pgn': data.gameDataGame.pgn,
+		
     'date': getByAttribute("Date")(data.gameDataAttributes)
   };
   return cleaned
 }
 
 
-class ResultTable extends React.Component {
+class ResultTabs extends React.Component {
   constructor(props){
     super(props);
+		this.state = {
+			players: []
+		}
   }
+	setPlayers = data => this.setState({players: data.data});
+	componentDidMount = () => {
+    const playerRequest = { searchDB: this.props.db };
+    postRequest(getUrl('api/players'), playerRequest, this.setPlayers)
+	}
   setPanel = key => {
     const base = window.location.pathname;
     const newUrl = base + "/" + key;
@@ -63,17 +77,26 @@ class ResultTable extends React.Component {
       gamesTable = <GamesTableLoc gamesData={this.props.gamesData}/>
     }
 
-    return (
-      <Tabs activeKey={this.props.loc.showType} onSelect={this.setPanel} id="db-tabs">
-        <Tab eventKey={ resultPanels.gameList } title={ resultPanels.gameList }>
-          { gamesTable }
-        </Tab>
-        <Tab eventKey={ resultPanels.statistics } title={ resultPanels.statistics }>
-          <StatWindow db={this.props.db} selection={this.props.selection} gamesData={this.props.gamesData}/>
-        </Tab>
-      </Tabs>
-    )
+		const showTabs = this.state.players.length > 0
+		var tabs = <div/>
+		if (showTabs){ 
+			tabs = (<Tabs activeKey={this.props.loc.showType} onSelect={this.setPanel} id="db-tabs">
+					<Tab eventKey={ resultPanels.gameList } title={ resultPanels.gameList }>
+						{ gamesTable }
+					</Tab>
+					<Tab eventKey={ resultPanels.statistics } title={ resultPanels.statistics }>
+						<StatWindow db={this.props.db} selection={this.props.selection} players={ this.state.players } gamesData={this.props.gamesData}/>
+					</Tab>
+					<Tab eventKey={ resultPanels.blunders } title={ resultPanels.blunders }>
+						<BlunderWindow players={ this.state.players } gamesData={ this.props.gamesData } db={ this.props.db }/>
+					</Tab>
+				</Tabs>)
+		}
+    return tabs
   }
+		setMoveSummary = data => {
+			this.setState({moveData: data.data});
+		}
 }
 
 const startingStateForSearch = {
@@ -105,7 +128,7 @@ export class SearchWindow extends React.Component {
   getGamesForSearch = () => {
     postRequest(getUrl('api/games'), this.getGameSearchData(), this.processGameData);
   };
-  components = {ResultTable: contextComp(ResultTable)}
+  components = {ResultTabs: contextComp(ResultTabs)}
   componentDidMount = () => {
     this.setState(startingStateForSearch, this.getGamesForSearch);
   }
@@ -115,9 +138,9 @@ export class SearchWindow extends React.Component {
   hasGames = () => this.state.gamesData.length > 0
   render = () => {
     var resultRow = <div/>;
-    const ResultTableLoc = this.components.ResultTable;
+    const ResultTabsLoc = this.components.ResultTabs;
     if (this.hasGames()){
-      resultRow = <ResultTableLoc db={this.props.db} selection={this.state.selection} gamesData={this.state.gamesData} />;
+      resultRow = <ResultTabsLoc db={this.props.db} selection={this.state.selection} gamesData={this.state.gamesData} />;
     }
     return (
       <div>

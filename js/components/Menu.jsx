@@ -13,6 +13,13 @@ import styles from './Login.css';
 
 const appName = "Chess database";
 
+const loginConst = 10
+const menuConsts = {
+	login: loginConsts.login
+, register: loginConsts.register
+, about: loginConst
+}
+
 export class Menu extends Component {
   constructor(props) {
     super(props);
@@ -34,16 +41,21 @@ export class Menu extends Component {
 
   show = () => {
     const showType = this.state.typeSelected;
+		console.log("Showing modal");
 
-    const loginElement = (
-      <div>
-        <Login loginType={ showType } userCallback={ this.props.userCallback } />
-      </div>
-    );
+		var inside = null
+		if (showType == loginConsts.register || showType == loginConsts.login){
+			inside = (
+				<Login loginType={ showType } logoutCallback={this.logoutCallback} userCallback={ this.props.userCallback } unsetTypeSelected = { this.unsetTypeSelected } />
+			);
+		} else {
+			inside = <About unsetTypeSelected = { this.unsetTypeSelected } />
+		}
+		var modalElement = <div>{ inside }</div>
 
     return (
-      <Modal show={ this.state.typeSelected != '' } logoutCallback={this.logoutCallback} unsetTypeSelected={ this.unserTypeSelected }> 
-        { loginElement }
+      <Modal show={ this.state.typeSelected != '' }>
+        { modalElement }
       </Modal>
     )
   }
@@ -52,6 +64,7 @@ export class Menu extends Component {
   userIsLoggedIn = () => !objectIsEmpty(this.props.user)
 
   render = () => {
+
     var menu = <div/>
     if (this.userIsLoggedIn()) {
       menu = (
@@ -63,37 +76,50 @@ export class Menu extends Component {
     }
     else {
       var loginWindow = <div/>
-      if (this.state.typeSelected){
+      if (this.state.typeSelected > 0){
         loginWindow = this.show()
       }
       const userText = this.userIsLoggedIn() ? this.props.user.id : "Not logged in";
-      var allUserElements = null;
+			var userElement = null;
+			var nav = (<Nav pullRight>
+					<NavItem eventKey={menuConsts.about}>
+						About
+					</NavItem>
+					{ loginWindow }
+				</Nav>)
       if (this.props.showUserElements){
-        allUserElements = (<Navbar.Collapse>
-            <Navbar.Toggle />
-            <Navbar.Text>
-              <span>{userText}</span>
-            </Navbar.Text>
-            <Nav pullRight>
-              <NavItem eventKey={loginConsts.login}>
-                Log in
-              </NavItem>
-              <NavItem eventKey={loginConsts.login}>
-                Register
-              </NavItem>
-            </Nav>
-            { loginWindow }
-          </Navbar.Collapse>
-        )
+				userElement = (
+					<Navbar.Text>{userText}</Navbar.Text>
+				)
+				nav = (
+					<Nav pullRight>
+						<NavItem eventKey={menuConsts.login}>
+							Log in
+						</NavItem>
+						<NavItem eventKey={menuConsts.register}>
+							Register
+						</NavItem>
+						<NavItem eventKey={menuConsts.about}>
+							About
+						</NavItem>
+						{ loginWindow }
+					</Nav>
+				)
       }
+      var allUserElements = null;
       menu = (
-        <Navbar inverse collapseOnSelect>
+        <Navbar inverse collapseOnSelect onSelect={ this.updateTypeSelected }>
           <Navbar.Header>
             <Navbar.Brand>
               {appName}
             </Navbar.Brand>
+            <Navbar.Toggle />
           </Navbar.Header>
-          { allUserElements }
+					<Navbar.Collapse>
+						{ userElement }
+						{ nav }
+            { loginWindow }
+          </Navbar.Collapse>
         </Navbar>
       )
     }
@@ -132,6 +158,26 @@ export class UserDetail extends React.Component {
   }
 }
 
+export class About extends Component {
+  constructor(props) {
+    super(props);
+	}
+  render() {
+    return (
+      <div>
+        <Modal.Header><Modal.Title>About</Modal.Title></Modal.Header>
+        <Modal.Body>
+					<div>This is a chess database that stores games and helps you obtain useful data on those games.</div>
+					<div>For each game, the database stores the computer evaluation of all moves. This allows for new ways of understanding the games. Right now, the tool simply shows statistics that I found interesting. The goal is to expand the tool so that you can upload your own databases, and use this database to find out how to improve or how to prepare against an opponent</div>
+					<div>The database is completely free and open-source. Here is the code for the <a href="https://github.com/cgoldammer/chess-database-backend" target="_blank">backend</a> and the <a href="https://github.com/cgoldammer/chess-database-frontend" target="_blank">frontend</a></div>.
+        </Modal.Body>
+        <Modal.Footer>
+          <Button onClick={ this.props.unsetTypeSelected }>Close</Button>
+        </Modal.Footer>
+      </div>
+    );
+	}
+}
 
 export class Login extends Component {
   constructor(props) {
@@ -165,7 +211,7 @@ export class Login extends Component {
     return (
       
       <div>
-        <Modal.Header>{ name }</Modal.Header>
+        <Modal.Header><Modal.Title>{ name }</Modal.Title></Modal.Header>
         <Modal.Body>
           <form onSubmit={this.handleSubmit}>
             <FormGroup controlId="email" bsSize="large">

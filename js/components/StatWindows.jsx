@@ -90,7 +90,6 @@ export class StatWindow extends React.Component {
   loadByEvaluation = () => {
     const ids = this.props.gamesData.map(g => g.id);
     const setEvaluation = data => this.setState({gameEvaluations: data.data});
-    const setPlayers = data => this.setState({players: data.data});
     postRequest(getUrl('api/gameEvaluations'), ids, setEvaluation);
 
     const moveRequest = { 
@@ -99,8 +98,6 @@ export class StatWindow extends React.Component {
     }
 
     postRequest(getUrl('api/moveSummary'), moveRequest, this.setMoveSummary);
-    const playerRequest = { searchDB: this.props.db };
-    postRequest(getUrl('api/players'), playerRequest, setPlayers)
   }
   componentDidMount = () => {
     this.loadByEvaluation();
@@ -109,7 +106,7 @@ export class StatWindow extends React.Component {
   render = () => {
     return (
       <div>
-        <EvaluationWindow gameEvaluations={this.state.gameEvaluations} players={this.state.players}/>
+        <EvaluationWindow gameEvaluations={this.state.gameEvaluations} players={this.props.players}/>
         <hr/>
         <MoveEvalGraph moveData={this.state.moveData}/>
       </div>

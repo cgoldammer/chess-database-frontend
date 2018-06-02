@@ -70,6 +70,7 @@ class ResultTabs extends React.Component {
     const newLoc = updateLoc(this.props.loc, "showType", key);
     this.props.locSetter(newLoc);
   }
+	getGamesHash = () => JSON.stringify(this.props.gamesData.map(g => g.id))
   render = () => {
     var gamesTable = <div/>;
     if (this.props.gamesData.length > 0){
@@ -85,10 +86,10 @@ class ResultTabs extends React.Component {
 						{ gamesTable }
 					</Tab>
 					<Tab eventKey={ resultPanels.statistics } title={ resultPanels.statistics }>
-						<StatWindow db={this.props.db} selection={this.props.selection} players={ this.state.players } gamesData={this.props.gamesData}/>
+						<StatWindow key= {this.getGamesHash() } db={this.props.db} selection={this.props.selection} players={ this.state.players } gamesData={this.props.gamesData}/>
 					</Tab>
 					<Tab eventKey={ resultPanels.blunders } title={ resultPanels.blunders }>
-						<BlunderWindow players={ this.state.players } gamesData={ this.props.gamesData } db={ this.props.db }/>
+						<BlunderWindow key={ this.getGamesHash() } players={ this.state.players } gamesData={ this.props.gamesData } db={ this.props.db }/>
 					</Tab>
 				</Tabs>)
 		}
@@ -117,6 +118,7 @@ export class SearchWindow extends React.Component {
   }
   processGameData = (data) => {
     this.setState({'gamesData': data.data.map(cleanGameData)});
+    console.log("UPdated game data state")
   }
   getGameSearchData = () => {
     const data = { 
@@ -140,7 +142,8 @@ export class SearchWindow extends React.Component {
     var resultRow = <div/>;
     const ResultTabsLoc = this.components.ResultTabs;
     if (this.hasGames()){
-      resultRow = <ResultTabsLoc db={this.props.db} selection={this.state.selection} gamesData={this.state.gamesData} />;
+			console.log("Result row with " + this.state.gamesData.length + "games");
+      resultRow = <ResultTabsLoc db={ this.props.db } selection={ this.state.selection } gamesData={this.state.gamesData} />;
     }
     return (
       <div>

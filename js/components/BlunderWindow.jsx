@@ -58,6 +58,7 @@ export class BlunderPosition extends React.Component {
 
 export class BlunderWindow extends React.Component {
   constructor(props){
+    console.log("Blunders with " + props.gamesData.length + "games");
     super(props);
     this.state = { 
       players: [],

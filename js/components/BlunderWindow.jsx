@@ -1,6 +1,7 @@
 import React from 'react';
 import Chessdiagram from 'react-chessdiagram'; 
 
+import { Row, Col } from 'react-bootstrap';
 import { postRequest } from '../api.js';
 import { getUrl, playerName } from '../helpers.jsx';
 
@@ -24,7 +25,7 @@ export class BlunderPosition extends React.Component {
     const data = this.props.data.moveEvalsGame;
     const playerWhite = this.props.playersMap[data.playerWhiteId];
     const playerBlack = this.props.playersMap[data.playerBlackId];
-    return "Game: " + playerName(playerWhite) + " - " + playerName(playerBlack);
+    return playerName(playerWhite) + " - " + playerName(playerBlack);
   }
   moveString = (move, evaluation) => {
     const thisMove = this.getCurrentEval();
@@ -81,11 +82,8 @@ export class BlunderWindow extends React.Component {
   }
 
   render = () => {
-    return (
-      <div>
-        { this.state.evalData.map((data, index) => <BlunderPosition playersMap={ this.playersMap } key={ index } data={data}/>) }
-      </div>
-    )
+      const board = (data, index) => <Col key={ index } md={ 6 }><BlunderPosition playersMap={ this.playersMap } key={ index } data={data}/></Col>
+    return (<Row className="text-center">{ this.state.evalData.map(board) }</Row>)
   }
 }
 

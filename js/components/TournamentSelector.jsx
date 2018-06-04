@@ -1,6 +1,7 @@
 import React from 'react';
 import { Grid, Row, Col } from 'react-bootstrap';
 import Select from 'react-select';
+import styles from './TournamentSelector.css';
 
 export class TournamentSelector extends React.Component {
   constructor(props) {
@@ -9,7 +10,7 @@ export class TournamentSelector extends React.Component {
   hasData = () => this.props.tournamentData.length > 0;
   render = () => {
     return (
-      <div>
+      <div className={styles.tournamentSelector}>
         <Row>
           <Col xs={12} mdOffset={3} md={6}>
             <span>Tournament</span>

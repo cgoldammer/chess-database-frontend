@@ -1,5 +1,5 @@
 import React from 'react';
-import { Grid, Row, Col, Button, DropdownButton, MenuItem, FormControl, Breadcrumb, Modal } from 'react-bootstrap';
+import { Jumbotron, Grid, Row, Col, Button, DropdownButton, MenuItem, FormControl, Breadcrumb, Modal } from 'react-bootstrap';
 import Chess from 'chess.js';
 
 import { Menu } from './components/Menu.jsx';
@@ -13,6 +13,7 @@ import myData from '/home/cg/data/output/tests.json';
 import {testVar, axios} from './api.js';
 import {postRequest} from './api.js';
 import styles from './App.css';
+import statStyles from './components/StatWindows.css';
 
 var debugFunctions = {}
 window.debugFunctions = debugFunctions;
@@ -92,6 +93,14 @@ class BreadcrumbNavigator extends React.Component {
     )
   }
 }
+
+
+const IntroWindow = () => (
+	<Jumbotron>
+		<h2 className={statStyles.statTitle}>Chess analytics</h2>
+		<p>Get statistics on games based on evaluations of every single move.</p>
+	</Jumbotron>
+)
 
 export class App extends React.Component {
   constructor(props) {
@@ -188,11 +197,14 @@ export class App extends React.Component {
     return {loc: this.state.loc, locSetter: locSetter}
   }
   render = () => {
-    var setDB = <div></div>
-    var fileDiv = <div></div>
+    var setDB = null;
+    var fileDiv = null;
     if (this.state.loc.db == null){
       const DBChooserLoc = this.components.DBChooser;
-      setDB = <DBChooserLoc dbData={this.state.dbData} dbAction={this.setDB}/>;
+      setDB = (<div>
+				<IntroWindow/>
+				<DBChooserLoc dbData={this.state.dbData} dbAction={this.setDB}/>
+			</div>)
       if (this.userIsLoggedIn()){
         fileDiv = <FileReader fileContentCallback={ this.fileUploadHandler }/>
       }
@@ -211,18 +223,18 @@ export class App extends React.Component {
       <ThemeContext.Provider value={this.contextData()}>
         <Menu userCallback={ this.updateUser } user= { this.state.user } showUserElements={this.props.features.showUsers}/>
         <Grid fluid>
-          <Row>
+          <Row >
             { nav } 
           </Row>
           <Row>
             { appForDB }
           </Row>
           <Row>
-            <Col md={6} mdOffset={3}>
-              { setDB }
-              { fileDiv }
-            </Col>
-          </Row>
+						<div className={statStyles.statHeader}>
+							{ setDB }
+							{ fileDiv }
+						</div>
+					</Row>
         </Grid>
       </ThemeContext.Provider>
     )

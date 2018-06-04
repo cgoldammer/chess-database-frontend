@@ -10,6 +10,8 @@ const darkSquareColor = '#bfbfbf'
 const flip = false;
 const squareSize = 35;
 
+import styles from './StatWindows.css';
+
 const formatWithColor = (moveNumber, isWhite, mv, evaluation) => moveNumber + ". " + (isWhite ? "" : "... " ) + mv + " (" + (evaluation / 100).toFixed(2) + ")"
  
 
@@ -62,13 +64,14 @@ export class BlunderWindow extends React.Component {
   constructor(props){
     super(props);
     this.state = { 
-      players: [],
-      evalData: []
+      players: []
+    , evalData: []
+    , loaded: false
     };
   }
   loadEvals = () => {
     const ids = {moveEvalGames: this.props.gamesData.map(g => g.id)};
-    const setEvaluation = data => this.setState({evalData: data.data.slice(0, maxLength)});
+    const setEvaluation = data => this.setState({loaded: true, evalData: data.data.slice(0, maxLength)});
     postRequest(getUrl('api/moveEvaluations'), ids, setEvaluation);
   }
   componentDidMount = () => {
@@ -82,14 +85,23 @@ export class BlunderWindow extends React.Component {
   }
 
   render = () => {
+      window.evalData = this.state.evalData;
       const board = (data, index) => <Col key={ index } md={ 6 }><BlunderPosition playersMap={ this.playersMap } key={ index } data={data}/></Col>
       const subsetText = "Showing the first " + maxLength + " results. Pick a tournament to show all blunders for that tournament."
-      const subsetNote = (this.state.evalData.length == maxLength) ? <p>{subsetNote}</p> : null;
+      const allText = "Showing all " + this.state.evalData.length + " blunders that were detected."
+      const subsetNote = (<p>
+        { (this.state.evalData.length == maxLength) ? subsetText : allText }
+      </p>);
     return (
       <div>
-        <h2>Blunders</h2>
-        { subsetNote }
-        <p>The following shows positions in which the move played deviated by at least 200 centipawns from the best move. Note that this feature is experimental for now. Currently, the evaluations are done relatively quickly (100ms), so the computer will not always find the best move, and thus not all moves shown here are actually blunders.</p>
+        <div className={styles.statHeader}>
+          <h2 className={styles.statTitle}>Blunders</h2>
+          <div className={styles.statContent}>
+            { subsetNote }
+            <p>The following shows positions in which the move played deviated by at least 200 centipawns from the best move. Note that this feature is experimental for now. Currently, the evaluations are done relatively quickly (100ms), so the computer will not always find the best move, and thus not all moves shown here are actually blunders.</p>
+            <p>We are excluding positions in which the player was already winning (evaluation after the move better than +3 in favor of the player) or already losing. We are also omitting situations in which the player missed a mate. This will be improved at a later time.</p>
+          </div>
+        </div>
         <hr/>
         <Row className="text-center">
           { this.state.evalData.map(board) }

@@ -4,7 +4,9 @@ import BootstrapTable from 'react-bootstrap-table-next';
 import { avg, playerName, getUrl } from '../helpers.jsx';
 import { postRequest } from '../api.js';
 import { MoveEvalGraph } from './MoveEvalPage.jsx';
-import { Panel, Col } from 'react-bootstrap';
+import { Jumbotron, Panel, Col } from 'react-bootstrap';
+import styles from './StatWindows.css';
+
 
 /* This function returns a list that can be displayed as a table */
 const getPlayerAverages = (evaluations, players) => {
@@ -67,9 +69,14 @@ class EvaluationWindow extends React.Component {
     }
     return (
       <div>
-        <h2>Average Centipawn Loss</h2>
-        { table }
-          <p>The table provides the average centi-pawn (CP) loss per player. For instance, if a player blunders a pawn on every second move, but otherwise plays perfect moves, that player would have a CP Loss of 50.</p>
+        <div className={styles.statHeader}>
+          <h2 className={styles.statTitle}>Average Centipawn Loss</h2>
+          <div className={styles.statContent}>
+            <p>As with all statistics, one should not over-interpret the result. For instance, if a player makes more mistakes than another player, that does not necessarily imply that the player plays less well, it could also be because the player has a sharper style.</p>
+            <p>The table provides the average centi-pawn (CP) loss per player. For instance, if a player blunders a pawn on every second move, but otherwise plays perfect moves, that player would have a CP Loss of 50.</p>
+          </div>
+          { table }
+        </div>
       </div>
     )
   }

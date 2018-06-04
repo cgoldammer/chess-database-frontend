@@ -18,7 +18,7 @@ export class DBChooser extends React.Component {
   };
   hasData = () => this.props.dbData.length > 0;
 
-  getButton = (data) => <ListGroupItem key={data.id} onClick={() => this.selectDB(data)}>{data.name}</ListGroupItem>
+  getButton = (data) => <ListGroupItem key={data.id} onClick={() => this.selectDB(data)}><p style={{fontSize: "130%"}}>{data.name}</p></ListGroupItem>
 
   render = () => {
     return (

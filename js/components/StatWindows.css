@@ -1,0 +1,19 @@
+.statHeader {
+  max-width: 800px;
+  float: none;
+  margin: 0 auto;
+  padding-top: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+.statTitle {
+  text-align: center;
+}
+
+.statContent {
+  text-align: justify;
+  max-width: 500px;
+  float: none;
+  margin: 0 auto;
+}

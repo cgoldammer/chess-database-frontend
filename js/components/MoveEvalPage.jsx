@@ -1,12 +1,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { Panel, Grid, Row, Col, Button, DropdownButton, MenuItem, ButtonGroup, ToggleButton, ToggleButtonGroup } from 'react-bootstrap';
+import { Jumbotron, Panel, Grid, Row, Col, Button, DropdownButton, MenuItem, ButtonGroup, ToggleButton, ToggleButtonGroup } from 'react-bootstrap';
 
 import d3 from 'd3'
 import { LineChart } from 'react-d3-components'
 import Select from 'react-select';
 
 import {testVar, axios, postRequest} from '../api.js';
+import styles from './StatWindows.css';
 
 class Legend extends React.Component {
   constructor(props) {
@@ -15,13 +16,13 @@ class Legend extends React.Component {
   render = () => {
     const legendEntry = (selected, index) => {
       const color = this.props.colorScale(selected.index);
-      const style = {float: "left", backgroundColor: color, margin: "2px 2px", minHeight: "12px", minWidth: "50px"};
+      const style = {float: "left", backgroundColor: color, margin: "2px 2px", minHeight: "12px", minWidth: "100px"};
       return (
-        <div style={{margin: "0px 50px"}} key={index}><span style={style}></span><span>{selected.name}</span></div>
+        <div tyle={{margin: "0px 100px"}} key={index}><span style={style}></span><span>{selected.name}</span></div>
       )
     }
     return (
-      <div>
+      <div style={{marginLeft: "20px"}}>
         { this.props.selected.map(legendEntry) }
       </div>
     )
@@ -79,9 +80,7 @@ export class MoveEvalGraph extends React.Component {
       return <div/>
     } 
     else { 
-      var style = { 'marginTop': 50, 'marginBottom': 50};
-
-      const maxWidth = 600;
+      const maxWidth = 700;
       const width = Math.min(window.innerWidth - 50, maxWidth);
       const height = width;
       var chartArea = <LineChart data={this.getChartData()} width={width} height={height}
@@ -91,26 +90,24 @@ export class MoveEvalGraph extends React.Component {
         stroke={{strokeDasharray: dashFunc}}
         margin={{top: 10, bottom: 5, left: 50, right: 10}}
         xAxis={{innerTickSize: 1, zero:width/2, label: "Move"}}
-        yAxis={{label: "Average evaluation for the player"}}
       />
 
       const { selectedPlayers } = this.state;
-      const toggleButton = this.state.selectedPlayers.length > 0 ? (<Button onClick={this.toggleStdError}>Toggle standard errors</Button>) : <div/>
+      const toggleButton = this.state.selectedPlayers.length > 0 ? (<div><Button onClick={this.toggleStdError}>Toggle standard errors</Button></div>) : null;
       return (
-        <div>
-          <h2>Evaluation by Move</h2>
-          <div style={style}>
-            <Row>
-              <Col md={4}>
-                <Select multi={true} value={selectedPlayers.map(p => p.value)} onChange={this.onChange} options={options}/>
-              </Col>
-              <Col md={8}>
-                {chartArea} 
-                {legend}
-                { toggleButton }
-              </Col>
-            </Row>
+        <div className={styles.statHeader}>
+          <h2 className={styles.statTitle}>Evaluation by Move</h2>
+          <div className={styles.statContent}>
+            <p>For each game, we find out the average evaluation of their position by a certain move. In principle, this can potentially be used to detect whether a certain player tends to win their game through the opening or the endgame.</p>
           </div>
+          <Row style={{margin: "0px 0px"}}>
+            <Select multi={true} value={selectedPlayers.map(p => p.value)} onChange={this.onChange} options={options}/>
+          </Row>
+          <Row style={{margin: "0px 0px"}}>
+            {chartArea} 
+            {legend}
+            { toggleButton }
+          </Row>
         </div>
       );
     }

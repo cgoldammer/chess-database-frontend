@@ -16,7 +16,7 @@ export class EvaluationWindow extends Component {
   toggle = (selected) => this.setState({ overwrite: !this.state.overwrite });
 
   submit = () => {
-    const callback = () => this.console.log('evaluations complete');
+    const callback = () => null;
     const data = { evaluationDB: this.props.db, evaluationOverwrite: this.state.overwrite };
     postRequest(getUrl('api/addEvaluations'), data, callback)
   }

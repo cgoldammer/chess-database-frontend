@@ -11,7 +11,7 @@ const minPasswordLength = 1;
 
 import styles from './Login.css';
 
-const appName = "Chess database";
+const appName = "Chess data analytics";
 
 const loginConst = 10
 const menuConsts = {
@@ -41,8 +41,6 @@ export class Menu extends Component {
 
   show = () => {
     const showType = this.state.typeSelected;
-		console.log("Showing modal");
-
 		var inside = null
 		if (showType == loginConsts.register || showType == loginConsts.login){
 			inside = (

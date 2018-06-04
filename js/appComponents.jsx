@@ -166,8 +166,6 @@ export class App extends React.Component {
     }
     const stateUpdater = tournaments => {
       const data = {db: db.id, tournamentData: tournaments.data};
-      console.log("updating db and tournaments");
-      console.log(data);
       this.setState(data, furtherUpdates);
     }
     postRequest(getUrl('api/tournaments'), {searchDB: db.id}, stateUpdater);

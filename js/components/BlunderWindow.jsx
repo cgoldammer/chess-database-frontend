@@ -16,7 +16,6 @@ const formatWithColor = (moveNumber, isWhite, mv, evaluation) => moveNumber + ".
 export class BlunderPosition extends React.Component {
   constructor(props){
     super(props);
-    console.log(props.data);
   }
 
   getCurrentEval = () => this.props.data.moveEvalsMoveEval
@@ -57,9 +56,10 @@ export class BlunderPosition extends React.Component {
   }
 }
 
+const maxLength = 100;
+
 export class BlunderWindow extends React.Component {
   constructor(props){
-    console.log("Blunders with " + props.gamesData.length + "games");
     super(props);
     this.state = { 
       players: [],
@@ -68,7 +68,7 @@ export class BlunderWindow extends React.Component {
   }
   loadEvals = () => {
     const ids = {moveEvalGames: this.props.gamesData.map(g => g.id)};
-    const setEvaluation = data => this.setState({evalData: data.data});
+    const setEvaluation = data => this.setState({evalData: data.data.slice(0, maxLength)});
     postRequest(getUrl('api/moveEvaluations'), ids, setEvaluation);
   }
   componentDidMount = () => {
@@ -83,7 +83,19 @@ export class BlunderWindow extends React.Component {
 
   render = () => {
       const board = (data, index) => <Col key={ index } md={ 6 }><BlunderPosition playersMap={ this.playersMap } key={ index } data={data}/></Col>
-    return (<Row className="text-center">{ this.state.evalData.map(board) }</Row>)
+      const subsetText = "Showing the first " + maxLength + " results. Pick a tournament to show all blunders for that tournament."
+      const subsetNote = (this.state.evalData.length == maxLength) ? <p>{subsetNote}</p> : null;
+    return (
+      <div>
+        <h2>Blunders</h2>
+        { subsetNote }
+        <p>The following shows positions in which the move played deviated by at least 200 centipawns from the best move. Note that this feature is experimental for now. Currently, the evaluations are done relatively quickly (100ms), so the computer will not always find the best move, and thus not all moves shown here are actually blunders.</p>
+        <hr/>
+        <Row className="text-center">
+          { this.state.evalData.map(board) }
+        </Row>
+      </div>
+    )
   }
 }
 

@@ -118,7 +118,6 @@ export class SearchWindow extends React.Component {
   }
   processGameData = (data) => {
     this.setState({'gamesData': data.data.map(cleanGameData)});
-    console.log("UPdated game data state")
   }
   getGameSearchData = () => {
     const data = { 
@@ -142,7 +141,6 @@ export class SearchWindow extends React.Component {
     var resultRow = <div/>;
     const ResultTabsLoc = this.components.ResultTabs;
     if (this.hasGames()){
-			console.log("Result row with " + this.state.gamesData.length + "games");
       resultRow = <ResultTabsLoc db={ this.props.db } selection={ this.state.selection } gamesData={this.state.gamesData} />;
     }
     return (

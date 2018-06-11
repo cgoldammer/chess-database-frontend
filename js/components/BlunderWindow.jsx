@@ -2,7 +2,7 @@ import React from 'react';
 import Chessdiagram from 'react-chessdiagram'; 
 
 import { Row, Col } from 'react-bootstrap';
-import { postRequest } from '../api.js';
+import { getRequest } from '../api.js';
 import { getUrl, playerName } from '../helpers.jsx';
 
 const lightSquareColor = '#f2f2f2'
@@ -72,7 +72,7 @@ export class BlunderWindow extends React.Component {
   loadEvals = () => {
     const ids = {moveEvalGames: this.props.gamesData.map(g => g.id)};
     const setEvaluation = data => this.setState({loaded: true, evalData: data.data.slice(0, maxLength)});
-    postRequest(getUrl('api/moveEvaluations'), ids, setEvaluation);
+    getRequest(getUrl('api/moveEvaluations'), ids, setEvaluation);
   }
   componentDidMount = () => {
     this.loadEvals();

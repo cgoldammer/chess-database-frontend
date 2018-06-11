@@ -7,7 +7,7 @@ import { TournamentSelector } from './TournamentSelector.jsx';
 import { GamesTable } from './GamesTable.jsx';
 import { StatWindow } from './StatWindows.jsx';
 import { BlunderWindow } from './BlunderWindow.jsx';
-import { postRequest } from '../api.js';
+import { getRequest, postRequest } from '../api.js';
 import { avg, playerName, resultPanels, contextComp, updateLoc, getUrl} from '../helpers.jsx';
 
 
@@ -62,7 +62,7 @@ class ResultTabs extends React.Component {
 	setPlayers = data => this.setState({players: data.data});
 	componentDidMount = () => {
     const playerRequest = { searchDB: this.props.db };
-    postRequest(getUrl('api/players'), playerRequest, this.setPlayers)
+    getRequest(getUrl('api/players'), playerRequest, this.setPlayers)
 	}
   setPanel = key => {
     const base = window.location.pathname;
@@ -127,7 +127,7 @@ export class SearchWindow extends React.Component {
     return data
   }
   getGamesForSearch = () => {
-    postRequest(getUrl('api/games'), this.getGameSearchData(), this.processGameData);
+    getRequest(getUrl('api/games'), this.getGameSearchData(), this.processGameData);
   };
   components = {ResultTabs: contextComp(ResultTabs)}
   componentDidMount = () => {

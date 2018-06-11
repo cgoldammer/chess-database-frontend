@@ -57,3 +57,7 @@ export const postRequest = (url, data, callback) => {
   const opts = {'headers': headers};
   axios.post(url, data, opts).then(callback);
 }
+
+export const getRequest = (url, data, callback) => {
+	axios.get(url, {params: {data: data}}).then(callback);
+}

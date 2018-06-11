@@ -11,7 +11,7 @@ import { HOC, exposeRouter, objectIsEmpty, loginDummyUser, logout, getUser, Them
 
 import myData from '/home/cg/data/output/tests.json';
 import {testVar, axios} from './api.js';
-import {postRequest} from './api.js';
+import {getRequest, postRequest} from './api.js';
 import styles from './App.css';
 import statStyles from './components/StatWindows.css';
 
@@ -171,13 +171,13 @@ export class App extends React.Component {
   correspond to the database */
   setDB = db => { 
     const furtherUpdates = () => {
-      postRequest(getUrl('api/dataSummary'), {searchDB: db.id}, this.processSummaryResponse);
+      getRequest(getUrl('api/dataSummary'), {searchDB: db.id}, this.processSummaryResponse);
     }
     const stateUpdater = tournaments => {
       const data = {db: db.id, tournamentData: tournaments.data};
       this.setState(data, furtherUpdates);
     }
-    postRequest(getUrl('api/tournaments'), {searchDB: db.id}, stateUpdater);
+    getRequest(getUrl('api/tournaments'), {searchDB: db.id}, stateUpdater);
   }
   processSummaryResponse = (data) => {
     this.setState({'summaryData': data.data});

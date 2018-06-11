@@ -2,7 +2,7 @@ import React from 'react';
 import BootstrapTable from 'react-bootstrap-table-next';
 
 import { avg, playerName, getUrl } from '../helpers.jsx';
-import { postRequest } from '../api.js';
+import { getRequest, postRequest } from '../api.js';
 import { MoveEvalGraph } from './MoveEvalPage.jsx';
 import { Jumbotron, Panel, Col } from 'react-bootstrap';
 import styles from './StatWindows.css';
@@ -95,16 +95,16 @@ export class StatWindow extends React.Component {
     this.setState({moveData: data.data});
   }
   loadByEvaluation = () => {
-    const ids = this.props.gamesData.map(g => g.id);
+    const ids = { gameList: this.props.gamesData.map(g => g.id)};
     const setEvaluation = data => this.setState({gameEvaluations: data.data});
-    postRequest(getUrl('api/gameEvaluations'), ids, setEvaluation);
+    getRequest(getUrl('api/gameEvaluations'), ids, setEvaluation);
 
     const moveRequest = { 
       moveRequestDB: this.props.db
     , moveRequestTournaments: this.props.selection.tournaments
     }
 
-    postRequest(getUrl('api/moveSummary'), moveRequest, this.setMoveSummary);
+    getRequest(getUrl('api/moveSummary'), moveRequest, this.setMoveSummary);
   }
   componentDidMount = () => {
     this.loadByEvaluation();

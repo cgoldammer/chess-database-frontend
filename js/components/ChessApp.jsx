@@ -70,7 +70,6 @@ export class ChessApp extends React.Component {
     super(props);
     this.state = { startMove: 0 };
     this.moves = defaultGetRows(props.game.pgn);
-		console.log(props);
   }
   setToEnd = () => this.setMove(this.moves.length);
   setMove = move => this.setState({startMove: move});

@@ -10,8 +10,6 @@ import { BlunderWindow } from './BlunderWindow.jsx';
 import { getRequest, postRequest } from '../api.js';
 import { avg, playerName, resultPanels, contextComp, updateLoc, getUrl} from '../helpers.jsx';
 
-
-
 const defaultSearch = { tournaments:[] };
 
 /* A search window is used to select games from the database */
@@ -44,7 +42,7 @@ const cleanGameData = (data) => {
   , 'black': playerName(data.gameDataPlayerBlack)
   , 'result': gameResult(data.gameDataGame.gameResult)
   , 'tournament': data.gameDataTournament.name
-  , 'opening': data.gameDataOpening.variationName || ""
+  , 'opening': "gameDataOpening" in data ? (data.gameDataOpening.variationName || "") : ""
   , 'pgn': data.gameDataGame.pgn
   , 'date': getByAttribute("Date")(data.gameDataAttributes)
   };

@@ -244,9 +244,6 @@ export class App extends React.Component {
 App.defaultProps = {
   getDatabaseData: () => axios.get(getUrl('api/databases'))
 }
-// App.contextTypes = {
-//   router: React.PropTypes.function.isRequired
-// }
 
 const fileReaderState = { showModal: false, file: 0, name: "" };
 

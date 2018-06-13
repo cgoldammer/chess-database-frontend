@@ -85,13 +85,16 @@ export class BlunderWindow extends React.Component {
   }
 
   render = () => {
-      window.evalData = this.state.evalData;
-      const board = (data, index) => <Col key={ index } md={ 6 }><BlunderPosition playersMap={ this.playersMap } key={ index } data={data}/></Col>
-      const subsetText = "Showing the first " + maxLength + " results. Pick a tournament to show all blunders for that tournament."
-      const allText = "Showing all " + this.state.evalData.length + " blunders that were detected."
-      const subsetNote = (<p>
-        { (this.state.evalData.length == maxLength) ? subsetText : allText }
-      </p>);
+    if (!this.state.loaded){
+      return null;
+    }
+    window.evalData = this.state.evalData;
+    const board = (data, index) => <Col key={ index } md={ 6 }><BlunderPosition playersMap={ this.playersMap } key={ index } data={data}/></Col>
+    const subsetText = "Showing the first " + maxLength + " results. Pick a tournament to show all blunders for that tournament."
+    const allText = "Showing all " + this.state.evalData.length + " blunders that were detected."
+    const subsetNote = (<p>
+      { (this.state.evalData.length == maxLength) ? subsetText : allText }
+    </p>);
     return (
       <div>
         <div className={styles.statHeader}>

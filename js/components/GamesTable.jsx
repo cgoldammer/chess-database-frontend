@@ -71,7 +71,7 @@ export class GamesTable extends React.Component {
     if (this.gameIsSelected()){
       board = (
 				<div style={{display: 'flex', justifyContent: 'center'}}>
-					<ChessApp pgn={this.props.loc.game.pgn}/>
+					<ChessApp game={this.props.loc.game}/>
 				</div>
 			);
     }

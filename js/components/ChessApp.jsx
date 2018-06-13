@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactTable from 'react-table';
 import styles from './ChessApp.css';
-import { ButtonGroup, Panel, ListGroup, ListGroupItem, Navbar, Nav, NavItem, NavDropdown, Grid, Row, Col, Button, DropdownButton, MenuItem, FormControl, Breadcrumb, Modal } from 'react-bootstrap';
+import { Table, ButtonGroup, Panel, ListGroup, ListGroupItem, Navbar, Nav, NavItem, NavDropdown, Grid, Row, Col, Button, DropdownButton, MenuItem, FormControl, Breadcrumb, Modal } from 'react-bootstrap';
 import Chessdiagram from 'react-chessdiagram'; 
 import { defaultGetRows, calculateMoveNumber } from "./helpers.jsx";
 
@@ -27,11 +27,50 @@ const cols = [
 ];
 const moveColumns = cols;
 
+class GameOverview extends React.Component {
+  constructor(props){
+    super(props);
+  }
+	render = () => {
+		const game = this.props.game;
+		const whitePlayerName = game.white;
+		const blackPlayerName = game.black;
+		const gameName = whitePlayerName + " vs. " + blackPlayerName;
+
+		return (
+			<div>
+				<h3>{ gameName }</h3>
+				<Table striped bordered condensed hover>
+					<tbody>
+						<tr>
+							<td>Tournament</td>
+							<td>{ game.tournament }</td>
+						</tr>
+						<tr>
+							<td>Opening</td>
+							<td>{ game.opening }</td>
+						</tr>
+						<tr>
+							<td>Result</td>
+							<td>{ game.result }</td>
+						</tr>
+						<tr>
+							<td>Date</td>
+							<td>{ game.date }</td>
+						</tr>
+					</tbody>
+				</Table>
+			</div>
+		)
+	}
+}
+
 export class ChessApp extends React.Component {
   constructor(props){
     super(props);
     this.state = { startMove: 0 };
-    this.moves = defaultGetRows(props.pgn);
+    this.moves = defaultGetRows(props.game.pgn);
+		console.log(props);
   }
   setToEnd = () => this.setMove(this.moves.length);
   setMove = move => this.setState({startMove: move});
@@ -66,8 +105,9 @@ export class ChessApp extends React.Component {
     const data = this.getData();
     return (
       <div>
+				<GameOverview game={ this.props.game }/>
         <div>
-          <Chessdiagram key={this.state.startMove} flip={flip} pgn={ this.props.pgn } squareSize={squareSize} lightSquareColor={lightSquareColor} darkSquareColor={darkSquareColor} startMove={this.state.startMove}/>
+          <Chessdiagram key={this.state.startMove} flip={flip} pgn={ this.props.game.pgn } squareSize={squareSize} lightSquareColor={lightSquareColor} darkSquareColor={darkSquareColor} startMove={this.state.startMove}/>
         </div>
         <div>
           <ReactTable className={styles.gameTable} pageSize={data.length} showPagination={false} data={data} columns={moveColumns} getTdProps={this.onRowClick}/>

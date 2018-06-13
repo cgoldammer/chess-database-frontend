@@ -12,7 +12,7 @@ export const avg = vals => {
   return (total / vals.length);
 }
 
-export const playerName = player => player.lastName + (player.firstName.length == 0 ? '' : ', ' + player.firstName)
+export const playerName = player => player.firstName + " " + player.lastName;
 
 /* Helper functions for logging in and out. This is extracted out into this module because we want
 to be able to call this function for debugging in addition to calling it at part of a login window */

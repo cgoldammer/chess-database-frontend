@@ -39,14 +39,14 @@ const cleanGameData = (data) => {
     return results.length > 0 ? results[0].value : ''
   }
   const cleaned = {
-    'id': data.gameDataGame.id,
-    'white': playerName(data.gameDataPlayerWhite),
-    'black': playerName(data.gameDataPlayerBlack),
-		'result': gameResult(data.gameDataGame.gameResult),
-    'tournament': data.gameDataTournament.name,
-    'pgn': data.gameDataGame.pgn,
-		
-    'date': getByAttribute("Date")(data.gameDataAttributes)
+    'id': data.gameDataGame.id
+  , 'white': playerName(data.gameDataPlayerWhite)
+  , 'black': playerName(data.gameDataPlayerBlack)
+  , 'result': gameResult(data.gameDataGame.gameResult)
+  , 'tournament': data.gameDataTournament.name
+  , 'opening': data.gameDataOpening.variationName || ""
+  , 'pgn': data.gameDataGame.pgn
+  , 'date': getByAttribute("Date")(data.gameDataAttributes)
   };
   return cleaned
 }
@@ -55,22 +55,22 @@ const cleanGameData = (data) => {
 class ResultTabs extends React.Component {
   constructor(props){
     super(props);
-		this.state = {
-			players: []
-		}
+    this.state = {
+      players: []
+    }
   }
-	setPlayers = data => this.setState({players: data.data});
-	componentDidMount = () => {
+  setPlayers = data => this.setState({players: data.data});
+  componentDidMount = () => {
     const playerRequest = { searchDB: this.props.db };
     getRequest(getUrl('api/players'), playerRequest, this.setPlayers)
-	}
+  }
   setPanel = key => {
     const base = window.location.pathname;
     const newUrl = base + "/" + key;
     const newLoc = updateLoc(this.props.loc, "showType", key);
     this.props.locSetter(newLoc);
   }
-	getGamesHash = () => JSON.stringify(this.props.gamesData.map(g => g.id))
+  getGamesHash = () => JSON.stringify(this.props.gamesData.map(g => g.id))
   render = () => {
     var gamesTable = <div/>;
     if (this.props.gamesData.length > 0){
@@ -78,26 +78,26 @@ class ResultTabs extends React.Component {
       gamesTable = <GamesTableLoc gamesData={this.props.gamesData}/>
     }
 
-		const showTabs = this.state.players.length > 0
-		var tabs = <div/>
-		if (showTabs){ 
-			tabs = (<Tabs activeKey={this.props.loc.showType} onSelect={this.setPanel} id="db-tabs">
-					<Tab eventKey={ resultPanels.gameList } title={ resultPanels.gameList }>
-						{ gamesTable }
-					</Tab>
-					<Tab eventKey={ resultPanels.statistics } title={ resultPanels.statistics }>
-						<StatWindow key= {this.getGamesHash() } db={this.props.db} selection={this.props.selection} players={ this.state.players } gamesData={this.props.gamesData}/>
-					</Tab>
-					<Tab eventKey={ resultPanels.blunders } title={ resultPanels.blunders }>
-						<BlunderWindow key={ this.getGamesHash() } players={ this.state.players } gamesData={ this.props.gamesData } db={ this.props.db }/>
-					</Tab>
-				</Tabs>)
-		}
+    const showTabs = this.state.players.length > 0
+    var tabs = <div/>
+    if (showTabs){ 
+      tabs = (<Tabs activeKey={this.props.loc.showType} onSelect={this.setPanel} id="db-tabs">
+          <Tab eventKey={ resultPanels.gameList } title={ resultPanels.gameList }>
+            { gamesTable }
+          </Tab>
+          <Tab eventKey={ resultPanels.statistics } title={ resultPanels.statistics }>
+            <StatWindow key= {this.getGamesHash() } db={this.props.db} selection={this.props.selection} players={ this.state.players } gamesData={this.props.gamesData}/>
+          </Tab>
+          <Tab eventKey={ resultPanels.blunders } title={ resultPanels.blunders }>
+            <BlunderWindow key={ this.getGamesHash() } players={ this.state.players } gamesData={ this.props.gamesData } db={ this.props.db }/>
+          </Tab>
+        </Tabs>)
+    }
     return tabs
   }
-		setMoveSummary = data => {
-			this.setState({moveData: data.data});
-		}
+    setMoveSummary = data => {
+      this.setState({moveData: data.data});
+    }
 }
 
 const startingStateForSearch = {

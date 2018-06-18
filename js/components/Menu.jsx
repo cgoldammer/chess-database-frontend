@@ -49,37 +49,43 @@ export class Menu extends Component {
 		} else {
 			inside = <About unsetTypeSelected = { this.unsetTypeSelected } />
 		}
-		var modalElement = <div>{ inside }</div>
 
     return (
       <Modal show={ this.state.typeSelected != '' }>
-        { modalElement }
+        { inside }
       </Modal>
     )
   }
 
-  updateTypeSelected = (type) => this.setState({typeSelected: type})
+  updateTypeSelected = type => this.setState({typeSelected: type})
   userIsLoggedIn = () => !objectIsEmpty(this.props.user)
 
   render = () => {
-
-    var menu = <div/>
+		var nav = null;
+    var loginWindow = null;
+    if (this.state.typeSelected > 0){
+      loginWindow = this.show()
+    }
     if (this.userIsLoggedIn()) {
-      menu = (
-        <div>
-          <div> Hi { this.props.user.userId } </div>
-          <UserDetail logoutCallback={ this.logoutCallback }/>
-        </div>
-      )
+			nav = (
+				<div>
+					<Navbar.Text> Hi { this.props.user.userId } </Navbar.Text>
+					<Nav pullRight>
+						<NavItem eventKey={menuConsts.login}>
+							<UserDetail logoutCallback={ this.logoutCallback }/>
+						</NavItem>
+						<NavItem eventKey={menuConsts.about}>
+							About
+						</NavItem>
+					</Nav>
+					{ loginWindow }
+				</div>
+			)
     }
     else {
-      var loginWindow = <div/>
-      if (this.state.typeSelected > 0){
-        loginWindow = this.show()
-      }
       const userText = this.userIsLoggedIn() ? this.props.user.id : "Not logged in";
 			var userElement = null;
-			var nav = <div/>
+			var nav = null;
 			var nav = (<div>
 				<Nav pullRight>
 					<NavItem eventKey={menuConsts.about}>
@@ -108,22 +114,22 @@ export class Menu extends Component {
 				</div>)
       }
       var allUserElements = null;
-      menu = (
-        <Navbar inverse collapseOnSelect onSelect={ this.updateTypeSelected }>
-          <Navbar.Header>
-            <Navbar.Brand>
-              {appName}
-            </Navbar.Brand>
-            <Navbar.Toggle />
-          </Navbar.Header>
-					<Navbar.Collapse>
-						{ userElement }
-						{ nav }
-            { loginWindow }
-          </Navbar.Collapse>
-        </Navbar>
-      )
     }
+		const menu = (
+			<Navbar inverse collapseOnSelect onSelect={ this.updateTypeSelected }>
+				<Navbar.Header>
+					<Navbar.Brand>
+						{appName}
+					</Navbar.Brand>
+					<Navbar.Toggle />
+				</Navbar.Header>
+				<Navbar.Collapse>
+					{ userElement }
+					{ nav }
+					{ loginWindow }
+				</Navbar.Collapse>
+			</Navbar>
+		)
     return menu;
   }
 }
@@ -147,12 +153,12 @@ export class UserDetail extends React.Component {
           <Button onClick={ this.closePopup }>Close User Details</Button>
         </Row>
         <Row>
-          <Button onClick={ this.props.logoutCallback }> Log out </Button>;
+          <Button onClick={ this.props.logoutCallback }> Log out </Button>
         </Row>
       </div>
     return (
       <div>
-        <div className={styles.nav} onClick={this.showPopup}>Show user details</div>
+        <div onClick={this.showPopup}>Show user details</div>
         <ReactModal isOpen={ this.state.open }> { inside } </ReactModal>
       </div>
     )

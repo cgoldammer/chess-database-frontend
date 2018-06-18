@@ -1,6 +1,7 @@
 import React from 'react';
 import qs from "qs";
-import { axios } from './api.js'
+import axios from 'axios';
+import { LocationContext } from './Context.js'
 
 export const objectIsEmpty = (obj) => obj == null || Object.keys(obj).length === 0 && obj.constructor === Object 
 
@@ -28,12 +29,12 @@ loginData[loginConsts.login] = {url: "login", name: "Log in"};
 export const loginOrRegisterUser = (loginType, email, password, callback) => {
   const data = {email: email, password: password}
   const url = getUrl(loginData[loginType].url);
-  axios.post(url, qs.stringify(data)).then(callback);
+  axios.post(url, qs.stringify(data)).then(callback).catch(() => {});
 };
 
 export const loginDummyUser = callback => loginOrRegisterUser(loginConsts.login, "a@a.com", "a", callback);
-export const logout = callback => axios.get(getUrl('logout')).then(callback);
-export const getUser = callback => axios.get(getUrl('api/user')).then(callback);
+export const logout = callback => axios.get(getUrl('logout')).then(callback).catch(() => {});
+export const getUser = callback => axios.get(getUrl('api/user')).then(callback).catch(() => {});
 
 export const exposeRouter = ComponentClass => {
   return class extends React.Component {
@@ -54,22 +55,12 @@ export var HOC = CL => class extends React.Component {
   }
 }
 
-export const ThemeContext = React.createContext({
-  loc: null
-, locSetter: () => {}
-});
-
-export const defaultLoc = {
-  db: null
-, showType: null
-, game: null
-};
-
+/* A HOC that wraps a component in the contexts to obtain and set the location */
 export const contextComp = Component => {
   return props => (
-      <ThemeContext.Consumer>
-        {context => <Component {...props} loc={context.loc} locSetter={context.locSetter}/>}
-      </ThemeContext.Consumer>
+		<LocationContext.Consumer>
+			{context => <Component {...props} loc={context.loc} locSetter={context.locSetter}/>}
+		</LocationContext.Consumer>
   );
 };
 
@@ -96,5 +87,10 @@ export const updateLoc = (loc, name, value) => {
 }
 
 export const getUrl = (loc) => {
+	var BACKENDURL;
+	if (BACKENDURL == undefined){
+		BACKENDURL = 'snap_dev';
+	}
+	
   return '/' + BACKENDURL + '/' + loc
 }

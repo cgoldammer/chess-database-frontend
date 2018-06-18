@@ -79,17 +79,20 @@ export class Menu extends Component {
       }
       const userText = this.userIsLoggedIn() ? this.props.user.id : "Not logged in";
 			var userElement = null;
-			var nav = (<Nav pullRight>
+			var nav = <div/>
+			var nav = (<div>
+				<Nav pullRight>
 					<NavItem eventKey={menuConsts.about}>
 						About
 					</NavItem>
-					{ loginWindow }
-				</Nav>)
+				</Nav>
+				{ loginWindow }
+			</div>)
       if (this.props.showUserElements){
 				userElement = (
 					<Navbar.Text>{userText}</Navbar.Text>
 				)
-				nav = (
+				nav = (<div>
 					<Nav pullRight>
 						<NavItem eventKey={menuConsts.login}>
 							Log in
@@ -100,9 +103,9 @@ export class Menu extends Component {
 						<NavItem eventKey={menuConsts.about}>
 							About
 						</NavItem>
-						{ loginWindow }
 					</Nav>
-				)
+					{ loginWindow }
+				</div>)
       }
       var allUserElements = null;
       menu = (

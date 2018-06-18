@@ -7,10 +7,12 @@ import { TournamentSelector } from "./components/MoveEvalPage.jsx";
 import { DBChooser } from './components/DBChooser.jsx';
 import { EvaluationWindow } from './components/AdminComponents.jsx';
 import { SearchWindow } from './components/SearchWindow.jsx';
-import { HOC, exposeRouter, objectIsEmpty, loginDummyUser, logout, getUser, ThemeContext, contextComp, defaultLoc, resultPanels, updateLoc, getUrl} from './helpers.jsx';
+import { HOC, exposeRouter, objectIsEmpty, loginDummyUser, logout, getUser, contextComp, resultPanels, updateLoc, getUrl} from './helpers.jsx';
+import { defaultLoc, LocationContext } from './Context.js'
+import axios from 'axios';
 
 import myData from '/home/cg/data/output/tests.json';
-import {testVar, axios} from './api.js';
+import {testVar } from './api.js';
 import {getRequest, postRequest} from './api.js';
 import styles from './App.css';
 import statStyles from './components/StatWindows.css';
@@ -116,9 +118,10 @@ export class App extends React.Component {
     , locationList: []
     };
   }
-  updateDatabases = () => this.props.getDatabaseData().then(this.displayDatabases);
+  getDatabaseData = () => axios.get(getUrl('api/databases'))
+  updateDatabases = () => this.getDatabaseData().then(this.displayDatabases).catch(() => {})
   componentDidMount = () => {
-    const updateUser = () => axios.get(getUrl('api/user')).then(this.updateUser);
+    const updateUser = () => axios.get(getUrl('api/user')).then(this.updateUser).catch(() => {})
     updateUser();
     debugFunctions.login = () => loginDummyUser(updateUser);
     debugFunctions.logout = () => {
@@ -134,13 +137,13 @@ export class App extends React.Component {
     , DBChooser: contextComp(DBChooser)
     , Navigator: contextComp(BreadcrumbNavigator)
   }
-  displayDatabases = (data) => {
+  displayDatabases = data => {
     this.setState({dbData: data.data});
   }
-  updateUser = (user) => {
+  updateUser = user => {
     this.setState({user: user.data}, this.updateDatabases);
   }
-  fileUploadHandler = (data) => {
+  fileUploadHandler = data => {
     const uploadDone = () => {
       this.updateDatabases();
     }
@@ -220,7 +223,7 @@ export class App extends React.Component {
     const nav = <Navigator/>;
     
     return (
-      <ThemeContext.Provider value={this.contextData()}>
+      <LocationContext.Provider value={this.contextData()}>
         <Menu userCallback={ this.updateUser } user= { this.state.user } showUserElements={this.props.features.showUsers}/>
         <Grid fluid>
           <Row >
@@ -236,13 +239,9 @@ export class App extends React.Component {
 						</div>
 					</Row>
         </Grid>
-      </ThemeContext.Provider>
+      </LocationContext.Provider>
     )
   }
-}
-
-App.defaultProps = {
-  getDatabaseData: () => axios.get(getUrl('api/databases'))
 }
 
 const fileReaderState = { showModal: false, file: 0, name: "" };

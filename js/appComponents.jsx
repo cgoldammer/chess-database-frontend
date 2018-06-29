@@ -17,6 +17,7 @@ import {getRequest, postRequest} from './api.js';
 import styles from './App.css';
 import statStyles from './components/StatWindows.css';
 
+
 var debugFunctions = {}
 window.debugFunctions = debugFunctions;
 
@@ -99,7 +100,7 @@ class BreadcrumbNavigator extends React.Component {
 
 const IntroWindow = () => (
 	<Jumbotron>
-		<h2 className={statStyles.statTitle}>Chess analytics</h2>
+		<h2 className={statStyles.statTitle}>Chess insights</h2>
 		<p>Get statistics on games based on evaluations of every single move.</p>
 	</Jumbotron>
 )
@@ -305,9 +306,7 @@ export class FileReader extends React.Component {
   }
 }
 
-
-
-const isAdmin = false;
+var isAdmin = process.env.ISADMIN;
 
 class AppForDB extends React.Component {
   constructor(props) {

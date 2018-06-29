@@ -3,8 +3,9 @@ const webpack = require('webpack');
 const common = require('./webpack.common.js');
 
 const features = {
-  'SHOWUSERS': JSON.stringify(true)
-, 'BACKENDURL': JSON.stringify('snap_dev')
+  SHOWUSERS: true
+, BACKENDURL: 'snap_dev'
+, ISADMIN: true
 }
 
 devExports = {
@@ -31,7 +32,7 @@ devExports = {
     }
   },
   plugins: [
-    new webpack.DefinePlugin(features)
+    new webpack.EnvironmentPlugin(features)
   ]
 }
 

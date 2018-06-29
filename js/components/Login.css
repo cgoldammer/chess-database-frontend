@@ -4,6 +4,13 @@
   cursor: context-menu;
 }
 
+.description {
+  text-align: justify;
+  max-width: 500px;
+  float: none;
+  margin: 0 auto;
+  padding-bottom:10px;
+}
 
 
 

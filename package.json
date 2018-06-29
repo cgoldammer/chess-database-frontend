@@ -3,9 +3,8 @@
   "sideEffects": false,
   "version": "0.0.1",
   "scripts": {
-    "build_dev": "webpack --config webpack.dev.js",
-    "build_prod": "webpack --config webpack.prod.js",
-    "start": "webpack-dev-server --config ./webpack.dev.js --mode development",
+    "build": "webpack --config webpack.prod.js",
+    "start": "webpack-dev-server --config webpack.dev.js --mode development",
     "test": "jest"
   },
   "jest": {

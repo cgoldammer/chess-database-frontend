@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Navbar, Grid, Row, Col, Button, FormGroup, FormControl, ControlLabel, NavItem, Nav, Modal } from "react-bootstrap";
+import { HelpBlock, Label, Navbar, Grid, Row, Col, Button, FormGroup, FormControl, ControlLabel, NavItem, Nav, Modal } from "react-bootstrap";
 import { axios } from '../api.js';
 import ReactModal from 'react-modal';
 
@@ -10,14 +10,16 @@ import { objectIsEmpty, loginConsts, loginData, loginOrRegisterUser, logout, get
 const minPasswordLength = 1;
 
 import styles from './Login.css';
+import statStyles from './StatWindows.css';
 
-const appName = "Chess data analytics";
+const appName = "Chess insights";
 
 const loginConst = 10
 const menuConsts = {
-	login: loginConsts.login
-, register: loginConsts.register
-, about: loginConst
+  register: loginConsts.register
+, login: loginConsts.login
+, about: loginConsts.login + 1
+, details: loginConsts.login + 2
 }
 
 export class Menu extends Component {
@@ -42,13 +44,15 @@ export class Menu extends Component {
   show = () => {
     const showType = this.state.typeSelected;
 		var inside = null
-		if (showType == loginConsts.register || showType == loginConsts.login){
+		if (showType == menuConsts.register || showType == menuConsts.login){
 			inside = (
 				<Login loginType={ showType } logoutCallback={this.logoutCallback} userCallback={ this.props.userCallback } unsetTypeSelected = { this.unsetTypeSelected } />
 			);
+		} else if (showType == menuConsts.details){
+			inside = <UserDetail logoutCallback = { this.logoutCallback } user= { this.props.user } unsetTypeSelected = { this.unsetTypeSelected } />
 		} else {
 			inside = <About unsetTypeSelected = { this.unsetTypeSelected } />
-		}
+		} 
 
     return (
       <Modal show={ this.state.typeSelected != '' }>
@@ -69,10 +73,10 @@ export class Menu extends Component {
     if (this.userIsLoggedIn()) {
 			nav = (
 				<div>
-					<Navbar.Text> Hi { this.props.user.userId } </Navbar.Text>
+					<Navbar.Text> Welcome back! </Navbar.Text>
 					<Nav pullRight>
-						<NavItem eventKey={menuConsts.login}>
-							<UserDetail logoutCallback={ this.logoutCallback }/>
+						<NavItem eventKey={menuConsts.details} logoutCallback={ this.logoutCallback }>
+              Account details
 						</NavItem>
 						<NavItem eventKey={menuConsts.about}>
 							About
@@ -116,7 +120,7 @@ export class Menu extends Component {
       var allUserElements = null;
     }
 		const menu = (
-			<Navbar inverse collapseOnSelect onSelect={ this.updateTypeSelected }>
+			<Navbar inverse collapseOnSelect style={{ marginBottom: 0, borderRadius: 0 }} onSelect={ this.updateTypeSelected }>
 				<Navbar.Header>
 					<Navbar.Brand>
 						{appName}
@@ -147,21 +151,30 @@ export class UserDetail extends React.Component {
   closePopup = () => this.setState({open: false})
 
   render = () => {
-    const inside = 
+    const hr = <hr style={{ height: "2px", border: "0 none", color: "lightGray", backgroundColor: "lightGray" }}/>
+    const inside = (
       <div>
-        <Row>
-          <Button onClick={ this.closePopup }>Close User Details</Button>
-        </Row>
-        <Row>
-          <Button onClick={ this.props.logoutCallback }> Log out </Button>
-        </Row>
-      </div>
-    return (
-      <div>
-        <div onClick={this.showPopup}>Show user details</div>
-        <ReactModal isOpen={ this.state.open }> { inside } </ReactModal>
+        <Modal.Header><Modal.Title>About</Modal.Title></Modal.Header>
+        <Modal.Body>
+          <Row style={{margin: "0px 0px"}}>
+            <Col xs={6}>
+              <div>Email:</div>
+            </Col>
+            <Col xs={6}>
+              <div> { this.props.user.userId } </div>
+            </Col>
+          </Row>
+          { hr }
+          <Row style={{margin: "0px 0px"}}>
+            <Button onClick={ this.props.logoutCallback }> Log out </Button>
+          </Row>
+        </Modal.Body>
+        <Modal.Footer> 
+          <Button onClick={ this.props.unsetTypeSelected }>Close User Details</Button>
+        </Modal.Footer>
       </div>
     )
+    return inside
   }
 }
 
@@ -174,9 +187,20 @@ export class About extends Component {
       <div>
         <Modal.Header><Modal.Title>About</Modal.Title></Modal.Header>
         <Modal.Body>
-					<div>This is a chess database that stores games and helps you obtain useful data on those games.</div>
-					<div>For each game, the database stores the computer evaluation of all moves. This allows for new ways of understanding the games. Right now, the tool simply shows statistics that I found interesting. The goal is to expand the tool so that you can upload your own databases, and use this database to find out how to improve or how to prepare against an opponent</div>
-					<div>The database is completely free and open-source. Here is the code for the <a href="https://github.com/cgoldammer/chess-database-backend" target="_blank">backend</a> and the <a href="https://github.com/cgoldammer/chess-database-frontend" target="_blank">frontend</a></div>.
+          <div>
+            <p className={styles.description}>
+              This is a chess database that stores games and helps you obtain useful data on those games.
+            </p>
+            <p className={styles.description}>
+              For each game, the database stores the computer evaluation of all moves. Right now, the tool shows simple statistics.
+            </p>
+            <p className={styles.description}>
+              The goal is to expand the tool so that you can upload your own databases, and use this database to find out how to improve or how to prepare against an opponent
+            </p>
+            <p className={styles.description}>
+              The database is completely free and open-source. Here is the code for the <a href="https://github.com/cgoldammer/chess-database-backend" target="_blank">backend</a> and the <a href="https://github.com/cgoldammer/chess-database-frontend" target="_blank">frontend</a>
+            </p>
+          </div>
         </Modal.Body>
         <Modal.Footer>
           <Button onClick={ this.props.unsetTypeSelected }>Close</Button>
@@ -191,8 +215,9 @@ export class Login extends Component {
     super(props);
 
     this.state = {
-      email: "",
-      password: ""
+      email: ""
+    , password: ""
+    , failMessage: null
     };
   }
 
@@ -204,13 +229,21 @@ export class Login extends Component {
     this.setState({
       [event.target.id]: event.target.value
     });
+    this.setState({ failMessage: null });
   }
 
-  registerCallback = () => getUser(this.props.userCallback);
+  registerCallback = data => {
+    getUser(this.props.userCallback);
+    this.props.unsetTypeSelected();
+  }
+  failCallback = data => {
+    this.showFail(data.response.data);
+  }
+  showFail = data => this.setState({failMessage: data})
 
   handleSubmit = event => {
     event.preventDefault();
-    loginOrRegisterUser(this.props.loginType, this.state.email, this.state.password, this.registerCallback);
+    loginOrRegisterUser(this.props.loginType, this.state.email, this.state.password, this.registerCallback, this.failCallback);
   }
 
   render() {
@@ -238,6 +271,7 @@ export class Login extends Component {
                 type="password"
               />
             </FormGroup>
+            { this.state.failMessage ? <HelpBlock bsStyle="warning" style= {{ color: "red" }} > { this.state.failMessage } </HelpBlock> : null }
             <Button
               block
               bsSize="large"

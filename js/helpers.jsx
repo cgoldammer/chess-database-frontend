@@ -26,10 +26,10 @@ export var loginData = {};
 loginData[loginConsts.register] = {url: "register", name: "Register"};
 loginData[loginConsts.login] = {url: "login", name: "Log in"};
 
-export const loginOrRegisterUser = (loginType, email, password, callback) => {
+export const loginOrRegisterUser = (loginType, email, password, callback, failCallback) => {
   const data = {email: email, password: password}
   const url = getUrl(loginData[loginType].url);
-  axios.post(url, qs.stringify(data)).then(callback).catch(() => {});
+  axios.post(url, qs.stringify(data)).then(callback).catch(failCallback);
 };
 
 export const loginDummyUser = callback => loginOrRegisterUser(loginConsts.login, "a@a.com", "a", callback);
@@ -58,9 +58,9 @@ export var HOC = CL => class extends React.Component {
 /* A HOC that wraps a component in the contexts to obtain and set the location */
 export const contextComp = Component => {
   return props => (
-		<LocationContext.Consumer>
-			{context => <Component {...props} loc={context.loc} locSetter={context.locSetter}/>}
-		</LocationContext.Consumer>
+    <LocationContext.Consumer>
+      {context => <Component {...props} loc={context.loc} locSetter={context.locSetter}/>}
+    </LocationContext.Consumer>
   );
 };
 
@@ -87,10 +87,10 @@ export const updateLoc = (loc, name, value) => {
 }
 
 export const getUrl = (loc) => {
-	var BACKENDURL;
-	if (BACKENDURL == undefined){
-		BACKENDURL = 'snap_dev';
-	}
-	
+  var BACKENDURL = process.env.BACKENDURL;
+  if (BACKENDURL == undefined){
+    BACKENDURL = 'snap_prod';
+  }
+  
   return '/' + BACKENDURL + '/' + loc
 }

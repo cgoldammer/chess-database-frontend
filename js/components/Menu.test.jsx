@@ -13,7 +13,7 @@ test('If the user is logged in, the menu shows a UserDetail', () => {
     <Menu userCallback={ () => {} } user ={ dummyUser } showUserElements={ true }/>
   )
 	const wrapper = mount(menu);
-  expect(wrapper.text()).toContain("Show user details");
+  expect(wrapper.text()).toContain("Account details");
 });
 
 test('If the user is not logged in, the menu shows a button to register', () => {

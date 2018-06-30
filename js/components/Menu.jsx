@@ -75,7 +75,7 @@ export class Menu extends Component {
 				<div>
 					<Navbar.Text> Welcome back! </Navbar.Text>
 					<Nav pullRight>
-						<NavItem eventKey={menuConsts.details} logoutCallback={ this.logoutCallback }>
+						<NavItem eventKey={menuConsts.details}>
               Account details
 						</NavItem>
 						<NavItem eventKey={menuConsts.about}>

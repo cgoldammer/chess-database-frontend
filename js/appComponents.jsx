@@ -1,5 +1,5 @@
 import React from 'react';
-import { Jumbotron, Grid, Row, Col, Button, DropdownButton, MenuItem, FormControl, Breadcrumb, Modal } from 'react-bootstrap';
+import { HelpBlock, Jumbotron, Grid, Row, Col, Button, DropdownButton, MenuItem, FormControl, Breadcrumb, Modal } from 'react-bootstrap';
 import Chess from 'chess.js';
 
 import { Menu } from './components/Menu.jsx';
@@ -7,13 +7,13 @@ import { TournamentSelector } from "./components/MoveEvalPage.jsx";
 import { DBChooser } from './components/DBChooser.jsx';
 import { EvaluationWindow } from './components/AdminComponents.jsx';
 import { SearchWindow } from './components/SearchWindow.jsx';
-import { HOC, exposeRouter, objectIsEmpty, loginDummyUser, logout, getUser, contextComp, resultPanels, updateLoc, getUrl} from './helpers.jsx';
+import { HOC, exposeRouter, objectIsEmpty, loginDummyUser, logout, getUser, contextComp, resultPanels, updateLoc, getUrl, preparePlayerData} from './helpers.jsx';
 import { defaultLoc, LocationContext } from './Context.js'
 import axios from 'axios';
 
 import myData from '/home/cg/data/output/tests.json';
 import {testVar } from './api.js';
-import {getRequest, postRequest} from './api.js';
+import {getRequest, getRequestPromise, postRequest} from './api.js';
 import styles from './App.css';
 import statStyles from './components/StatWindows.css';
 
@@ -113,6 +113,7 @@ export class App extends React.Component {
       dbData: []
     , db: null
     , tournamentData: []
+    , players: []
     , summaryData: {}
     , user: {}
     , loc: defaultLoc
@@ -181,7 +182,14 @@ export class App extends React.Component {
       const data = {db: db.id, tournamentData: tournaments.data};
       this.setState(data, furtherUpdates);
     }
-    getRequest(getUrl('api/tournaments'), {searchDB: db.id}, stateUpdater);
+    const playerUpdate = players => {
+      const data = {players: players.data.map(preparePlayerData)};
+      this.setState(data);
+    }
+    const loadTournaments = () => getRequestPromise(getUrl('api/tournaments'), {searchDB: db.id})
+    const loadPlayers = () => getRequestPromise(getUrl('api/players'), {searchDB: db.id})
+
+    loadTournaments().then(stateUpdater).then(loadPlayers).then(playerUpdate).then(furtherUpdates)
   }
   processSummaryResponse = (data) => {
     this.setState({'summaryData': data.data});
@@ -218,7 +226,14 @@ export class App extends React.Component {
       const db = this.state.loc.db.id;
       const url = "/db/" + db;
       const AppForDBLoc = this.components.AppForDB;
-      appForDB = <AppForDBLoc db={db} tournamentData={ this.state.tournamentData } summaryData={ this.state.summaryData} leaveDB={this.leaveDB} user={this.state.user} router={this.routeForDB}/>;
+      appForDB = <AppForDBLoc
+        db={db}
+        tournamentData={ this.state.tournamentData }
+        players={ this.state.players }
+        summaryData={ this.state.summaryData}
+        leaveDB={this.leaveDB}
+        user={this.state.user}
+        router={this.routeForDB}/>;
     }
     const Navigator = this.components.Navigator ;
     const nav = <Navigator/>;
@@ -245,7 +260,7 @@ export class App extends React.Component {
   }
 }
 
-const fileReaderState = { showModal: false, file: 0, name: "" };
+const fileReaderState = { showModal: false, file: 0, name: "", showTooBigWarning: false };
 
 export class FileReader extends React.Component {
   constructor(props) {
@@ -260,12 +275,22 @@ export class FileReader extends React.Component {
       this.setState({ file: file });
     }
   }
+  setWarning = val => this.setState({showTooBigWarning: val})
 
   submitResultsCallback = () => {
+    const maxFileSize = 200 * 1024;
     var reader = new window.FileReader()
-    reader.onload = (e) => {
+    reader.onload = e => {
+      const result = reader.result;
       const data = { uploadName: this.state.name, uploadText: reader.result };
-      this.props.fileContentCallback(data);
+      console.log(result.length);
+      if (result.length >= maxFileSize){
+        this.setWarning(true)
+      }
+      else {
+        this.setWarning(false)
+        this.props.fileContentCallback(data);
+      }
     }
     reader.readAsText(this.state.file);
   }
@@ -284,6 +309,7 @@ export class FileReader extends React.Component {
           placeholder="Name of the database"
           onChange={(e) => this.setState({ name: e.target.value })}
         />
+        { this.state.showTooBigWarning ? <HelpBlock style= {{ color: "red" }} > Max file size: 200KB </HelpBlock> : null }
           <Button onClick={ this.submitResultsCallback } disabled={ !this.validateForm() }>Submit</Button>
         </div>)
     }
@@ -319,7 +345,7 @@ class AppForDB extends React.Component {
     return Object.keys(this.props.summaryData).length > 0;
   }
   render = () => {
-    const search = <SearchWindow key={this.props.db} db={this.props.db} tournamentData={this.props.tournamentData}/>
+    const search = <SearchWindow key={this.props.db} db={this.props.db} players={ this.props.players } tournamentData={this.props.tournamentData}/>
     var summary = <div/>
     if (this.hasSummary()){
       var summary = <AppSummary data={this.props.summaryData}/>

@@ -19,12 +19,18 @@ export class SearchChoice extends React.Component {
   }
   updateTournaments = (tournaments) => {
     const newTournaments = tournaments == null ? [] : tournaments.map(t => t.id);
-    const newState = {tournaments: newTournaments}
-    const updater = this.props.onChangeSelection(newState);
+    const updater = this.props.onChangeSelection('tournaments', newTournaments);
+  }
+  updatePlayers = (players) => {
+    const newPlayers = players == null ? [] : players.map(t => t.id);
+    const updater = this.props.onChangeSelection('players', newPlayers);
   }
   render = () => {
     return (
-      <TournamentSelector selected={this.props.selected} tournamentData={this.props.tournamentData} callback={this.updateTournaments}/>
+      <div>
+        <TournamentSelector name="Tournament" selected={this.props.selected} data={this.props.tournamentData} callback={this.updateTournaments}/>
+        <TournamentSelector name="Player" selected={this.props.selectedPlayers} data={this.props.playersData} callback={this.updatePlayers}/>
+      </div>
     )
   }
 }
@@ -42,7 +48,7 @@ const cleanGameData = (data) => {
   , 'black': playerName(data.gameDataPlayerBlack)
   , 'result': gameResult(data.gameDataGame.gameResult)
   , 'tournament': data.gameDataTournament.name
-  , 'opening': "gameDataOpening" in data ? (data.gameDataOpening.variationName || "") : ""
+  , 'opening': ("gameDataOpening" in data && data.gameDataOpening != null) ? (data.gameDataOpening.variationName || "") : ""
   , 'pgn': data.gameDataGame.pgn
   , 'date': getByAttribute("Date")(data.gameDataAttributes)
   };
@@ -68,7 +74,14 @@ class ResultTabs extends React.Component {
     const newLoc = updateLoc(this.props.loc, "showType", key);
     this.props.locSetter(newLoc);
   }
-  getGamesHash = () => JSON.stringify(this.props.gamesData.map(g => g.id))
+  /* This is a hack. Multiple windows here load their own data upon mounting. We do this because
+   * it runs faster than pulling the state up, since if we'd pull the state up, we'd have to
+   * obtain data even for windows we aren't rendering. However, this means that the component
+   * will get stale whenever the selections change. To avoid that, we pass a key
+   * to these components that's unique in whatever is selected right now, so a change
+   * in the selection rebuilds the component.
+  */
+  getGamesHash = () => JSON.stringify(this.props.gamesData.map(g => g.id)) + JSON.stringify(this.props.selection)
   render = () => {
     var gamesTable = <div/>;
     if (this.props.gamesData.length > 0){
@@ -87,7 +100,7 @@ class ResultTabs extends React.Component {
             <StatWindow key= {this.getGamesHash() } db={this.props.db} selection={this.props.selection} players={ this.state.players } gamesData={this.props.gamesData}/>
           </Tab>
           <Tab eventKey={ resultPanels.blunders } title={ resultPanels.blunders }>
-            <BlunderWindow key={ this.getGamesHash() } players={ this.state.players } gamesData={ this.props.gamesData } db={ this.props.db }/>
+            <BlunderWindow selectedPlayers={ this.props.selection.players } key={ this.getGamesHash() } players={ this.state.players } gamesData={ this.props.gamesData } db={ this.props.db }/>
           </Tab>
         </Tabs>)
     }
@@ -99,7 +112,7 @@ class ResultTabs extends React.Component {
 }
 
 const startingStateForSearch = {
-  selection: { tournaments: [] },
+  selection: { tournaments: [], players: [] },
   gamesData: []
 };
 
@@ -115,7 +128,15 @@ export class SearchWindow extends React.Component {
     return selected;
   }
   processGameData = (data) => {
-    this.setState({'gamesData': data.data.map(cleanGameData)});
+    var cleaned = data.data;
+    const selectedIds = this.state.selection.players
+    const isInSelected = value => selectedIds.indexOf(value) > -1;
+    if (selectedIds.length > 0){
+      const isSelectedPlayer = gameData => isInSelected(gameData.gameDataPlayerBlack.id) || isInSelected(gameData.gameDataPlayerWhite.id)
+      cleaned = cleaned.filter(isSelectedPlayer);
+    }
+    cleaned = cleaned.map(cleanGameData)
+    this.setState({'gamesData': cleaned});
   }
   getGameSearchData = () => {
     const data = { 
@@ -131,8 +152,10 @@ export class SearchWindow extends React.Component {
   componentDidMount = () => {
     this.setState(startingStateForSearch, this.getGamesForSearch);
   }
-  updateChoice = selection => { 
-    this.setState({selection: selection}, this.getGamesForSearch);
+  updateChoice = (index, value) => { 
+    var newValues = this.state.selection;
+    newValues[index] = value;
+    this.setState({selection: newValues}, this.getGamesForSearch);
   }
   hasGames = () => this.state.gamesData.length > 0
   render = () => {
@@ -144,7 +167,12 @@ export class SearchWindow extends React.Component {
     return (
       <div>
         <Row style={{ marginLeft: 0, marginRight: 0 }}>
-          <SearchChoice onChangeSelection={this.updateChoice} selected={this.state.selection.tournaments} tournamentData={this.props.tournamentData}/>
+          <SearchChoice
+            onChangeSelection={this.updateChoice}
+            selected={this.state.selection.tournaments}
+            playersData={this.props.players}
+            selectedPlayers={this.state.selection.players}
+            tournamentData={this.props.tournamentData}/>
         </Row>
         <Row style={{ marginLeft: 0, marginRight: 0 }}>
           { resultRow }

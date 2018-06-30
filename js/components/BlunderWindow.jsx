@@ -21,7 +21,6 @@ export class BlunderPosition extends React.Component {
   }
 
   getCurrentEval = () => this.props.data.moveEvalsMoveEval
-  getNextEval = () => this.props.data.moveEvalsMoveEvalNext
   gameString = () => {
     const data = this.props.data.moveEvalsGame;
     const playerWhite = this.props.playersMap[data.playerWhiteId];
@@ -34,17 +33,17 @@ export class BlunderPosition extends React.Component {
   }
   bestMoveString = () => {
     const thisMove = this.getCurrentEval();
-    return this.moveString(thisMove.moveBest, thisMove.eval);
+    return this.moveString(thisMove.moveBest, thisMove.evalBest);
   }
   playedMoveString = () => {
     const thisMove = this.getCurrentEval();
-    const nextMove = this.getNextEval();
-    return this.moveString(thisMove.movePlayed, nextMove.eval);
+    return this.moveString(thisMove.movePlayed, thisMove.eval);
   }
   render = () => {
     const data = this.props.data;
     const evaluation = data.moveEvalsMoveEval;
     const fen = evaluation.fen.substring(4);
+    const loss = data.moveEvalsMoveLoss;
     const board = <Chessdiagram fen={fen} flip={this.props.flip} squareSize={squareSize} lightSquareColor={lightSquareColor} darkSquareColor={darkSquareColor}/>
     return (
       <div>
@@ -69,9 +68,31 @@ export class BlunderWindow extends React.Component {
     , loaded: false
     };
   }
+  prepareData = data => {
+    var cleaned = data.data.slice(0, maxLength);
+
+    const selectedIds = this.props.selectedPlayers;
+    const isInSelected = value => selectedIds.indexOf(value) > -1;
+    if (selectedIds.length > 0){
+      console.log("SL");
+      const isSelectedPlayer = moveEval => {
+        console.log(moveEval);
+        const game = moveEval.moveEvalsGame;
+        const ev = moveEval.moveEvalsMoveEval;
+        console.log(ev);
+        console.log(game);
+        const matchForWhite = isInSelected(game.playerWhiteId) && ev.isWhite;
+        const matchForBlack = isInSelected(game.playerBlackId) && (!ev.isWhite);
+        return matchForWhite || matchForBlack;
+      }
+      cleaned = cleaned.filter(isSelectedPlayer)
+      console.log("blunders remaining: " + cleaned.length)
+    }
+    return cleaned;
+  }
   loadEvals = () => {
     const ids = {moveEvalGames: this.props.gamesData.map(g => g.id)};
-    const setEvaluation = data => this.setState({loaded: true, evalData: data.data.slice(0, maxLength)});
+    const setEvaluation = data => this.setState({loaded: true, evalData: this.prepareData(data)});
     getRequest(getUrl('api/moveEvaluations'), ids, setEvaluation);
   }
   componentDidMount = () => {

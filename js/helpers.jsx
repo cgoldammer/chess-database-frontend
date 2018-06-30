@@ -15,6 +15,12 @@ export const avg = vals => {
 
 export const playerName = player => player.firstName + " " + player.lastName;
 
+export const preparePlayerData = player => {
+  var newPlayer = Object.assign(player); 
+  newPlayer['name'] = playerName(player);
+  return newPlayer
+}
+
 /* Helper functions for logging in and out. This is extracted out into this module because we want
 to be able to call this function for debugging in addition to calling it at part of a login window */
 export const loginConsts = {

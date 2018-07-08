@@ -4,6 +4,7 @@ import BootstrapTable from 'react-bootstrap-table-next';
 import { avg, playerName, getUrl } from '../helpers.jsx';
 import { getRequest, postRequest } from '../api.js';
 import { MoveEvalGraph } from './MoveEvalPage.jsx';
+import { ResultPercentage } from './ResultPercentage.jsx';
 import { Jumbotron, Panel, Col } from 'react-bootstrap';
 import styles from './StatWindows.css';
 
@@ -86,14 +87,14 @@ export class StatWindow extends React.Component {
   constructor(props){
     super(props);
     this.state = { 
-      gameEvaluations: [],
-      players: [],
-      moveData: []
+      gameEvaluations: []
+    , players: []
+    , moveData: []
+    , resultPercentages: []
     };
   }
-  setMoveSummary = data => {
-    this.setState({moveData: data.data});
-  }
+  setMoveSummary = data => this.setState({moveData: data.data});
+  setResultPercentages = data => this.setState({resultPercentages: data.data});
   loadByEvaluation = () => {
     const ids = { gameList: this.props.gamesData.map(g => g.id)};
     const setEvaluation = data => this.setState({gameEvaluations: data.data});
@@ -103,19 +104,25 @@ export class StatWindow extends React.Component {
       moveRequestDB: this.props.db
     , moveRequestTournaments: this.props.selection.tournaments
     }
-
     getRequest(getUrl('api/moveSummary'), moveRequest, this.setMoveSummary);
+    const defaultRequest = { 
+      searchDB: this.props.db
+    }
+    getRequest(getUrl('api/resultPercentages'), defaultRequest, this.setResultPercentages);
   }
   componentDidMount = () => {
     this.loadByEvaluation();
   }
 
   render = () => {
+    const hr = <hr style={{ height: "2px", border: "0 none", color: "lightGray", backgroundColor: "lightGray" }}/>
     return (
       <div>
         <EvaluationWindow gameEvaluations={this.state.gameEvaluations} players={this.props.players}/>
-        <hr/>
+        { hr }
         <MoveEvalGraph moveData={this.state.moveData}/>
+				{ hr }
+        <ResultPercentage data={this.state.resultPercentages}/>
       </div>
       
     )

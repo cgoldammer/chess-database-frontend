@@ -6,6 +6,7 @@ const features = {
   SHOWUSERS: true
 , BACKENDURL: 'snap_dev'
 , ISADMIN: true
+, MIN_DATA_QUALITY: false
 }
 
 devExports = {

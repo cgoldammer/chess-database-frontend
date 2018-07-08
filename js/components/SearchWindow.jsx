@@ -8,7 +8,7 @@ import { GamesTable } from './GamesTable.jsx';
 import { StatWindow } from './StatWindows.jsx';
 import { BlunderWindow } from './BlunderWindow.jsx';
 import { getRequest, postRequest } from '../api.js';
-import { avg, playerName, resultPanels, contextComp, updateLoc, getUrl} from '../helpers.jsx';
+import { avg, playerNameShort, playerName, resultPanels, contextComp, updateLoc, getUrl} from '../helpers.jsx';
 
 const defaultSearch = { tournaments:[] };
 
@@ -44,6 +44,8 @@ const cleanGameData = (data) => {
   }
   const cleaned = {
     'id': data.gameDataGame.id
+  , 'whiteShort': playerNameShort(data.gameDataPlayerWhite)
+  , 'blackShort': playerNameShort(data.gameDataPlayerBlack)
   , 'white': playerName(data.gameDataPlayerWhite)
   , 'black': playerName(data.gameDataPlayerBlack)
   , 'result': gameResult(data.gameDataGame.gameResult)

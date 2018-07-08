@@ -6,28 +6,9 @@ import d3 from 'd3'
 import { LineChart } from 'react-d3-components'
 import Select from 'react-select';
 
+import { Legend } from './Legend.jsx';
 import {testVar, axios, postRequest} from '../api.js';
 import styles from './StatWindows.css';
-
-class Legend extends React.Component {
-  constructor(props) {
-    super(props);
-  }
-  render = () => {
-    const legendEntry = (selected, index) => {
-      const color = this.props.colorScale(selected.index);
-      const style = {float: "left", backgroundColor: color, margin: "2px 2px", minHeight: "12px", minWidth: "100px"};
-      return (
-        <div tyle={{margin: "0px 100px"}} key={index}><span style={style}></span><span>{selected.name}</span></div>
-      )
-    }
-    return (
-      <div style={{marginLeft: "20px"}}>
-        { this.props.selected.map(legendEntry) }
-      </div>
-    )
-  }
-}
 
 
 const isConfIntLabel = label => label.endsWith('_low') || label.endsWith('_high')
@@ -68,6 +49,9 @@ export class MoveEvalGraph extends React.Component {
     const colorScaleForChart = colorScaleWithRepeat
     const options = this.getSelectOptions();
     const legend = <Legend colorScale={colorScale} selected={this.state.selectedPlayers}/>
+    const data = this.getChartData();
+    console.log("CC");
+    console.log(data);
 
     const dashFunc = function(label){
       if (isConfIntLabel(label)){
@@ -83,7 +67,10 @@ export class MoveEvalGraph extends React.Component {
       const maxWidth = 700;
       const width = Math.min(window.innerWidth - 50, maxWidth);
       const height = width;
-      var chartArea = <LineChart data={this.getChartData()} width={width} height={height}
+      var chartArea = <LineChart 
+        data={this.getChartData()} 
+        width={width} 
+        height={height}
         xScale={d3.scale.linear().domain(extents[0]).range([0, width])}
         yScale={d3.scale.linear().domain(extents[1]).range([0, height])}
         colorScale={colorScaleForChart}

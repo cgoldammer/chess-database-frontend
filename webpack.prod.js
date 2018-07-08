@@ -6,6 +6,7 @@ const features = {
   SHOWUSERS: false
 , BACKENDURL: 'snap_prod'
 , ISADMIN: false
+, MIN_DATA_QUALITY: true
 }
 
 const prodExports = {

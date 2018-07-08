@@ -13,7 +13,11 @@ export const avg = vals => {
   return (total / vals.length);
 }
 
+const shortLengthMax = 10;
+const shortenName = name => name.length <= shortLengthMax ? name : name.substring(0, shortLengthMax - 3) + "..."
+
 export const playerName = player => player.firstName + " " + player.lastName;
+export const playerNameShort = player => shortenName(player.firstName) + " " + shortenName(player.lastName);
 
 export const preparePlayerData = player => {
   var newPlayer = Object.assign(player); 

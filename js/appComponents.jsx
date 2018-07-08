@@ -101,14 +101,14 @@ class BreadcrumbNavigator extends React.Component {
 const IntroWindow = () => (
 	<Jumbotron>
 		<h2 className={statStyles.statTitle}>Chess insights</h2>
-		<p>Get statistics on games based on evaluations of every single move.</p>
+		<p>A database with evaluations of every single move. Free and Open-Source.</p>
 	</Jumbotron>
 )
 
 export class App extends React.Component {
   constructor(props) {
     super(props);
-    document.title = "Chess statistics"
+    document.title = "Chess insights"
     this.state = {
       dbData: []
     , db: null

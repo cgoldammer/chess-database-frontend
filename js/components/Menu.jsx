@@ -1,11 +1,14 @@
 import React, { Component } from "react";
-import { HelpBlock, Label, Navbar, Grid, Row, Col, Button, FormGroup, FormControl, ControlLabel, NavItem, Nav, Modal } from "react-bootstrap";
+import ReactDOM from 'react-dom';
+import { Tooltip, Overlay, FieldGroup, HelpBlock, Label, Navbar, Grid, Row, Col, Button, FormGroup, FormControl, ControlLabel, NavItem, Nav, Modal } from "react-bootstrap";
 import { axios } from '../api.js';
 import ReactModal from 'react-modal';
 
 ReactModal.setAppElement('body');
 
-import { objectIsEmpty, loginConsts, loginData, loginOrRegisterUser, logout, getUser } from '../helpers.jsx';
+import { objectIsEmpty, loginConsts, loginData, loginOrRegisterUser, logout, getUser, showFeedback, getUrl } from '../helpers.jsx';
+import {getRequest, getRequestPromise, postRequest} from '../api.js';
+window.sh = showFeedback;
 
 const minPasswordLength = 1;
 
@@ -20,6 +23,7 @@ const menuConsts = {
 , login: loginConsts.login
 , about: loginConsts.login + 1
 , details: loginConsts.login + 2
+, feedback: loginConsts.login + 3
 }
 
 export class Menu extends Component {
@@ -48,12 +52,16 @@ export class Menu extends Component {
 			inside = (
 				<Login loginType={ showType } logoutCallback={this.logoutCallback} userCallback={ this.props.userCallback } unsetTypeSelected = { this.unsetTypeSelected } />
 			);
-		} else if (showType == menuConsts.details){
+		}
+    if (showType == menuConsts.details){
 			inside = <UserDetail logoutCallback = { this.logoutCallback } user= { this.props.user } unsetTypeSelected = { this.unsetTypeSelected } />
-		} else {
+		} 
+    if (showType == menuConsts.about) {
 			inside = <About unsetTypeSelected = { this.unsetTypeSelected } />
 		} 
-
+    if (showType == menuConsts.feedback) {
+			inside = <Feedback unsetTypeSelected = { this.unsetTypeSelected } />
+		} 
     return (
       <Modal show={ this.state.typeSelected != '' }>
         { inside }
@@ -81,6 +89,9 @@ export class Menu extends Component {
 						<NavItem eventKey={menuConsts.about}>
 							About
 						</NavItem>
+						<NavItem eventKey={menuConsts.feedback}>
+							Feedback
+						</NavItem>
 					</Nav>
 					{ loginWindow }
 				</div>
@@ -94,6 +105,9 @@ export class Menu extends Component {
 				<Nav pullRight>
 					<NavItem eventKey={menuConsts.about}>
 						About
+					</NavItem>
+					<NavItem eventKey={menuConsts.feedback}>
+						Feedback
 					</NavItem>
 				</Nav>
 				{ loginWindow }
@@ -112,6 +126,9 @@ export class Menu extends Component {
 						</NavItem>
 						<NavItem eventKey={menuConsts.about}>
 							About
+						</NavItem>
+						<NavItem eventKey={menuConsts.feedback}>
+							Feedback
 						</NavItem>
 					</Nav>
 					{ loginWindow }
@@ -178,6 +195,50 @@ export class UserDetail extends React.Component {
   }
 }
 
+export class Feedback extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+			email: ''
+		, content: null
+		, showSuccess: false}
+	}
+	setEmail = event => this.setState({email: event.target.value })
+	setContent = event => this.setState({content: event.target.value })
+	feedbackSubmitted = () => {
+		this.setState({ showSuccess: true });
+		this.props.unsetTypeSelected();
+	}
+
+	submit = () => {
+		const data = { fbText: this.state.content, fbEmail: this.state.email }
+    postRequest(getUrl('api/sendFeedback'), data, this.feedbackSubmitted);
+	}
+  render() {
+    return (
+      <div>
+        <Modal.Header><Modal.Title>Feedback</Modal.Title></Modal.Header>
+        <Modal.Body>
+          <div>
+						<FormGroup>
+							<ControlLabel>Your feedback</ControlLabel>
+							<FormControl componentClass="textarea" placeholder="Enter your feedback here" onChange={ this.setContent }/>
+						</FormGroup>
+						<FormGroup>
+							<ControlLabel>Your email (optional)</ControlLabel>
+							<FormControl type="email" onChange={ this.setEmail }/>
+						</FormGroup>
+					</div>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button bsStyle="success" onClick={ this.submit } ref={button => {this.target=button;}}>Submit</Button>
+          <Button bsStyle="warning" onClick={ this.props.unsetTypeSelected }>Cancel</Button>
+        </Modal.Footer>
+      </div>
+    );
+	}
+}
+
 export class About extends Component {
   constructor(props) {
     super(props);
@@ -198,8 +259,9 @@ export class About extends Component {
               The goal is to expand the tool so that you can upload your own databases, and use this database to find out how to improve or how to prepare against an opponent
             </p>
             <p className={styles.description}>
-              The database is completely free and open-source. Here is the code for the <a href="https://github.com/cgoldammer/chess-database-backend" target="_blank">backend</a> and the <a href="https://github.com/cgoldammer/chess-database-frontend" target="_blank">frontend</a>
+              The database is completely free and open-source. Here is the code for the <a href="https://github.com/cgoldammer/chess-database-backend" target="_blank">backend</a> and the <a href="https://github.com/cgoldammer/chess-database-frontend" target="_blank">frontend</a>.
             </p>
+            <p className={styles.description}> <a href="mailto:goldammer.christian@gmail.com?Subject=Chess%20insights" target="_top">Send me an email!</a> </p>
           </div>
         </Modal.Body>
         <Modal.Footer>

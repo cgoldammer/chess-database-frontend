@@ -10,8 +10,8 @@ import statStyles from './StatWindows.css';
 
 const columns = {
 	id: {dataField: 'id', text: 'Id', hidden: true}
-, white: {dataField: 'white', text: 'White'}
-, black: {dataField: 'black', text: 'Black'}
+, white: {dataField: 'whiteShort', text: 'White'}
+, black: {dataField: 'blackShort', text: 'Black'}
 , result: {dataField: 'result', text: 'Result'}
 , tournament: {dataField: 'tournament', text: 'Tournament'}
 , date: {dataField: 'date', text: 'Date'}
@@ -55,10 +55,10 @@ export class GamesTable extends React.Component {
     }
     else {
       view = (<Row>
-        <Col md={6}>
+        <Col xs={5}>
           { table }
         </Col>
-        <Col md={6}>
+        <Col xsOffset={2} xs={5}>
           { board }
         </Col>
       </Row>)

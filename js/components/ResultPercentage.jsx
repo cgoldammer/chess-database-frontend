@@ -41,7 +41,7 @@ export class ResultPercentage extends React.Component {
     const grouped = this.getGrouped();
     for (let group of Object.keys(grouped).sort()){
       const groupData = grouped[group];
-      const minNumberEvals = process.env.MIN_DATA_QUALITY ? 5 : 1;
+      const minNumberEvals = process.env.MIN_DATA_QUALITY ? 15 : 1;
       const getRow = v => ({x: v.rpEvaluation, y: v.rpWinPercentage + 0.5 * v.rpDrawPercentage});
       cleaned.push({ label: group, values: groupData.filter(row => row.rpNumberEvals >= minNumberEvals).map(getRow).sort((a, b) => a.x - b.x) });
     }

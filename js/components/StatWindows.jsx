@@ -121,10 +121,7 @@ export class StatWindow extends React.Component {
         <EvaluationWindow gameEvaluations={this.state.gameEvaluations} players={this.props.players}/>
         { hr }
         <MoveEvalGraph moveData={this.state.moveData}/>
-				{ hr }
-        <ResultPercentage data={this.state.resultPercentages}/>
       </div>
-      
     )
   }
 }

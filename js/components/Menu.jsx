@@ -1,7 +1,8 @@
 import React, { Component } from "react";
 import ReactDOM from 'react-dom';
 import { Tooltip, Overlay, FieldGroup, HelpBlock, Label, Navbar, Grid, Row, Col, Button, FormGroup, FormControl, ControlLabel, NavItem, Nav, Modal } from "react-bootstrap";
-import { axios } from '../api.js';
+import axios from 'axios';
+import qs from "qs";
 import ReactModal from 'react-modal';
 
 ReactModal.setAppElement('body');
@@ -10,7 +11,7 @@ import { objectIsEmpty, loginConsts, loginData, loginOrRegisterUser, logout, get
 import {getRequest, getRequestPromise, postRequest} from '../api.js';
 window.sh = showFeedback;
 
-const minPasswordLength = 1;
+const minPasswordLength = 6;
 
 import styles from './Login.css';
 import statStyles from './StatWindows.css';
@@ -280,6 +281,8 @@ export class Login extends Component {
       email: ""
     , password: ""
     , failMessage: null
+		, resetPasswordForm: false
+		, incorrectPassword: false
     };
   }
 
@@ -299,7 +302,11 @@ export class Login extends Component {
     this.props.unsetTypeSelected();
   }
   failCallback = data => {
-    this.showFail(data.response.data);
+		const text = data.response.data;
+		if (text.includes("password")){
+			this.setState({ incorrectPassword: true });
+		}
+    this.showFail(text);
   }
   showFail = data => this.setState({failMessage: data})
 
@@ -307,43 +314,82 @@ export class Login extends Component {
     event.preventDefault();
     loginOrRegisterUser(this.props.loginType, this.state.email, this.state.password, this.registerCallback, this.failCallback);
   }
+	setToResetPassword = () => this.setState({ resetPasswordForm: true });
+	sendPasswordChangeEmail = event => {
+    event.preventDefault();
+		const url = getUrl('sendPasswordResetEmail?email=' + this.state.email);
+	  axios.post(url).then(this.props.unsetTypeSelected).catch(() => {});
+	}
 
   render() {
     const name = loginData[this.props.loginType].name;
+		
+		const resetButton = !this.state.incorrectPassword ? null : <Button block bsSize="large" onClick={ this.setToResetPassword }>Forgot password?</Button>
+		var modalBody = (
+			<div>
+				<form onSubmit={this.handleSubmit}>
+					<FormGroup controlId="email" bsSize="large">
+						<ControlLabel>Email</ControlLabel>
+						<FormControl
+							autoFocus
+							type="email"
+							value={this.state.email}
+							onChange={this.handleChange}
+						/>
+					</FormGroup>
+					<FormGroup controlId="password" bsSize="large">
+						<ControlLabel>Password</ControlLabel>
+						<FormControl
+							value={this.state.password}
+							onChange={this.handleChange}
+							type="password"
+						/>
+					</FormGroup>
+					{ this.state.failMessage ? <HelpBlock bsStyle="warning" style= {{ color: "red" }} > { this.state.failMessage } </HelpBlock> : null }
+					<Button
+						block
+						bsSize="large"
+						disabled={!this.validateForm()}
+						type="submit"
+					>
+					{ name }
+					</Button>
+				</form>
+				{ resetButton }
+			</div>
+		)
+
+		if (this.state.resetPasswordForm) {
+			modalBody = (
+				<div>
+					<form onSubmit={this.sendPasswordChangeEmail}>
+						<FormGroup controlId="email" bsSize="large">
+							<ControlLabel>Email</ControlLabel>
+							<FormControl
+								autoFocus
+								type="email"
+								value={this.state.email}
+								onChange={this.handleChange}
+							/>
+						</FormGroup>
+						<Button
+							block
+							bsSize="large"
+							disabled={this.state.email.length == 0}
+							type="submit"
+						>
+						Send email to change password
+						</Button>
+					</form>
+				</div>
+			)
+		}
     return (
-      
       <div>
         <Modal.Header><Modal.Title>{ name }</Modal.Title></Modal.Header>
         <Modal.Body>
-          <form onSubmit={this.handleSubmit}>
-            <FormGroup controlId="email" bsSize="large">
-              <ControlLabel>Email</ControlLabel>
-              <FormControl
-                autoFocus
-                type="email"
-                value={this.state.email}
-                onChange={this.handleChange}
-              />
-            </FormGroup>
-            <FormGroup controlId="password" bsSize="large">
-              <ControlLabel>Password</ControlLabel>
-              <FormControl
-                value={this.state.password}
-                onChange={this.handleChange}
-                type="password"
-              />
-            </FormGroup>
-            { this.state.failMessage ? <HelpBlock bsStyle="warning" style= {{ color: "red" }} > { this.state.failMessage } </HelpBlock> : null }
-            <Button
-              block
-              bsSize="large"
-              disabled={!this.validateForm()}
-              type="submit"
-            >
-            { name }
-            </Button>
-          </form>
-        </Modal.Body>
+					{ modalBody }
+				</Modal.Body>
         <Modal.Footer>
           <Button onClick={ this.props.unsetTypeSelected }>Close</Button>
         </Modal.Footer>

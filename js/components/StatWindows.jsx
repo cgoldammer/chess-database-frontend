@@ -96,9 +96,12 @@ export class StatWindow extends React.Component {
   setMoveSummary = data => this.setState({moveData: data.data});
   setResultPercentages = data => this.setState({resultPercentages: data.data});
   loadByEvaluation = () => {
-    const ids = { gameList: this.props.gamesData.map(g => g.id)};
+		const data = { 
+			gameRequestDB: this.props.db
+		, gameRequestTournaments: this.props.selection.tournaments
+		}
     const setEvaluation = data => this.setState({gameEvaluations: data.data});
-    getRequest(getUrl('api/gameEvaluations'), ids, setEvaluation);
+    getRequest(getUrl('api/gameEvaluations'), data, setEvaluation);
 
     const moveRequest = { 
       moveRequestDB: this.props.db

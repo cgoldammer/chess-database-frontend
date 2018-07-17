@@ -71,7 +71,7 @@ export class BlunderWindow extends React.Component {
   prepareData = data => {
     var cleaned = data.data.slice(0, maxLength);
 
-    const selectedIds = this.props.selectedPlayers;
+    const selectedIds = this.props.selection.players;
     const isInSelected = value => selectedIds.indexOf(value) > -1;
     if (selectedIds.length > 0){
       console.log("SL");
@@ -91,9 +91,16 @@ export class BlunderWindow extends React.Component {
     return cleaned;
   }
   loadEvals = () => {
-    const ids = {moveEvalGames: this.props.gamesData.map(g => g.id)};
+
+		const data = { 
+			gameRequestDB: this.props.db
+		, gameRequestTournaments: this.props.selection.tournaments
+		}
     const setEvaluation = data => this.setState({loaded: true, evalData: this.prepareData(data)});
-    getRequest(getUrl('api/moveEvaluations'), ids, setEvaluation);
+		const getSlice = end => ({moveEvalGames: this.props.gamesData.slice(0, end).map(g => g.id)});
+
+    getRequest(getUrl('api/moveEvaluations'), data, setEvaluation);
+
   }
   componentDidMount = () => {
     this.loadEvals();

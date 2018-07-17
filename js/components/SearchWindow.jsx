@@ -102,7 +102,7 @@ class ResultTabs extends React.Component {
             <StatWindow key= {this.getGamesHash() } db={this.props.db} selection={this.props.selection} players={ this.state.players } gamesData={this.props.gamesData}/>
           </Tab>
           <Tab eventKey={ resultPanels.blunders } title={ resultPanels.blunders }>
-            <BlunderWindow selectedPlayers={ this.props.selection.players } key={ this.getGamesHash() } players={ this.state.players } gamesData={ this.props.gamesData } db={ this.props.db }/>
+            <BlunderWindow selection={ this.props.selection } key={ this.getGamesHash() } players={ this.state.players } gamesData={ this.props.gamesData } db={ this.props.db }/>
           </Tab>
         </Tabs>)
     }

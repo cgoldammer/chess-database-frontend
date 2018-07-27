@@ -22,7 +22,6 @@ const getColumns = screenIsSmall => {
 	return selected.map(column => columns[column]);
 }
 
-
 export class GamesTable extends React.Component {
   constructor(props) {
     super(props);
@@ -36,10 +35,9 @@ export class GamesTable extends React.Component {
       hideSelectColumn: true
     }
   }
-
-  gameIsSelected = () => this.props.loc.game != null;
+  gameIsSelected = () => this.props.selectedGame != null;
   onRowSelect = (e, row) => {
-    this.props.locSetter(updateLoc(this.props.loc, "game", row));
+    this.props.selectGame(row.id);
   }
   getView = (data, board, screenIsBig) => {
     var view = <div/>
@@ -67,11 +65,17 @@ export class GamesTable extends React.Component {
   }
   render() {
     const data = this.props.gamesData;
+    console.log("rendering game table");
+    console.log(data);
     var board = null;
+
     if (this.gameIsSelected()){
+      const game = this.props.selectedGame;
+      console.log("GAME");
+      console.log(game)
       board = (
 				<div style={{display: 'flex', justifyContent: 'center'}}>
-					<ChessApp game={this.props.loc.game}/>
+					<ChessApp game={ game }/>
 				</div>
 			);
     }

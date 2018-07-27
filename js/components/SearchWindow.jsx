@@ -9,6 +9,9 @@ import { StatWindow } from './StatWindows.jsx';
 import { BlunderWindow } from './BlunderWindow.jsx';
 import { getRequest, postRequest } from '../api.js';
 import { avg, playerNameShort, playerName, resultPanels, contextComp, updateLoc, getUrl} from '../helpers.jsx';
+import { connect, Provider } from 'react-redux'
+import { store, getSelectedGames } from '../redux.jsx';
+import { SELECT_GAME, SELECT_SHOWTYPE } from '../reducers.jsx';
 
 const defaultSearch = { tournaments:[] };
 
@@ -37,7 +40,7 @@ export class SearchChoice extends React.Component {
 
 const gameResult = resultInt => resultInt == -1 ? "0-1" : resultInt == 0 ? "1/2-1/2" : "1-0";
 
-const cleanGameData = (data) => {
+const cleanGameData = data => {
   const getByAttribute = type => data => {
     const results = data.filter(att => att.attribute == type)
     return results.length > 0 ? results[0].value : ''
@@ -57,24 +60,49 @@ const cleanGameData = (data) => {
   return cleaned
 }
 
+const getSelectedGame = (games, gameId) => {
+  console.log("FINDING GMAE ID");
+  console.log(gameId);
+  console.log(games);
+  if (gameId == null){
+    return null;
+  }
+  const matches = games.filter(g => g.id == gameId);
+  if (matches.length == 0){
+    return null;
+  }
+  console.log(matches);
+  return matches[0];
+}
+
+const selectGame = gameId => ({type: SELECT_GAME, gameId: gameId })
+
+// TODO: Need to fix performance here. Huge overhead.
+const mapStateToPropsResultTabs = (state, ownProps) => ({
+  playerData: state.playerData.data
+, selectedDB: state.selectedDB
+, selection: state.selection
+, selectedGames: getSelectedGames(state).map(cleanGameData)
+, selectedGame: getSelectedGame(getSelectedGames(state).map(cleanGameData), state.selectedGame)
+, showType: state.showType
+})
+
+const selectShowType = key => ({type: SELECT_SHOWTYPE, showType: key})
+
+const mapDispatchToPropsResultTabs = (dispatch, ownProps) => ({
+  selectGame: gameId => dispatch(selectGame(gameId))
+, selectShowType: key => dispatch(selectShowType(key))
+})
+
 
 class ResultTabs extends React.Component {
   constructor(props){
     super(props);
-    this.state = {
-      players: []
-    }
   }
   setPlayers = data => this.setState({players: data.data});
   componentDidMount = () => {
-    const playerRequest = { searchDB: this.props.db };
+    const playerRequest = { searchDB: this.props.dbSelected };
     getRequest(getUrl('api/players'), playerRequest, this.setPlayers)
-  }
-  setPanel = key => {
-    const base = window.location.pathname;
-    const newUrl = base + "/" + key;
-    const newLoc = updateLoc(this.props.loc, "showType", key);
-    this.props.locSetter(newLoc);
   }
   /* This is a hack. Multiple windows here load their own data upon mounting. We do this because
    * it runs faster than pulling the state up, since if we'd pull the state up, we'd have to
@@ -83,26 +111,36 @@ class ResultTabs extends React.Component {
    * to these components that's unique in whatever is selected right now, so a change
    * in the selection rebuilds the component.
   */
-  getGamesHash = () => JSON.stringify(this.props.gamesData.map(g => g.id)) + JSON.stringify(this.props.selection)
+  getGamesHash = () => JSON.stringify(this.props.selectedGames.map(g => g.id)) + JSON.stringify(this.props.selection)
   render = () => {
-    var gamesTable = <div/>;
-    if (this.props.gamesData.length > 0){
-      const GamesTableLoc = contextComp(GamesTable);
-      gamesTable = <GamesTableLoc gamesData={this.props.gamesData}/>
+    if (this.props.selectedGames.length == 0){
+      return null
     }
+    var gamesTable = <div/>;
+    const GamesTableLoc = contextComp(GamesTable);
+    console.log("SSS");
+    console.log(this.props.selectedGame);
+    gamesTable = 
+      <GamesTable
+        gamesData={this.props.selectedGames}
+        selectedGame={this.props.selectedGame}
+        selectGame={ this.props.selectGame }
+      />
 
-    const showTabs = this.state.players.length > 0
+    console.log("rendering tabs0 ");
+    const showTabs = this.props.playerData.length > 0
     var tabs = <div/>
     if (showTabs){ 
-      tabs = (<Tabs activeKey={this.props.loc.showType} onSelect={this.setPanel} id="db-tabs">
+      console.log("rendering tabs");
+      tabs = (<Tabs activeKey={this.props.showType} onSelect={this.props.selectShowType} id="db-tabs">
           <Tab eventKey={ resultPanels.gameList } title={ resultPanels.gameList }>
             { gamesTable }
           </Tab>
           <Tab eventKey={ resultPanels.statistics } title={ resultPanels.statistics }>
-            <StatWindow key= {this.getGamesHash() } db={this.props.db} selection={this.props.selection} players={ this.state.players } gamesData={this.props.gamesData}/>
+            <StatWindow key= {this.getGamesHash() } db={this.props.selectedDB} selection={this.props.selection} players={ this.props.playerData } gamesData={this.props.selectedGames}/>
           </Tab>
           <Tab eventKey={ resultPanels.blunders } title={ resultPanels.blunders }>
-            <BlunderWindow selection={ this.props.selection } key={ this.getGamesHash() } players={ this.state.players } gamesData={ this.props.gamesData } db={ this.props.db }/>
+            <BlunderWindow selection={ this.props.selection } key={ this.getGamesHash() } players={ this.props.playerData } gamesData={ this.props.selectedGames } db={ this.props.selectedDB }/>
           </Tab>
         </Tabs>)
     }
@@ -112,6 +150,8 @@ class ResultTabs extends React.Component {
       this.setState({moveData: data.data});
     }
 }
+
+const ResultTabsConnected = connect(mapStateToPropsResultTabs, mapDispatchToPropsResultTabs)(ResultTabs);
 
 const startingStateForSearch = {
   selection: { tournaments: [], players: [] },
@@ -129,48 +169,25 @@ export class SearchWindow extends React.Component {
     const selected = this.state.selection.tournaments;
     return selected;
   }
-  processGameData = (data) => {
-    var cleaned = data.data;
-    const selectedIds = this.state.selection.players
-    const isInSelected = value => selectedIds.indexOf(value) > -1;
-    if (selectedIds.length > 0){
-      const isSelectedPlayer = gameData => isInSelected(gameData.gameDataPlayerBlack.id) || isInSelected(gameData.gameDataPlayerWhite.id)
-      cleaned = cleaned.filter(isSelectedPlayer);
-    }
-    cleaned = cleaned.map(cleanGameData)
-    this.setState({'gamesData': cleaned});
-  }
   getGameSearchData = () => {
     const data = { 
-      gameRequestDB: this.props.db
+      gameRequestDB: this.props.selectedDB
     , gameRequestTournaments: this.getSelectedTournaments()
     };
     return data
   }
-  getGamesForSearch = () => {
-    getRequest(getUrl('api/games'), this.getGameSearchData(), this.processGameData);
-  };
-  components = {ResultTabs: contextComp(ResultTabs)}
-  componentDidMount = () => {
-    this.setState(startingStateForSearch, this.getGamesForSearch);
-  }
-  updateChoice = (index, value) => { 
-    var newValues = this.state.selection;
-    newValues[index] = value;
-    this.setState({selection: newValues}, this.getGamesForSearch);
-  }
-  hasGames = () => this.state.gamesData.length > 0
   render = () => {
     var resultRow = <div/>;
-    const ResultTabsLoc = this.components.ResultTabs;
-    if (this.hasGames()){
-      resultRow = <ResultTabsLoc db={ this.props.db } selection={ this.state.selection } gamesData={this.state.gamesData} />;
-    }
+    resultRow = (
+      <Provider store={ store }>
+        <ResultTabsConnected/>
+      </Provider>
+    )
     return (
       <div>
         <Row style={{ marginLeft: 0, marginRight: 0 }}>
           <SearchChoice
-            onChangeSelection={this.updateChoice}
+            onChangeSelection={this.updateSelection}
             selected={this.state.selection.tournaments}
             playersData={this.props.players}
             selectedPlayers={this.state.selection.players}

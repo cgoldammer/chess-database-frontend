@@ -1,7 +1,7 @@
 import React from 'react';
 import qs from "qs";
 import axios from 'axios';
-import { LocationContext } from './Context.js'
+import { LocationContext, defaultLoc } from './Context.js'
 
 export const objectIsEmpty = (obj) => obj == null || Object.keys(obj).length === 0 && obj.constructor === Object 
 
@@ -83,6 +83,9 @@ export const resultPanels = {
 export const updateLoc = (loc, name, value) => {
   var newLoc = { ...loc} 
   newLoc[name] = value;
+  if (name == "db" && value == null){
+    newLoc = defaultLoc;
+  }
   if (name == "db" && value != null){
     newLoc.showType = resultPanels.gameList;
     newLoc.game = null;
@@ -103,4 +106,35 @@ export const getUrl = (loc) => {
   }
   
   return '/' + BACKENDURL + '/' + loc
+}
+
+export const getUrlFromLoc = loc => {
+  var url = ''
+  if (loc.db != null){
+    url += 'db=' + loc.db
+    if (loc.showType != null){
+      url += '/showType=' + loc.showType
+      if (loc.game != null){
+        url += '/game=' + loc.game
+      }
+    }
+  }
+  return url
+}
+
+export const getLocFromUrl = url => {
+  const components = url.split('/')
+  var db = null;
+  var showType = null;
+  var game = null;
+  if (components.length >= 1){
+    db = parseInt(components[0].split('=')[1]) || nul;
+    if (components.length >= 2){
+      showType = components[1].split('=')[1];
+    }
+    if (components.length >= 3){
+      game = parseInt(components[2].split('=')[1]) || null;
+    }
+  }
+  return {db: db, showType: showType, game: game}
 }

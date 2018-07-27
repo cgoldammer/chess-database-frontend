@@ -1,4 +1,4 @@
-import {App} from './appComponents.jsx'
+import { app } from './appComponents.jsx'
 import React from 'react';
 import ReactDOM from 'react-dom';
 
@@ -9,9 +9,7 @@ const features = {
   showUsers: SHOWUSERS
 }
 
-
-ReactDOM.render(<BrowserRouter><App features={features}/></BrowserRouter>, document.getElementById("world"));
-
+ReactDOM.render(app(features), document.getElementById("world"));
 module.hot.accept();
 
 

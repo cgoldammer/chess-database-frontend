@@ -7,16 +7,23 @@ import { TournamentSelector } from "./components/MoveEvalPage.jsx";
 import { DBChooser } from './components/DBChooser.jsx';
 import { EvaluationWindow } from './components/AdminComponents.jsx';
 import { SearchWindow } from './components/SearchWindow.jsx';
-import { HOC, exposeRouter, objectIsEmpty, loginDummyUser, logout, getUser, contextComp, resultPanels, updateLoc, getUrl, preparePlayerData} from './helpers.jsx';
+import { HOC, exposeRouter, objectIsEmpty, loginDummyUser, logout, getUser, contextComp, resultPanels, updateLoc, getUrl, preparePlayerData, getUrlFromLoc, getLocFromUrl} from './helpers.jsx';
 import { defaultLoc, LocationContext } from './Context.js'
 import axios from 'axios';
+import { connect, Provider } from 'react-redux'
+import { createStore, combineReducers, applyMiddleware } from 'redux';
+import {createBrowserHistory} from 'history';
+import thunkMiddleware from 'redux-thunk';
 
 import myData from '/home/cg/data/output/tests.json';
 import {testVar } from './api.js';
 import {getRequest, getRequestPromise, postRequest} from './api.js';
 import styles from './App.css';
 import statStyles from './components/StatWindows.css';
+const hist = createBrowserHistory();
+import { store } from './redux.jsx';
 
+import { rootReducer, FETCH_DB_DATA, FETCH_TOURNAMENT_DATA, FETCH_PLAYER_DATA, FETCH_GAME_DATA, STATUS_RECEIVING, STATUS_RECEIVED, SELECT_DB, SELECTION_CHANGED, defaultSelectionState } from './reducers.jsx';
 
 var debugFunctions = {}
 window.debugFunctions = debugFunctions;
@@ -80,12 +87,15 @@ class BreadcrumbNavigator extends React.Component {
   }
   sendLocation = (name, value) => () => this.props.locSetter(updateLoc(this.props.loc, name, value));
   render = () => {
+    if (this.props.loc.db != null && this.props.db == null){
+      return null;
+    }
     const crumb = (key, value, name) => <Breadcrumb.Item key={name} onClick={ this.sendLocation(key, value) }> {name} </Breadcrumb.Item>;
     const loc = this.props.loc;
     const homeCrumb = crumb("db", null, "home");
-    const dbCrumb = loc.db != null ? crumb("db", loc.db, loc.db.name) : null;
+    const dbCrumb = loc.db != null ? crumb("db", loc.db, this.props.db.name) : null;
     const showCrumb = loc.showType != null ? crumb("showType", loc.showType, loc.showType) : null;
-    const gameCrumb = loc.game != null ? crumb("game", loc.game, loc.game.id) : null;
+    const gameCrumb = loc.game != null ? crumb("game", this.props.game, loc.game) : null;
     return (
       <Breadcrumb>
         { homeCrumb }
@@ -105,46 +115,50 @@ const IntroWindow = () => (
 	</Jumbotron>
 )
 
+// const startingLoc = getLocFromUrl(window.location.pathname.slice(1));
+const startingLoc = defaultLoc;
+
 export class App extends React.Component {
   constructor(props) {
     super(props);
     document.title = "Chess insights"
     this.state = {
-      dbData: []
+      gamesData: []
     , db: null
     , tournamentData: []
     , players: []
     , summaryData: {}
     , user: {}
-    , loc: defaultLoc
+    , loc: startingLoc
     , locationList: []
     };
   }
-  getDatabaseData = () => axios.get(getUrl('api/databases'))
-  updateDatabases = () => this.getDatabaseData().then(this.displayDatabases).catch(() => {})
-  componentDidMount = () => {
-    const updateUser = () => axios.get(getUrl('api/user')).then(this.updateUser).catch(() => {})
-    updateUser();
-    debugFunctions.login = () => loginDummyUser(updateUser);
-    debugFunctions.logout = () => {
-      logout(() => {});
-      this.updateUser({data: {}});
-    }
-    window.debugFunctions.user = () => this.state.user;
-    window.debugFunctions = debugFunctions;
+  // getDatabaseData = () => axios.get(getUrl('api/databases'))
+  // updateDatabases = () => this.getDatabaseData().then(this.displayDatabases).catch(() => {})
+  // componentDidMount = () => {
+  //   const updateUser = () => axios.get(getUrl('api/user')).then(this.updateUser).catch(() => {})
+  //   updateUser();
+  //   debugFunctions.login = () => loginDummyUser(updateUser);
+  //   debugFunctions.logout = () => {
+  //     logout(() => {});
+  //     this.updateUser({data: {}});
+  //   }
+  //   window.debugFunctions.user = () => this.state.user;
+  //   window.debugFunctions = debugFunctions;
 
-  }
+  // }
   components = {
       AppForDB: contextComp(AppForDB)
     , DBChooser: contextComp(DBChooser)
     , Navigator: contextComp(BreadcrumbNavigator)
   }
-  displayDatabases = data => {
-    this.setState({dbData: data.data});
-  }
-  updateUser = user => {
-    this.setState({user: user.data}, this.updateDatabases);
-  }
+  // getSelectedGame = () => this.state.gamesData.filter(g => g.id == this.state.loc.game)[0];
+  // displayDatabases = data => {
+  //   this.setState({dbData: data.data});
+  // }
+  // updateUser = user => {
+  //   this.setState({user: user.data}, this.updateDatabases);
+  // }
   fileUploadHandler = data => {
     const uploadDone = () => {
       this.updateDatabases();
@@ -162,34 +176,13 @@ export class App extends React.Component {
     else {
       if (locList.db != oldLoc.db) {
         const dbLoc = locList.db;
-        this.setDB(dbLoc);
+        this.props.setDB(dbLoc);
       }
       if (locList.game != undefined) {
         const game = locList.game
         const showType = resultPanels.gameList;
-
       }
     }
-  }
-  /* When setting a database, we also updte the tournaments. This is necessary to 
-  ensure that the search window works correctly, because it expects the tournaments to
-  correspond to the database */
-  setDB = db => { 
-    const furtherUpdates = () => {
-      getRequest(getUrl('api/dataSummary'), {searchDB: db.id}, this.processSummaryResponse);
-    }
-    const stateUpdater = tournaments => {
-      const data = {db: db.id, tournamentData: tournaments.data};
-      this.setState(data, furtherUpdates);
-    }
-    const playerUpdate = players => {
-      const data = {players: players.data.map(preparePlayerData)};
-      this.setState(data);
-    }
-    const loadTournaments = () => getRequestPromise(getUrl('api/tournaments'), {searchDB: db.id})
-    const loadPlayers = () => getRequestPromise(getUrl('api/players'), {searchDB: db.id})
-
-    loadTournaments().then(stateUpdater).then(loadPlayers).then(playerUpdate).then(furtherUpdates)
   }
   processSummaryResponse = (data) => {
     this.setState({'summaryData': data.data});
@@ -199,10 +192,15 @@ export class App extends React.Component {
   }
   locSetter = loc => {
     const oldLoc = this.state.loc;
+    // If the location contains a game, and the game data is not set,
+    // then load the game data before setting the state
     this.setState({loc: loc}, this.navigateToLoc(oldLoc))
+    hist.push('/' + getUrlFromLoc(loc));
   }
   leaveDB = () => {
-    this.locSetter(updateLoc(this.state.loc, "db", null));
+    const newLoc = updateLoc(this.state.loc, "db", null)
+
+    this.locSetter(newLoc);
   }
   contextData = () => {
     const locSetter = this.locSetter
@@ -215,28 +213,28 @@ export class App extends React.Component {
       const DBChooserLoc = this.components.DBChooser;
       setDB = (<div>
 				<IntroWindow/>
-				<DBChooserLoc dbData={this.state.dbData} dbAction={this.setDB}/>
+				<DBChooserLoc dbData={this.props.dbData} dbAction={this.props.setDB}/>
 			</div>)
       if (this.userIsLoggedIn()){
         fileDiv = <FileReader fileContentCallback={ this.fileUploadHandler }/>
       }
     }
     var appForDB = <div/>
-    if (this.state.loc.db != null){
-      const db = this.state.loc.db.id;
-      const url = "/db/" + db;
+    if (this.props.selectedDB != null && this.props.getSelectedDB()){
+      const db = this.props.getSelectedDB();
       const AppForDBLoc = this.components.AppForDB;
       appForDB = <AppForDBLoc
-        db={db}
-        tournamentData={ this.state.tournamentData }
-        players={ this.state.players }
-        summaryData={ this.state.summaryData}
+        selectedDB={this.props.selectedDB}
+        summaryData={ this.props.summaryData}
         leaveDB={this.leaveDB}
         user={this.state.user}
         router={this.routeForDB}/>;
     }
     const Navigator = this.components.Navigator ;
-    const nav = <Navigator/>;
+    // const selectedGame = this.getSelectedGame();
+    // const selectedDB = this.getSelectedDB();
+    // const nav = <Navigator game={ selectedGame } db={ selectedDB } />;
+    const nav = null;
     
     return (
       <LocationContext.Provider value={this.contextData()}>
@@ -283,7 +281,6 @@ export class FileReader extends React.Component {
     reader.onload = e => {
       const result = reader.result;
       const data = { uploadName: this.state.name, uploadText: reader.result };
-      console.log(result.length);
       if (result.length >= maxFileSize){
         this.setWarning(true)
       }
@@ -345,7 +342,12 @@ class AppForDB extends React.Component {
     return Object.keys(this.props.summaryData).length > 0;
   }
   render = () => {
-    const search = <SearchWindow key={this.props.db} db={this.props.db} players={ this.props.players } tournamentData={this.props.tournamentData}/>
+    const search = 
+      <SearchWindow 
+        selectedDB={this.props.selectedDB} 
+        playerData={ this.props.playerData } 
+        gamesData= { this.props.gamesData }
+        tournamentData={this.props.tournamentData}/>
     var summary = <div/>
     if (this.hasSummary()){
       var summary = <AppSummary data={this.props.summaryData}/>
@@ -365,3 +367,143 @@ AppForDB.defaultProps = {
   summaryData: {},
   tournamentData: []
 }
+
+const allDefaultRequests = type => {
+  const defaultRequest = (type, status) => data => ({type: type, status: status, data: data})
+  var requests = {}
+  requests.receiving = defaultRequest(type, STATUS_RECEIVING)
+  requests.received = defaultRequest(type, STATUS_RECEIVED)
+  return requests
+}
+
+const allDBRequests = type => {
+  const dbRequest = (type, status) => (dbId, data) => ({type: type, dbId: dbId, status: status, data: data})
+  return {
+    receiving: dbRequest(type, STATUS_RECEIVING)
+  , received: dbRequest(type, STATUS_RECEIVED)
+  }
+}
+
+const requestDB = allDefaultRequests(FETCH_DB_DATA);
+const requestTournaments = allDBRequests(FETCH_TOURNAMENT_DATA)
+const requestPlayers = allDBRequests(FETCH_PLAYER_DATA)
+const requestGames = allDBRequests(FETCH_GAME_DATA)
+
+const fetchPlayerData = (dbId, oldSelection) => {
+  return dispatch => {
+    dispatch(requestPlayers.receiving(dbId));
+
+    const handleDBResponse = data => {
+      dispatch(requestPlayers.received(dbId, data.data));
+      const changeSelection = {players: data.data.map(d => d.id)};
+      dispatch(selectionChangedAction(dbId, oldSelection, changeSelection));
+    }
+    getRequestPromise(getUrl('api/players'), {searchDB: dbId})
+      .then(handleDBResponse)
+  }
+}
+
+const selectionChanged = (newSelection, reset) => ({ type: SELECTION_CHANGED, selection: newSelection, reset: reset})
+
+const fetchTournamentData = (dbId, callback) => {
+  return dispatch => {
+    dispatch(requestTournaments.receiving(dbId));
+    const handleDBResponse = data => {
+      dispatch(requestTournaments.received(data.data));
+      const selection = {tournaments: data.data.map(d => d.id)};
+      const newSelection = {...defaultSelectionState, ...selection}
+      const select = selectionChangedAction(dbId, defaultSelectionState, selection);
+      dispatch(select);
+      dispatch(callback(dbId, newSelection));
+    }
+    getRequestPromise(getUrl('api/tournaments'), {searchDB: dbId})
+      .then(handleDBResponse)
+  }
+}
+
+const selectDB = dbId => ({type: SELECT_DB, dbId: dbId});
+
+const selectDBAction = dbId => {
+  return dispatch => {
+    dispatch(selectDB(dbId));
+    dispatch(fetchTournamentData(dbId, fetchPlayerData));
+  }
+}
+
+
+const gameSearchData = (dbId, selection) => ({
+  gameRequestDB: dbId
+, gameRequestTournaments: selection.tournaments
+})
+
+const fetchGames = (dbId, selection) => {
+  return dispatch => {
+    dispatch(requestGames.receiving(dbId));
+    const handleDBResponse = data => dispatch(requestGames.received(dbId, data.data));
+    getRequestPromise(getUrl('api/games'), gameSearchData(dbId, selection)).then(handleDBResponse)
+  }
+}
+
+// Upon selecting a database, first pull the player and tournament data. 
+// For each data point that is received, updated the selection.
+const fetchDataForDBSelection = (dbId, selection) => {
+  return dispatch => {
+    dispatch(fetchGames(dbId, selection));
+    // dispatch(fetchBlunderData(data));
+    // dispatch(fetchPlayerData(data));
+  }
+}
+
+const fetchData = (requester, receiver, url) => {
+  return dispatch => {
+    dispatch(requester());
+    const handleDBResponse = data => {
+      dispatch(receiver(data.data));
+    }
+    axios.get(getUrl(url)).then(handleDBResponse);
+  }
+}
+
+const selectionChangedAction = (dbId, selectionOld, selection) => {
+  return dispatch => {
+    const newSelection = { ...selectionOld, ...selection }
+    dispatch(selectionChanged(newSelection, false));
+    dispatch(fetchDataForDBSelection(dbId, newSelection));
+  }
+}
+
+const fetchDBData = fetchData(requestDB.receiving, requestDB.received, 'api/databases')
+
+const mapStateToProps = (state, ownProps) => ({
+  dbData: state.dbData.data
+, selectedDB: state.selectedDB
+, getSelectedDB: () => {
+    if (state.selectedDB && state.dbData.data.length > 0){
+      return state.dbData.data.filter(db => db.id == state.selectedDB)[0]
+    }
+    return null;
+  }
+, getLoc: () => {
+    const loc = {}
+    loc['db'] = state.selectedDB;
+    return loc
+  }
+, players: state.players
+, tournamentData: state.tournaments
+, gamesData: state.gamesData
+})
+
+const mapDispatchToProps = (dispatch, ownProps) => ({ 
+  setDB: dbId => dispatch(selectDBAction(dbId))
+});
+
+const AppConnected = connect(mapStateToProps, mapDispatchToProps)(App);
+
+
+export const app = features => (
+  <Provider store={ store }>
+    <AppConnected features={ features }/>
+  </Provider>
+);
+
+store.dispatch(fetchDBData);

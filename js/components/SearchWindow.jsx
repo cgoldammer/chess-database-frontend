@@ -77,6 +77,38 @@ const getSelectedGame = (games, gameId) => {
 
 const selectGame = gameId => ({type: SELECT_GAME, gameId: gameId })
 
+const maxLength = 10;
+const getSelectedBlunders = state => {
+  var cleaned = state.moveEvalsData.data.slice(0, maxLength);
+
+  const selectedIds = state.selection.players;
+  const isInSelected = value => selectedIds.indexOf(value) > -1;
+  if (!isInSelected){
+    return [];
+  }
+  const isSelectedPlayer = moveEval => {
+    const game = moveEval.moveEvalsGame;
+    const ev = moveEval.moveEvalsMoveEval;
+    const matchForWhite = isInSelected(game.playerWhiteId) && ev.isWhite;
+    const matchForBlack = isInSelected(game.playerBlackId) && (!ev.isWhite);
+    return matchForWhite || matchForBlack;
+  }
+  cleaned = cleaned.filter(isSelectedPlayer)
+
+  var playersMap = {}
+  for (var player of state.playerData.data){
+    playersMap[player.id] = player;
+  }
+  const addPlayerName = moveEval => {
+    const game = moveEval.moveEvalsGame;
+    const playerWhite = playersMap[game.playerWhiteId];
+    const playerBlack = playersMap[game.playerBlackId];
+
+    return {...moveEval, ...{'playerWhite': playerWhite, 'playerBlack': playerBlack}}
+  }
+  return cleaned.map(addPlayerName);
+}
+
 // TODO: Need to fix performance here. Huge overhead.
 const mapStateToPropsResultTabs = (state, ownProps) => ({
   playerData: state.playerData.data
@@ -85,6 +117,8 @@ const mapStateToPropsResultTabs = (state, ownProps) => ({
 , selectedGames: getSelectedGames(state).map(cleanGameData)
 , selectedGame: getSelectedGame(getSelectedGames(state).map(cleanGameData), state.selectedGame)
 , showType: state.showType
+, selectedBlunders: getSelectedBlunders(state)
+, moveEvalsData: state.moveEvalsData
 })
 
 const selectShowType = key => ({type: SELECT_SHOWTYPE, showType: key})
@@ -130,6 +164,14 @@ class ResultTabs extends React.Component {
     console.log("rendering tabs0 ");
     const showTabs = this.props.playerData.length > 0
     var tabs = <div/>
+    const blunderWindow = this.props.moveEvalsData.fetching ? null :
+      <BlunderWindow 
+        selection={ this.props.selection }
+        key={ this.getGamesHash() } 
+        players={ this.props.playerData } 
+        gamesData={ this.props.selectedGames } 
+        db={ this.props.selectedDB } 
+        selectedBlunders={this.props.selectedBlunders}/>
     if (showTabs){ 
       console.log("rendering tabs");
       tabs = (<Tabs activeKey={this.props.showType} onSelect={this.props.selectShowType} id="db-tabs">
@@ -140,7 +182,7 @@ class ResultTabs extends React.Component {
             <StatWindow key= {this.getGamesHash() } db={this.props.selectedDB} selection={this.props.selection} players={ this.props.playerData } gamesData={this.props.selectedGames}/>
           </Tab>
           <Tab eventKey={ resultPanels.blunders } title={ resultPanels.blunders }>
-            <BlunderWindow selection={ this.props.selection } key={ this.getGamesHash() } players={ this.props.playerData } gamesData={ this.props.selectedGames } db={ this.props.selectedDB }/>
+            { blunderWindow }
           </Tab>
         </Tabs>)
     }

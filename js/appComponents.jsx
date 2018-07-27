@@ -23,7 +23,7 @@ import statStyles from './components/StatWindows.css';
 const hist = createBrowserHistory();
 import { store } from './redux.jsx';
 
-import { rootReducer, FETCH_DB_DATA, FETCH_TOURNAMENT_DATA, FETCH_PLAYER_DATA, FETCH_GAME_DATA, STATUS_RECEIVING, STATUS_RECEIVED, SELECT_DB, SELECTION_CHANGED, defaultSelectionState } from './reducers.jsx';
+import { rootReducer, FETCH_DB_DATA, FETCH_TOURNAMENT_DATA, FETCH_PLAYER_DATA, FETCH_GAME_DATA, FETCH_MOVE_EVAL_DATA, STATUS_RECEIVING, STATUS_RECEIVED, SELECT_DB, SELECTION_CHANGED, defaultSelectionState } from './reducers.jsx';
 
 var debugFunctions = {}
 window.debugFunctions = debugFunctions;
@@ -209,19 +209,19 @@ export class App extends React.Component {
   render = () => {
     var setDB = null;
     var fileDiv = null;
-    if (this.state.loc.db == null){
+    if (this.props.selectedDB == null){
       const DBChooserLoc = this.components.DBChooser;
       setDB = (<div>
 				<IntroWindow/>
-				<DBChooserLoc dbData={this.props.dbData} dbAction={this.props.setDB}/>
+				<DBChooserLoc dbData={this.props.dbData} setDB={this.props.setDB}/>
 			</div>)
       if (this.userIsLoggedIn()){
         fileDiv = <FileReader fileContentCallback={ this.fileUploadHandler }/>
       }
     }
     var appForDB = <div/>
-    if (this.props.selectedDB != null && this.props.getSelectedDB()){
-      const db = this.props.getSelectedDB();
+    if (this.props.selectedDB){
+      const db = this.props.selectedDB;
       const AppForDBLoc = this.components.AppForDB;
       appForDB = <AppForDBLoc
         selectedDB={this.props.selectedDB}
@@ -244,14 +244,14 @@ export class App extends React.Component {
             { nav } 
           </Row>
           <Row>
-            { appForDB }
-          </Row>
-          <Row>
 						<div className={statStyles.statHeader}>
 							{ setDB }
 							{ fileDiv }
 						</div>
 					</Row>
+          <Row>
+            { appForDB }
+          </Row>
         </Grid>
       </LocationContext.Provider>
     )
@@ -388,6 +388,7 @@ const requestDB = allDefaultRequests(FETCH_DB_DATA);
 const requestTournaments = allDBRequests(FETCH_TOURNAMENT_DATA)
 const requestPlayers = allDBRequests(FETCH_PLAYER_DATA)
 const requestGames = allDBRequests(FETCH_GAME_DATA)
+const requestMoveEvals = allDBRequests(FETCH_MOVE_EVAL_DATA)
 
 const fetchPlayerData = (dbId, oldSelection) => {
   return dispatch => {
@@ -444,12 +445,21 @@ const fetchGames = (dbId, selection) => {
   }
 }
 
+const fetchMoveEvals = (dbId, selection) => {
+  return dispatch => {
+    dispatch(requestMoveEvals.receiving(dbId));
+    const handleDBResponse = data => dispatch(requestMoveEvals.received(dbId, data.data));
+    getRequestPromise(getUrl('api/moveEvaluations'), gameSearchData(dbId, selection)).then(handleDBResponse)
+  }
+}
+
+
 // Upon selecting a database, first pull the player and tournament data. 
 // For each data point that is received, updated the selection.
 const fetchDataForDBSelection = (dbId, selection) => {
   return dispatch => {
     dispatch(fetchGames(dbId, selection));
-    // dispatch(fetchBlunderData(data));
+    dispatch(fetchMoveEvals(dbId, selection));
     // dispatch(fetchPlayerData(data));
   }
 }
@@ -474,15 +484,18 @@ const selectionChangedAction = (dbId, selectionOld, selection) => {
 
 const fetchDBData = fetchData(requestDB.receiving, requestDB.received, 'api/databases')
 
+const getSelectedDB = (dbData, selectedId) => {
+  if (selectedId && dbData.data.length > 0){
+    const matches = dbData.data.filter(db => db.id == selectedId)
+    if (matches.length == 0) return null
+    return matches[0];
+  }
+  return null;
+}
+
 const mapStateToProps = (state, ownProps) => ({
   dbData: state.dbData.data
-, selectedDB: state.selectedDB
-, getSelectedDB: () => {
-    if (state.selectedDB && state.dbData.data.length > 0){
-      return state.dbData.data.filter(db => db.id == state.selectedDB)[0]
-    }
-    return null;
-  }
+, selectedDB: getSelectedDB(state.dbData, state.selectedDB)
 , getLoc: () => {
     const loc = {}
     loc['db'] = state.selectedDB;

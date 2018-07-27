@@ -22,10 +22,8 @@ export class BlunderPosition extends React.Component {
 
   getCurrentEval = () => this.props.data.moveEvalsMoveEval
   gameString = () => {
-    const data = this.props.data.moveEvalsGame;
-    const playerWhite = this.props.playersMap[data.playerWhiteId];
-    const playerBlack = this.props.playersMap[data.playerBlackId];
-    return playerName(playerWhite) + " - " + playerName(playerBlack);
+    const data = this.props.data;
+    return playerName(data.playerWhite) + " - " + playerName(data.playerBlack);
   }
   moveString = (move, evaluation) => {
     const thisMove = this.getCurrentEval();
@@ -41,6 +39,7 @@ export class BlunderPosition extends React.Component {
   }
   render = () => {
     const data = this.props.data;
+    console.log(data);
     const evaluation = data.moveEvalsMoveEval;
     const fen = evaluation.fen.substring(4);
     const loss = data.moveEvalsMoveLoss;
@@ -62,66 +61,14 @@ const maxLength = 100;
 export class BlunderWindow extends React.Component {
   constructor(props){
     super(props);
-    this.state = { 
-      players: []
-    , evalData: []
-    , loaded: false
-    };
-  }
-  prepareData = data => {
-    var cleaned = data.data.slice(0, maxLength);
-
-    const selectedIds = this.props.selection.players;
-    const isInSelected = value => selectedIds.indexOf(value) > -1;
-    if (selectedIds.length > 0){
-      console.log("SL");
-      const isSelectedPlayer = moveEval => {
-        console.log(moveEval);
-        const game = moveEval.moveEvalsGame;
-        const ev = moveEval.moveEvalsMoveEval;
-        console.log(ev);
-        console.log(game);
-        const matchForWhite = isInSelected(game.playerWhiteId) && ev.isWhite;
-        const matchForBlack = isInSelected(game.playerBlackId) && (!ev.isWhite);
-        return matchForWhite || matchForBlack;
-      }
-      cleaned = cleaned.filter(isSelectedPlayer)
-      console.log("blunders remaining: " + cleaned.length)
-    }
-    return cleaned;
-  }
-  loadEvals = () => {
-
-		const data = { 
-			gameRequestDB: this.props.db
-		, gameRequestTournaments: this.props.selection.tournaments
-		}
-    const setEvaluation = data => this.setState({loaded: true, evalData: this.prepareData(data)});
-		const getSlice = end => ({moveEvalGames: this.props.gamesData.slice(0, end).map(g => g.id)});
-
-    getRequest(getUrl('api/moveEvaluations'), data, setEvaluation);
-
-  }
-  componentDidMount = () => {
-    this.loadEvals();
-
-    var playersMap = {}
-    for (var player of this.props.players){
-      playersMap[player.id] = player;
-    }
-    this.playersMap = playersMap
   }
 
   render = () => {
-    if (!this.state.loaded){
-      return null;
-    }
-    window.evalData = this.state.evalData;
-    const board = (data, index) => <Col key={ index } md={ 6 }><BlunderPosition playersMap={ this.playersMap } key={ index } data={data}/></Col>
+    const board = (data, index) => <Col key={ index } md={ 6 }><BlunderPosition key={ index } data={ data }/></Col>
     const subsetText = "Showing the first " + maxLength + " results. Pick a tournament to show all blunders for that tournament."
-    const allText = "Showing all " + this.state.evalData.length + " blunders that were detected."
+    const allText = "Showing all " + this.props.selectedBlunders.length + " blunders that were detected."
     const subsetNote = (<p>
-      { (this.state.evalData.length == maxLength) ? subsetText : allText }
+      { (this.props.selectedBlunders.length == maxLength) ? subsetText : allText }
     </p>);
     return (
       <div>
@@ -135,7 +82,7 @@ export class BlunderWindow extends React.Component {
         </div>
         <hr/>
         <Row className="text-center">
-          { this.state.evalData.map(board) }
+          { this.props.selectedBlunders.map(board) }
         </Row>
       </div>
     )

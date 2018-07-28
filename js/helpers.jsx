@@ -113,7 +113,7 @@ export const getUrlFromLoc = loc => {
   if (loc.db != null){
     url += 'db=' + loc.db
     if (loc.showType != null){
-      url += '/showType=' + loc.showType
+      url += '/panel=' + loc.showType
       if (loc.game != null){
         url += '/game=' + loc.game
       }
@@ -128,7 +128,7 @@ export const getLocFromUrl = url => {
   var showType = null;
   var game = null;
   if (components.length >= 1){
-    db = parseInt(components[0].split('=')[1]) || nul;
+    db = parseInt(components[0].split('=')[1]) || null;
     if (components.length >= 2){
       showType = components[1].split('=')[1];
     }

@@ -12,7 +12,6 @@ import { defaultLoc, LocationContext } from './Context.js'
 import axios from 'axios';
 import { connect, Provider } from 'react-redux'
 import { createStore, combineReducers, applyMiddleware } from 'redux';
-import {createBrowserHistory} from 'history';
 import thunkMiddleware from 'redux-thunk';
 
 import myData from '/home/cg/data/output/tests.json';
@@ -20,10 +19,10 @@ import {testVar } from './api.js';
 import {getRequest, getRequestPromise, postRequest} from './api.js';
 import styles from './App.css';
 import statStyles from './components/StatWindows.css';
-const hist = createBrowserHistory();
-import { store } from './redux.jsx';
+import { store, updateUrl, getLoc } from './redux.jsx';
+import { selectGame, selectShowType } from './actions.jsx';
 
-import { rootReducer, FETCH_DB_DATA, FETCH_TOURNAMENT_DATA, FETCH_PLAYER_DATA, FETCH_GAME_DATA, FETCH_MOVE_EVAL_DATA, FETCH_GAME_EVAL_DATA, FETCH_MOVE_SUMMARY_DATA, STATUS_RECEIVING, STATUS_RECEIVED, SELECT_DB, SELECTION_CHANGED, defaultSelectionState } from './reducers.jsx';
+import { rootReducer, FETCH_DB_DATA, FETCH_TOURNAMENT_DATA, FETCH_PLAYER_DATA, FETCH_GAME_DATA, FETCH_MOVE_EVAL_DATA, FETCH_GAME_EVAL_DATA, FETCH_MOVE_SUMMARY_DATA, STATUS_RECEIVING, STATUS_RECEIVED, SELECT_DB, SELECTION_CHANGED, defaultSelectionState, defaultShowType } from './reducers.jsx';
 
 var debugFunctions = {}
 window.debugFunctions = debugFunctions;
@@ -85,17 +84,16 @@ class BreadcrumbNavigator extends React.Component {
   constructor(props) {
     super(props);
   }
-  sendLocation = (name, value) => () => this.props.locSetter(updateLoc(this.props.loc, name, value));
+  sendLocation = (name, value) => () => this.props.setLoc(this.props.loc, updateLoc(this.props.loc, name, value));
   render = () => {
-    if (this.props.loc.db != null && this.props.db == null){
-      return null;
-    }
     const crumb = (key, value, name) => <Breadcrumb.Item key={name} onClick={ this.sendLocation(key, value) }> {name} </Breadcrumb.Item>;
     const loc = this.props.loc;
     const homeCrumb = crumb("db", null, "home");
-    const dbCrumb = loc.db != null ? crumb("db", loc.db, this.props.db.name) : null;
-    const showCrumb = loc.showType != null ? crumb("showType", loc.showType, loc.showType) : null;
-    const gameCrumb = loc.game != null ? crumb("game", this.props.game, loc.game) : null;
+    var showCrumb = null;
+    var gameCrumb = null;
+    const dbCrumb = loc.db != null ? crumb("db", loc.db, this.props.selectedDB.name) : null;
+    if (dbCrumb) showCrumb = loc.showType != null ? crumb("showType", loc.showType, loc.showType) : null;
+    if (showCrumb) gameCrumb = loc.game != null ? crumb("game", this.props.game, loc.game) : null;
     return (
       <Breadcrumb>
         { homeCrumb }
@@ -115,8 +113,6 @@ const IntroWindow = () => (
 	</Jumbotron>
 )
 
-// const startingLoc = getLocFromUrl(window.location.pathname.slice(1));
-const startingLoc = defaultLoc;
 
 export class App extends React.Component {
   constructor(props) {
@@ -129,12 +125,16 @@ export class App extends React.Component {
     , players: []
     , summaryData: {}
     , user: {}
-    , loc: startingLoc
     , locationList: []
     };
   }
-  // getDatabaseData = () => axios.get(getUrl('api/databases'))
-  // updateDatabases = () => this.getDatabaseData().then(this.displayDatabases).catch(() => {})
+  componentDidMount = () => {
+    const initialLoc = () => {
+      const urlLoc = getLocFromUrl(window.location.pathname.slice(1));
+      this.props.setLoc(defaultLoc, urlLoc);
+    }
+    store.dispatch(fetchDBData(initialLoc));
+  }
   // componentDidMount = () => {
   //   const updateUser = () => axios.get(getUrl('api/user')).then(this.updateUser).catch(() => {})
   //   updateUser();
@@ -150,7 +150,6 @@ export class App extends React.Component {
   components = {
       AppForDB: contextComp(AppForDB)
     , DBChooser: contextComp(DBChooser)
-    , Navigator: contextComp(BreadcrumbNavigator)
   }
   // getSelectedGame = () => this.state.gamesData.filter(g => g.id == this.state.loc.game)[0];
   // displayDatabases = data => {
@@ -234,11 +233,7 @@ export class App extends React.Component {
         user={this.state.user}
         router={this.routeForDB}/>;
     }
-    const Navigator = this.components.Navigator ;
-    // const selectedGame = this.getSelectedGame();
-    // const selectedDB = this.getSelectedDB();
-    // const nav = <Navigator game={ selectedGame } db={ selectedDB } />;
-    const nav = null;
+    const nav = <BreadcrumbNavigator loc={ this.props.loc } selectedDB= { this.props.selectedDB } setLoc= { this.props.setLoc }/>;
     
     return (
       <LocationContext.Provider value={this.contextData()}>
@@ -428,11 +423,11 @@ const fetchTournamentData = (dbId, callback) => dispatch => {
 
 const selectDB = dbId => ({type: SELECT_DB, dbId: dbId});
 
-const selectDBAction = dbId => {
-  return dispatch => {
-    dispatch(selectDB(dbId));
-    dispatch(fetchTournamentData(dbId, fetchPlayerData));
-  }
+const selectDBAction = (dbId, callback=null) => dispatch => {
+  dispatch(selectDB(dbId));
+  dispatch(fetchTournamentData(dbId, fetchPlayerData));
+  updateUrl();
+  if (callback) callback();
 }
 
 
@@ -465,11 +460,12 @@ const fetchDataForDBSelection = (dbId, selection) => {
   }
 }
 
-const fetchData = (requester, receiver, url) => {
+const fetchData = (requester, receiver, url, callback=null) => {
   return dispatch => {
     dispatch(requester());
     const handleDBResponse = data => {
       dispatch(receiver(data.data));
+      if (callback) callback();
     }
     axios.get(getUrl(url)).then(handleDBResponse);
   }
@@ -481,7 +477,7 @@ const selectionChangedAction = (dbId, selectionOld, selection) => dispatch => {
   dispatch(fetchDataForDBSelection(dbId, newSelection));
 }
 
-const fetchDBData = fetchData(requestDB.receiving, requestDB.received, 'api/databases')
+const fetchDBData = callback => fetchData(requestDB.receiving, requestDB.received, 'api/databases', callback)
 
 const getSelectedDB = (dbData, selectedId) => {
   if (selectedId && dbData.data.length > 0){
@@ -495,11 +491,7 @@ const getSelectedDB = (dbData, selectedId) => {
 const mapStateToProps = (state, ownProps) => ({
   dbData: state.dbData.data
 , selectedDB: getSelectedDB(state.dbData, state.selectedDB)
-, getLoc: () => {
-    const loc = {}
-    loc['db'] = state.selectedDB;
-    return loc
-  }
+, loc: getLoc(state)
 , players: state.players
 , tournamentData: state.tournamentData
 , playerData: state.playerData
@@ -510,8 +502,16 @@ const mapStateToProps = (state, ownProps) => ({
 const mapDispatchToProps = (dispatch, ownProps) => ({ 
   setDB: dbId => dispatch(selectDBAction(dbId))
 , updateSelection: (dbId, selection, newSelection) => {
-    console.log("UPDAATE SEL");
     dispatch(selectionChangedAction(dbId, selection, newSelection))
+  }
+, setLoc: (oldLoc, newLoc) => {
+    const selectAfterDB = () => {
+      if (oldLoc.showType != newLoc.showType) dispatch(selectShowType(newLoc.showType));
+      if (oldLoc.game != newLoc.game) dispatch(selectGame(newLoc.game));
+      updateUrl();
+    }
+    if (oldLoc.db != newLoc.db) dispatch(selectDBAction(newLoc.db, selectAfterDB))
+    else selectAfterDB();
   }
 });
 
@@ -524,4 +524,3 @@ export const app = features => (
   </Provider>
 );
 
-store.dispatch(fetchDBData);

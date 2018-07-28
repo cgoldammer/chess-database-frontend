@@ -10,8 +10,9 @@ import { BlunderWindow } from './BlunderWindow.jsx';
 import { getRequest, postRequest } from '../api.js';
 import { avg, playerNameShort, playerName, resultPanels, contextComp, updateLoc, getUrl} from '../helpers.jsx';
 import { connect, Provider } from 'react-redux'
-import { store, getSelectedGames } from '../redux.jsx';
+import { store, getSelectedGames, updateUrl } from '../redux.jsx';
 import { SELECT_GAME, SELECT_SHOWTYPE } from '../reducers.jsx';
+import { selectGame, selectShowType } from '../actions.jsx';
 
 const defaultSearch = { tournaments:[] };
 
@@ -29,8 +30,6 @@ export class SearchChoice extends React.Component {
     const updater = this.props.updateSelection(this.props.selectedDB.id, this.props.selection, {'players': newPlayers});
   }
   render = () => {
-    console.log("CHHOSER SAA");
-    console.log(this.props.tournamentData);
     return (
       <div>
         <TournamentSelector 
@@ -73,9 +72,6 @@ const cleanGameData = data => {
 }
 
 const getSelectedGame = (games, gameId) => {
-  console.log("FINDING GMAE ID");
-  console.log(gameId);
-  console.log(games);
   if (gameId == null){
     return null;
   }
@@ -83,11 +79,9 @@ const getSelectedGame = (games, gameId) => {
   if (matches.length == 0){
     return null;
   }
-  console.log(matches);
   return matches[0];
 }
 
-const selectGame = gameId => ({type: SELECT_GAME, gameId: gameId })
 
 const maxLength = 10;
 const getSelectedBlunders = state => {
@@ -123,9 +117,6 @@ const getSelectedBlunders = state => {
 
 /* This function returns a list that can be displayed as a table */
 const getPlayerAverages = (evaluations, players) => {
-  console.log("PA");
-  console.log(evaluations);
-  console.log(players);
   if (players.length == 0){
     return []
   }
@@ -157,7 +148,6 @@ const getPlayerAverages = (evaluations, players) => {
     }
     return data
   }
-  console.log(evaluations.map(cleanPlayerData));
   return evaluations.map(cleanPlayerData);
 }
 
@@ -175,11 +165,16 @@ const mapStateToPropsResultTabs = (state, ownProps) => ({
 , playerAverages: getPlayerAverages(state.gameEvalData.data, state.playerData.data)
 })
 
-const selectShowType = key => ({type: SELECT_SHOWTYPE, showType: key})
 
 const mapDispatchToPropsResultTabs = (dispatch, ownProps) => ({
-  selectGame: gameId => dispatch(selectGame(gameId))
-, selectShowType: key => dispatch(selectShowType(key))
+  selectGame: gameId => {
+    dispatch(selectGame(gameId))
+    updateUrl();
+  }
+, selectShowType: key => {
+    dispatch(selectShowType(key));
+    updateUrl();
+  }
 })
 
 
@@ -206,8 +201,6 @@ class ResultTabs extends React.Component {
     }
     var gamesTable = <div/>;
     const GamesTableLoc = contextComp(GamesTable);
-    console.log("SSS");
-    console.log(this.props.selectedGame);
     gamesTable = 
       <GamesTable
         gamesData={this.props.selectedGames}
@@ -215,7 +208,6 @@ class ResultTabs extends React.Component {
         selectGame={ this.props.selectGame }
       />
 
-    console.log("rendering tabs0 ");
     const showTabs = this.props.playerData.length > 0
     var tabs = <div/>
     const blunderWindow = this.props.moveEvalsData.fetching ? null :
@@ -227,7 +219,6 @@ class ResultTabs extends React.Component {
         db={ this.props.selectedDB } 
         selectedBlunders={this.props.selectedBlunders}/>
     if (showTabs){ 
-      console.log("rendering tabs");
       tabs = (<Tabs activeKey={this.props.showType} onSelect={this.props.selectShowType} id="db-tabs">
           <Tab eventKey={ resultPanels.gameList } title={ resultPanels.gameList }>
             { gamesTable }

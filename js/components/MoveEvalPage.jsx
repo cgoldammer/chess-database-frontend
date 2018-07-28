@@ -50,8 +50,6 @@ export class MoveEvalGraph extends React.Component {
     const options = this.getSelectOptions();
     const legend = <Legend colorScale={colorScale} selected={this.state.selectedPlayers}/>
     const data = this.getChartData();
-    console.log("CC");
-    console.log(data);
 
     const dashFunc = function(label){
       if (isConfIntLabel(label)){
@@ -116,8 +114,6 @@ const extentsForData = (moveData) => {
 }
 
 const prepareForChart = (moveData, selectedPlayers, showStdError) => {
-  console.log("MOVE DATA");
-  console.log(moveData);
   const playerSet = new Set(selectedPlayers);
   const moveDataForPlayers = moveData.filter(x => playerSet.has(x.key));
   const reshapeMoves = moves => {

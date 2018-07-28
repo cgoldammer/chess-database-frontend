@@ -12,8 +12,6 @@ export class Legend extends React.Component {
         <div tyle={{margin: "0px 100px"}} key={ selected.index }><span style={style}></span><span>{ selected.name }</span></div>
       )
     }
-    console.log("sel");
-    console.log(this.props.selected);
     return (
       <div style={{marginLeft: "20px"}}>
         { this.props.selected.map(legendEntry) }

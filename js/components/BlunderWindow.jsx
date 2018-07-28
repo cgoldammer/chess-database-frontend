@@ -39,7 +39,6 @@ export class BlunderPosition extends React.Component {
   }
   render = () => {
     const data = this.props.data;
-    console.log(data);
     const evaluation = data.moveEvalsMoveEval;
     const fen = evaluation.fen.substring(4);
     const loss = data.moveEvalsMoveLoss;

@@ -65,14 +65,10 @@ export class GamesTable extends React.Component {
   }
   render() {
     const data = this.props.gamesData;
-    console.log("rendering game table");
-    console.log(data);
     var board = null;
 
     if (this.gameIsSelected()){
       const game = this.props.selectedGame;
-      console.log("GAME");
-      console.log(game)
       board = (
 				<div style={{display: 'flex', justifyContent: 'center'}}>
 					<ChessApp game={ game }/>

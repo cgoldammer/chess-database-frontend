@@ -1,10 +1,13 @@
 import { combineReducers } from 'redux';
-import { resultPanels } from './helpers.jsx';
+import { resultPanels, playerName } from './helpers.jsx';
 
 export const FETCH_DB_DATA = 'FETCH_DB_DATA';
 export const FETCH_PLAYER_DATA = 'FETCH_PLAYER_DATA';
 export const FETCH_TOURNAMENT_DATA = 'FETCH_TOURNAMENT_DATA';
 export const FETCH_GAME_DATA = 'FETCH_GAME_DATA';
+export const FETCH_MOVE_EVAL_DATA = 'FETCH_MOVE_EVAL_DATA';
+export const FETCH_GAME_EVAL_DATA = 'FETCH_GAME_EVAL_DATA';
+export const FETCH_MOVE_SUMMARY_DATA = 'FETCH_MOVE_SUMMARY_DATA';
 export const SELECT_DB = 'SELECT_DB';
 export const STATUS_RECEIVING = 'RECEIVING';
 export const STATUS_RECEIVED = 'RECEIVED';
@@ -33,7 +36,7 @@ const reduceSelectionChanged = (state=defaultSelectionState, action) => {
   return state;
 }
 
-const reduceDataDefault = (actionType, defaultState=defaultData) => {
+const reduceDataDefault = (actionType, defaultState=defaultData, cleaner=null) => {
   return (state=defaultState, action) => {
     switch (action.type) {
       case actionType:
@@ -41,18 +44,22 @@ const reduceDataDefault = (actionType, defaultState=defaultData) => {
           return ({ fetching: true, data: [] });
         }
         if (action.status == STATUS_RECEIVED) {
-          return ({ fetching: false, data: action.data });
+          const data = action.data
+          if (cleaner) {
+            var data = data.map(cleaner);
+          }
+          return ({ fetching: false, data: data });
         }
     }
     return state
   }
 }
 
-const defaultShowType = resultPanels.gameList;
+export const defaultShowType = resultPanels.gameList;
 const reduceShowType = (state=defaultShowType, action) => {
   switch (action.type){
     case SELECT_SHOWTYPE:
-      return action.showType
+      return action.showType == null ? defaultShowType : action.showType
   }
   return state;
 }
@@ -73,18 +80,23 @@ const reduceSelectDB = (state=null, action) => {
   return state
 }
 
-const reduce_db_data = reduceDataDefault(FETCH_DB_DATA)
-const reduce_tournament_data = reduceDataDefault(FETCH_TOURNAMENT_DATA)
 const reduceGameData = reduceDataDefault(FETCH_GAME_DATA)
+const reduceMoveEvalData = reduceDataDefault(FETCH_MOVE_EVAL_DATA)
+const reduceGameEvalData = reduceDataDefault(FETCH_GAME_EVAL_DATA)
+const reduceMoveSummaryData = reduceDataDefault(FETCH_MOVE_SUMMARY_DATA)
 
+const addPlayerName = player => ({...player, ...{name: playerName(player)}})
 
 export const rootReducer = combineReducers({
   dbData: reduceDataDefault(FETCH_DB_DATA)
 , tournamentData: reduceDataDefault(FETCH_TOURNAMENT_DATA)
-, playerData: reduceDataDefault(FETCH_PLAYER_DATA)
+, playerData: reduceDataDefault(FETCH_PLAYER_DATA, defaultData, addPlayerName)
 , selectedDB: reduceSelectDB
 , selection: reduceSelectionChanged
 , gamesData: reduceGameData
+, moveEvalsData: reduceMoveEvalData
 , showType: reduceShowType
 , selectedGame: reduceSelectedGame
+, moveSummaryData: reduceMoveSummaryData
+, gameEvalData: reduceGameEvalData
 })

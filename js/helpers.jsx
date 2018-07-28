@@ -1,7 +1,6 @@
 import React from 'react';
 import qs from "qs";
 import axios from 'axios';
-import { LocationContext, defaultLoc } from './Context.js'
 
 export const objectIsEmpty = (obj) => obj == null || Object.keys(obj).length === 0 && obj.constructor === Object 
 
@@ -65,15 +64,6 @@ export var HOC = CL => class extends React.Component {
   }
 }
 
-/* A HOC that wraps a component in the contexts to obtain and set the location */
-export const contextComp = Component => {
-  return props => (
-    <LocationContext.Consumer>
-      {context => <Component {...props} loc={context.loc} locSetter={context.locSetter}/>}
-    </LocationContext.Consumer>
-  );
-};
-
 export const resultPanels = {
   gameList: "Games"
 , statistics: "Statistics"
@@ -106,6 +96,12 @@ export const getUrl = (loc) => {
   }
   
   return '/' + BACKENDURL + '/' + loc
+}
+
+export const defaultLoc = {
+  db: null
+, showType: null
+, game: null
 }
 
 export const getUrlFromLoc = loc => {

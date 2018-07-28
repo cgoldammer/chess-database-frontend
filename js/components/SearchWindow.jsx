@@ -8,7 +8,7 @@ import { GamesTable } from './GamesTable.jsx';
 import { StatWindow } from './StatWindows.jsx';
 import { BlunderWindow } from './BlunderWindow.jsx';
 import { getRequest, postRequest } from '../api.js';
-import { avg, playerNameShort, playerName, resultPanels, contextComp, updateLoc, getUrl} from '../helpers.jsx';
+import { avg, playerNameShort, playerName, resultPanels, updateLoc, getUrl} from '../helpers.jsx';
 import { connect, Provider } from 'react-redux'
 import { store, getSelectedGames, updateUrl } from '../redux.jsx';
 import { SELECT_GAME, SELECT_SHOWTYPE } from '../reducers.jsx';
@@ -199,9 +199,7 @@ class ResultTabs extends React.Component {
     if (this.props.selectedGames.length == 0){
       return null
     }
-    var gamesTable = <div/>;
-    const GamesTableLoc = contextComp(GamesTable);
-    gamesTable = 
+    const gamesTable = 
       <GamesTable
         gamesData={this.props.selectedGames}
         selectedGame={this.props.selectedGame}

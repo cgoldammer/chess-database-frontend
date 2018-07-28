@@ -7,8 +7,7 @@ import { TournamentSelector } from "./components/MoveEvalPage.jsx";
 import { DBChooser } from './components/DBChooser.jsx';
 import { EvaluationWindow } from './components/AdminComponents.jsx';
 import { SearchWindow } from './components/SearchWindow.jsx';
-import { HOC, exposeRouter, objectIsEmpty, loginDummyUser, logout, getUser, contextComp, resultPanels, updateLoc, getUrl, preparePlayerData, getUrlFromLoc, getLocFromUrl} from './helpers.jsx';
-import { defaultLoc, LocationContext } from './Context.js'
+import { HOC, exposeRouter, objectIsEmpty, loginDummyUser, logout, getUser, resultPanels, updateLoc, getUrl, preparePlayerData, getUrlFromLoc, getLocFromUrl, defaultLoc} from './helpers.jsx';
 import axios from 'axios';
 import { connect, Provider } from 'react-redux'
 import { createStore, combineReducers, applyMiddleware } from 'redux';
@@ -134,30 +133,16 @@ export class App extends React.Component {
       this.props.setLoc(defaultLoc, urlLoc);
     }
     store.dispatch(fetchDBData(initialLoc));
-  }
-  // componentDidMount = () => {
-  //   const updateUser = () => axios.get(getUrl('api/user')).then(this.updateUser).catch(() => {})
-  //   updateUser();
-  //   debugFunctions.login = () => loginDummyUser(updateUser);
-  //   debugFunctions.logout = () => {
-  //     logout(() => {});
-  //     this.updateUser({data: {}});
-  //   }
-  //   window.debugFunctions.user = () => this.state.user;
-  //   window.debugFunctions = debugFunctions;
 
-  // }
-  components = {
-      AppForDB: contextComp(AppForDB)
-    , DBChooser: contextComp(DBChooser)
+    debugFunctions.login = () => loginDummyUser(updateUser);
+    debugFunctions.logout = () => {
+      logout(() => {});
+      this.updateUser({data: {}});
+    }
+    window.debugFunctions.user = () => this.state.user;
+    window.debugFunctions = debugFunctions;
   }
-  // getSelectedGame = () => this.state.gamesData.filter(g => g.id == this.state.loc.game)[0];
-  // displayDatabases = data => {
-  //   this.setState({dbData: data.data});
-  // }
-  // updateUser = user => {
-  //   this.setState({user: user.data}, this.updateDatabases);
-  // }
+
   fileUploadHandler = data => {
     const uploadDone = () => {
       this.updateDatabases();
@@ -201,18 +186,13 @@ export class App extends React.Component {
 
     this.locSetter(newLoc);
   }
-  contextData = () => {
-    const locSetter = this.locSetter
-    return {loc: this.state.loc, locSetter: locSetter}
-  }
   render = () => {
     var setDB = null;
     var fileDiv = null;
     if (this.props.selectedDB == null){
-      const DBChooserLoc = this.components.DBChooser;
       setDB = (<div>
 				<IntroWindow/>
-				<DBChooserLoc dbData={this.props.dbData} setDB={this.props.setDB}/>
+				<DBChooser dbData={this.props.dbData} setDB={this.props.setDB}/>
 			</div>)
       if (this.userIsLoggedIn()){
         fileDiv = <FileReader fileContentCallback={ this.fileUploadHandler }/>
@@ -221,8 +201,7 @@ export class App extends React.Component {
     var appForDB = <div/>
     if (this.props.selectedDB){
       const db = this.props.selectedDB;
-      const AppForDBLoc = this.components.AppForDB;
-      appForDB = <AppForDBLoc
+      appForDB = <AppForDB
         selectedDB={this.props.selectedDB}
         selection={ this.props.selection }
         updateSelection= { this.props.updateSelection }
@@ -236,7 +215,7 @@ export class App extends React.Component {
     const nav = <BreadcrumbNavigator loc={ this.props.loc } selectedDB= { this.props.selectedDB } setLoc= { this.props.setLoc }/>;
     
     return (
-      <LocationContext.Provider value={this.contextData()}>
+      <div>
         <Menu userCallback={ this.updateUser } user= { this.state.user } showUserElements={this.props.features.showUsers}/>
         <Grid fluid>
           <Row >
@@ -252,7 +231,7 @@ export class App extends React.Component {
             { appForDB }
           </Row>
         </Grid>
-      </LocationContext.Provider>
+      </div>
     )
   }
 }

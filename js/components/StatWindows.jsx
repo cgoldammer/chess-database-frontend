@@ -4,58 +4,18 @@ import BootstrapTable from 'react-bootstrap-table-next';
 import { avg, playerName, getUrl } from '../helpers.jsx';
 import { getRequest, postRequest } from '../api.js';
 import { MoveEvalGraph } from './MoveEvalPage.jsx';
-import { ResultPercentage } from './ResultPercentage.jsx';
 import { Jumbotron, Panel, Col } from 'react-bootstrap';
 import styles from './StatWindows.css';
-
-
-/* This function returns a list that can be displayed as a table */
-const getPlayerAverages = (evaluations, players) => {
-  if (players.length == 0){
-    return []
-  }
-  const getPlayerById = id => players.filter(p => p.id == id)[0];
-
-  const cleanPlayerData = dat => {
-    const playerId = dat[0];
-    const gameEvals = dat[1];
-    const player = getPlayerById(playerId);
-    const getEvals = ev => ev[0];
-    const filterForResult = result => gameEvals.filter(ge => ge[1] == result)
-    const avgEval = Math.floor(avg(gameEvals.map(getEvals)));
-
-    const wins = filterForResult(100);
-    const avgWinEval = Math.floor(avg(wins.map(getEvals)));
-
-    const losses = filterForResult(0);
-    const avgLossEval = Math.floor(avg(losses.map(getEvals)));
-
-    const combineWithNumber = (av, num) => "" + av + " (" + num + " game" + (num > 1 ? "s" : "") + ")";
-
-    const data = { 
-      playerId: playerId
-    , name: playerName(player)
-    ,	number: gameEvals.length
-    , avgEval: isNaN(avgEval) ? "" : avgEval
-    , avgWinEval: isNaN(avgWinEval) ? "" : combineWithNumber(avgWinEval, wins.length)
-    , avgLossEval: isNaN(avgLossEval) ? "" : combineWithNumber(avgLossEval, losses.length)
-    }
-    return data
-  }
-  return evaluations.map(cleanPlayerData);
-}
 
 
 class EvaluationWindow extends React.Component {
   constructor(props){
     super(props);
-    this.state = { 
-    };
   }
 
   render = () => {
-    const data = getPlayerAverages(this.props.gameEvaluations, this.props.players);
     var table = <div/>;
+    const data = this.props.playerAverages;
 
     const columns = [{dataField: 'name', text: 'Player'}
     , {dataField: 'number', text: 'Number of games', sort: true}
@@ -86,44 +46,14 @@ class EvaluationWindow extends React.Component {
 export class StatWindow extends React.Component {
   constructor(props){
     super(props);
-    this.state = { 
-      gameEvaluations: []
-    , players: []
-    , moveData: []
-    , resultPercentages: []
-    };
   }
-  setMoveSummary = data => this.setState({moveData: data.data});
-  setResultPercentages = data => this.setState({resultPercentages: data.data});
-  loadByEvaluation = () => {
-		const data = { 
-			gameRequestDB: this.props.db
-		, gameRequestTournaments: this.props.selection.tournaments
-		}
-    const setEvaluation = data => this.setState({gameEvaluations: data.data});
-    getRequest(getUrl('api/gameEvaluations'), data, setEvaluation);
-
-    const moveRequest = { 
-      moveRequestDB: this.props.db
-    , moveRequestTournaments: this.props.selection.tournaments
-    }
-    getRequest(getUrl('api/moveSummary'), moveRequest, this.setMoveSummary);
-    const defaultRequest = { 
-      searchDB: this.props.db
-    }
-    getRequest(getUrl('api/resultPercentages'), defaultRequest, this.setResultPercentages);
-  }
-  componentDidMount = () => {
-    this.loadByEvaluation();
-  }
-
   render = () => {
     const hr = <hr style={{ height: "2px", border: "0 none", color: "lightGray", backgroundColor: "lightGray" }}/>
     return (
       <div>
-        <EvaluationWindow gameEvaluations={this.state.gameEvaluations} players={this.props.players}/>
+        <EvaluationWindow playerAverages={ this.props.playerAverages }/>
         { hr }
-        <MoveEvalGraph moveData={this.state.moveData}/>
+        <MoveEvalGraph moveSummaryData={this.props.moveSummaryData}/>
       </div>
     )
   }

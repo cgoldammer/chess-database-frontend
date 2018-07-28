@@ -23,7 +23,7 @@ import statStyles from './components/StatWindows.css';
 const hist = createBrowserHistory();
 import { store } from './redux.jsx';
 
-import { rootReducer, FETCH_DB_DATA, FETCH_TOURNAMENT_DATA, FETCH_PLAYER_DATA, FETCH_GAME_DATA, FETCH_MOVE_EVAL_DATA, STATUS_RECEIVING, STATUS_RECEIVED, SELECT_DB, SELECTION_CHANGED, defaultSelectionState } from './reducers.jsx';
+import { rootReducer, FETCH_DB_DATA, FETCH_TOURNAMENT_DATA, FETCH_PLAYER_DATA, FETCH_GAME_DATA, FETCH_MOVE_EVAL_DATA, FETCH_GAME_EVAL_DATA, FETCH_MOVE_SUMMARY_DATA, STATUS_RECEIVING, STATUS_RECEIVED, SELECT_DB, SELECTION_CHANGED, defaultSelectionState } from './reducers.jsx';
 
 var debugFunctions = {}
 window.debugFunctions = debugFunctions;
@@ -225,6 +225,10 @@ export class App extends React.Component {
       const AppForDBLoc = this.components.AppForDB;
       appForDB = <AppForDBLoc
         selectedDB={this.props.selectedDB}
+        selection={ this.props.selection }
+        updateSelection= { this.props.updateSelection }
+        playerData={this.props.playerData.data }
+        tournamentData={this.props.tournamentData.data }
         summaryData={ this.props.summaryData}
         leaveDB={this.leaveDB}
         user={this.state.user}
@@ -345,8 +349,10 @@ class AppForDB extends React.Component {
     const search = 
       <SearchWindow 
         selectedDB={this.props.selectedDB} 
-        playerData={ this.props.playerData } 
+        selection={ this.props.selection }
         gamesData= { this.props.gamesData }
+        updateSelection = { this.props.updateSelection }
+        playerData={ this.props.playerData } 
         tournamentData={this.props.tournamentData}/>
     var summary = <div/>
     if (this.hasSummary()){
@@ -385,41 +391,39 @@ const allDBRequests = type => {
 }
 
 const requestDB = allDefaultRequests(FETCH_DB_DATA);
+
 const requestTournaments = allDBRequests(FETCH_TOURNAMENT_DATA)
 const requestPlayers = allDBRequests(FETCH_PLAYER_DATA)
 const requestGames = allDBRequests(FETCH_GAME_DATA)
 const requestMoveEvals = allDBRequests(FETCH_MOVE_EVAL_DATA)
+const requestGameEvals = allDBRequests(FETCH_GAME_EVAL_DATA)
+const requestMoveSummary = allDBRequests(FETCH_MOVE_SUMMARY_DATA)
 
-const fetchPlayerData = (dbId, oldSelection) => {
-  return dispatch => {
-    dispatch(requestPlayers.receiving(dbId));
+const fetchPlayerData = (dbId, oldSelection) => dispatch => {
+  dispatch(requestPlayers.receiving(dbId));
 
-    const handleDBResponse = data => {
-      dispatch(requestPlayers.received(dbId, data.data));
-      const changeSelection = {players: data.data.map(d => d.id)};
-      dispatch(selectionChangedAction(dbId, oldSelection, changeSelection));
-    }
-    getRequestPromise(getUrl('api/players'), {searchDB: dbId})
-      .then(handleDBResponse)
+  const handleDBResponse = data => {
+    dispatch(requestPlayers.received(dbId, data.data));
+    const changeSelection = {players: data.data.map(d => d.id)};
+    dispatch(selectionChangedAction(dbId, oldSelection, changeSelection));
   }
+  getRequestPromise(getUrl('api/players'), {searchDB: dbId})
+    .then(handleDBResponse)
 }
 
 const selectionChanged = (newSelection, reset) => ({ type: SELECTION_CHANGED, selection: newSelection, reset: reset})
 
-const fetchTournamentData = (dbId, callback) => {
-  return dispatch => {
-    dispatch(requestTournaments.receiving(dbId));
-    const handleDBResponse = data => {
-      dispatch(requestTournaments.received(data.data));
-      const selection = {tournaments: data.data.map(d => d.id)};
-      const newSelection = {...defaultSelectionState, ...selection}
-      const select = selectionChangedAction(dbId, defaultSelectionState, selection);
-      dispatch(select);
-      dispatch(callback(dbId, newSelection));
-    }
-    getRequestPromise(getUrl('api/tournaments'), {searchDB: dbId})
-      .then(handleDBResponse)
+const fetchTournamentData = (dbId, callback) => dispatch => {
+  dispatch(requestTournaments.receiving(dbId));
+  const handleDBResponse = data => {
+    dispatch(requestTournaments.received(dbId, data.data));
+    const selection = {tournaments: data.data.map(d => d.id)};
+    const newSelection = {...defaultSelectionState, ...selection}
+    dispatch(selectionChangedAction(dbId, defaultSelectionState, selection));
+    dispatch(callback(dbId, newSelection));
   }
+  getRequestPromise(getUrl('api/tournaments'), {searchDB: dbId})
+    .then(handleDBResponse)
 }
 
 const selectDB = dbId => ({type: SELECT_DB, dbId: dbId});
@@ -437,21 +441,17 @@ const gameSearchData = (dbId, selection) => ({
 , gameRequestTournaments: selection.tournaments
 })
 
-const fetchGames = (dbId, selection) => {
-  return dispatch => {
-    dispatch(requestGames.receiving(dbId));
-    const handleDBResponse = data => dispatch(requestGames.received(dbId, data.data));
-    getRequestPromise(getUrl('api/games'), gameSearchData(dbId, selection)).then(handleDBResponse)
-  }
+const defaultFetcher = (requester, url) => (dbId, selection) => dispatch => {
+  dispatch(requester.receiving(dbId));
+  const handleDBResponse = data => dispatch(requester.received(dbId, data.data));
+  getRequestPromise(getUrl('api/' + url), gameSearchData(dbId, selection)).then(handleDBResponse)
 }
 
-const fetchMoveEvals = (dbId, selection) => {
-  return dispatch => {
-    dispatch(requestMoveEvals.receiving(dbId));
-    const handleDBResponse = data => dispatch(requestMoveEvals.received(dbId, data.data));
-    getRequestPromise(getUrl('api/moveEvaluations'), gameSearchData(dbId, selection)).then(handleDBResponse)
-  }
-}
+const fetchGames = defaultFetcher(requestGames, 'games')
+const fetchMoveEvals = defaultFetcher(requestMoveEvals, 'moveEvaluations')
+const fetchGameEvaluations = defaultFetcher(requestGameEvals, 'gameEvaluations')
+const fetchMoveSummary = defaultFetcher(requestMoveSummary, 'moveSummary')
+
 
 
 // Upon selecting a database, first pull the player and tournament data. 
@@ -460,7 +460,8 @@ const fetchDataForDBSelection = (dbId, selection) => {
   return dispatch => {
     dispatch(fetchGames(dbId, selection));
     dispatch(fetchMoveEvals(dbId, selection));
-    // dispatch(fetchPlayerData(data));
+    dispatch(fetchGameEvaluations(dbId, selection));
+    dispatch(fetchMoveSummary(dbId, selection));
   }
 }
 
@@ -474,12 +475,10 @@ const fetchData = (requester, receiver, url) => {
   }
 }
 
-const selectionChangedAction = (dbId, selectionOld, selection) => {
-  return dispatch => {
-    const newSelection = { ...selectionOld, ...selection }
-    dispatch(selectionChanged(newSelection, false));
-    dispatch(fetchDataForDBSelection(dbId, newSelection));
-  }
+const selectionChangedAction = (dbId, selectionOld, selection) => dispatch => {
+  const newSelection = { ...selectionOld, ...selection }
+  dispatch(selectionChanged(newSelection, false));
+  dispatch(fetchDataForDBSelection(dbId, newSelection));
 }
 
 const fetchDBData = fetchData(requestDB.receiving, requestDB.received, 'api/databases')
@@ -502,12 +501,18 @@ const mapStateToProps = (state, ownProps) => ({
     return loc
   }
 , players: state.players
-, tournamentData: state.tournaments
+, tournamentData: state.tournamentData
+, playerData: state.playerData
 , gamesData: state.gamesData
+, selection: state.selection
 })
 
 const mapDispatchToProps = (dispatch, ownProps) => ({ 
   setDB: dbId => dispatch(selectDBAction(dbId))
+, updateSelection: (dbId, selection, newSelection) => {
+    console.log("UPDAATE SEL");
+    dispatch(selectionChangedAction(dbId, selection, newSelection))
+  }
 });
 
 const AppConnected = connect(mapStateToProps, mapDispatchToProps)(App);

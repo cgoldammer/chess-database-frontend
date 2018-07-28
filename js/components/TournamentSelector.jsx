@@ -8,6 +8,10 @@ export class TournamentSelector extends React.Component {
     super(props);
   }
   hasData = () => this.props.data.length > 0;
+  getSelection = () => {
+    if (this.props.selected.length == this.props.data.length) return [];
+    return this.props.selected;
+  }
   render = () => {
     return (
       <div className={styles.tournamentSelector}>
@@ -15,7 +19,7 @@ export class TournamentSelector extends React.Component {
           <Col xs={12} mdOffset={3} md={6}>
             <span>{ this.props.name } </span>
             <Select 
-              value={this.props.selected}
+              value={this.getSelection()}
               multi={true}
               options={this.props.data} 
               valueKey={'id'}

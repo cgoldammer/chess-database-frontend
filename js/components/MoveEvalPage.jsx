@@ -35,13 +35,13 @@ export class MoveEvalGraph extends React.Component {
   }
   toggleStdError = () => this.setState((state, props) => ({showStdError: !state.showStdError}))
   onChange = selected => this.setState({ selectedPlayers: selected.map(x => ({value:x.value, name: x.label, index: x.index}))})
-  hasData = () => this.props.moveData.length > 0;
-  getChartData = () => prepareForChart(this.props.moveData, this.state.selectedPlayers.map(p => p.value), this.state.showStdError)
-  getAllPlayers = () => this.props.moveData.map(x => x.key)
-  getAllData = () => prepareForChart(this.props.moveData, this.getAllPlayers(), this.state.showStdError)
+  hasData = () => this.props.moveSummaryData.length > 0;
+  getChartData = () => prepareForChart(this.props.moveSummaryData, this.state.selectedPlayers.map(p => p.value), this.state.showStdError)
+  getAllPlayers = () => this.props.moveSummaryData.map(x => x.key)
+  getAllData = () => prepareForChart(this.props.moveSummaryData, this.getAllPlayers(), this.state.showStdError)
   getExtents = () => extentsForData(this.getAllData())
-  getChartSeries = () => this.props.moveData.map((x) => ({field: 'eval' + x.key, name: x.player}));
-  getSelectOptions = () => this.props.moveData.map((x, index) => ({value: x.key, label: x.player, index: index}));
+  getChartSeries = () => this.props.moveSummaryData.map((x) => ({field: 'eval' + x.key, name: x.player}));
+  getSelectOptions = () => this.props.moveSummaryData.map((x, index) => ({value: x.key, label: x.player, index: index}));
   render = () => {
     const margins = {left: 100, right: 100, top: 50, bottom: 50}
     const extents = this.getExtents()
@@ -102,7 +102,7 @@ export class MoveEvalGraph extends React.Component {
 }
 
 MoveEvalGraph.defaultProps = {
-  moveData: []
+  moveSummaryData: []
 }
 
 const extentsForData = (moveData) => {
@@ -116,6 +116,8 @@ const extentsForData = (moveData) => {
 }
 
 const prepareForChart = (moveData, selectedPlayers, showStdError) => {
+  console.log("MOVE DATA");
+  console.log(moveData);
   const playerSet = new Set(selectedPlayers);
   const moveDataForPlayers = moveData.filter(x => playerSet.has(x.key));
   const reshapeMoves = moves => {

@@ -3,7 +3,6 @@ import { Grid, Row, Col, Button, DropdownButton, MenuItem, FormControl, Panel, L
 import styles from '../App.css';
 import { Link } from 'react-router-dom';
 
-
 export class DBChooser extends React.Component {
   constructor(props) {
     super(props);
@@ -11,14 +10,9 @@ export class DBChooser extends React.Component {
       selected: '',
     };
   }
-  selectDB = selected => {
-    this.setState({ selected });
-    const newLoc = {db: selected};
-    this.props.locSetter(newLoc);
-  };
   hasData = () => this.props.dbData.length > 0;
 
-  getButton = (data) => <ListGroupItem key={data.id} onClick={() => this.selectDB(data.id)}><p style={{fontSize: "130%"}}>{data.name}</p></ListGroupItem>
+  getButton = data => <ListGroupItem key={data.id} onClick={() => this.props.setDB(data.id)}><p style={{fontSize: "130%"}}>{data.name}</p></ListGroupItem>
 
   render = () => {
     return (

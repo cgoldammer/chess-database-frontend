@@ -16,6 +16,7 @@ devExports = {
   devServer: {
     contentBase: './lib',
     hot: true,
+    historyApiFallback: true,
     port: 8081,
     host: '0.0.0.0',
     disableHostCheck: true,

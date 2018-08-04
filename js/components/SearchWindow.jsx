@@ -22,11 +22,17 @@ export class SearchChoice extends React.Component {
     super(props);
   }
   updateTournaments = tournaments => {
+    if (tournaments == null) tournaments = []
+    if (tournaments.length == 0) tournaments = this.props.tournamentData;
+
     const newTournaments = tournaments == null ? [] : tournaments.map(t => t.id);
     const updater = this.props.updateSelection(this.props.selectedDB.id, this.props.selection, {'tournaments': newTournaments});
   }
   updatePlayers = players => {
-    const newPlayers = players == null ? [] : players.map(t => t.id);
+    if (players == null) players = []
+    if (players.length == 0) players = this.props.playerData;
+
+    const newPlayers = players.map(t => t.id);
     const updater = this.props.updateSelection(this.props.selectedDB.id, this.props.selection, {'players': newPlayers});
   }
   render = () => {

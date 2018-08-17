@@ -7,7 +7,7 @@ import { TournamentSelector } from "./components/MoveEvalPage.jsx";
 import { DBChooser } from './components/DBChooser.jsx';
 import { EvaluationWindow } from './components/AdminComponents.jsx';
 import { SearchWindow } from './components/SearchWindow.jsx';
-import { HOC, exposeRouter, objectIsEmpty, loginDummyUser, logout, getUser, resultPanels, updateLoc, getUrl, preparePlayerData, getUrlFromLoc, getLocFromUrl, defaultLoc} from './helpers.jsx';
+import { HOC, exposeRouter, objectIsEmpty, loginDummyUser, logout, getUser, resultPanels, updateLoc, getUrl, preparePlayerData, getUrlFromLoc, getLocFromUrl, defaultLoc, cleanGameData, getActiveSelection} from './helpers.jsx';
 import axios from 'axios';
 import { connect, Provider } from 'react-redux'
 import { createStore, combineReducers, applyMiddleware } from 'redux';
@@ -18,7 +18,7 @@ import {testVar } from './api.js';
 import {getRequest, getRequestPromise, postRequest} from './api.js';
 import styles from './App.css';
 import statStyles from './components/StatWindows.css';
-import { store, updateUrl, getLoc } from './redux.jsx';
+import { store, updateUrl, getLoc, getSelectedGames } from './redux.jsx';
 import { selectGame, selectShowType } from './actions.jsx';
 
 import { rootReducer, FETCH_DB_DATA, FETCH_TOURNAMENT_DATA, FETCH_PLAYER_DATA, FETCH_GAME_DATA, FETCH_MOVE_EVAL_DATA, FETCH_GAME_EVAL_DATA, FETCH_MOVE_SUMMARY_DATA, STATUS_RECEIVING, STATUS_RECEIVED, SELECT_DB, SELECTION_CHANGED, defaultSelectionState, defaultShowType } from './reducers.jsx';
@@ -210,6 +210,7 @@ export class App extends React.Component {
         summaryData={ this.props.summaryData}
         leaveDB={this.leaveDB}
         user={this.state.user}
+        selectedGames={this.props.selectedGames}
         router={this.routeForDB}/>;
     }
     const nav = <BreadcrumbNavigator loc={ this.props.loc } selectedDB= { this.props.selectedDB } setLoc= { this.props.setLoc }/>;
@@ -254,7 +255,7 @@ export class FileReader extends React.Component {
   setWarning = val => this.setState({showTooBigWarning: val})
 
   submitResultsCallback = () => {
-    const maxFileSize = 200 * 1024;
+    const maxFileSize = 1000 * 1024;
     var reader = new window.FileReader()
     reader.onload = e => {
       const result = reader.result;
@@ -324,9 +325,9 @@ class AppForDB extends React.Component {
       <SearchWindow 
         selectedDB={this.props.selectedDB} 
         selection={ this.props.selection }
-        gamesData= { this.props.gamesData }
         updateSelection = { this.props.updateSelection }
         playerData={ this.props.playerData } 
+        selectedGames={ this.props.selectedGames }
         tournamentData={this.props.tournamentData}/>
     var summary = <div/>
     if (this.hasSummary()){
@@ -373,13 +374,14 @@ const requestMoveEvals = allDBRequests(FETCH_MOVE_EVAL_DATA)
 const requestGameEvals = allDBRequests(FETCH_GAME_EVAL_DATA)
 const requestMoveSummary = allDBRequests(FETCH_MOVE_SUMMARY_DATA)
 
-const fetchPlayerData = (dbId, oldSelection) => dispatch => {
+
+const fetchPlayerData = dbId => dispatch => {
   dispatch(requestPlayers.receiving(dbId));
 
   const handleDBResponse = data => {
     dispatch(requestPlayers.received(dbId, data.data));
-    const changeSelection = {players: data.data.map(d => d.id)};
-    dispatch(selectionChangedAction(dbId, oldSelection, changeSelection));
+    // const changeSelection = {players: data.data.map(d => d.id)};
+    // dispatch(selectionChangedAction(dbId, oldSelection, changeSelection));
   }
   getRequestPromise(getUrl('api/players'), {searchDB: dbId})
     .then(handleDBResponse)
@@ -391,10 +393,7 @@ const fetchTournamentData = (dbId, callback) => dispatch => {
   dispatch(requestTournaments.receiving(dbId));
   const handleDBResponse = data => {
     dispatch(requestTournaments.received(dbId, data.data));
-    const selection = {tournaments: data.data.map(d => d.id)};
-    const newSelection = {...defaultSelectionState, ...selection}
-    dispatch(selectionChangedAction(dbId, defaultSelectionState, selection));
-    dispatch(callback(dbId, newSelection));
+    dispatch(callback(dbId));
   }
   getRequestPromise(getUrl('api/tournaments'), {searchDB: dbId})
     .then(handleDBResponse)
@@ -402,11 +401,11 @@ const fetchTournamentData = (dbId, callback) => dispatch => {
 
 const selectDB = dbId => ({type: SELECT_DB, dbId: dbId});
 
-const selectDBAction = (dbId, callback=null) => dispatch => {
+const selectDBAction = dbId => dispatch => {
   dispatch(selectDB(dbId));
+  dispatch(fetchGames(dbId));
   dispatch(fetchTournamentData(dbId, fetchPlayerData));
   updateUrl();
-  if (callback) callback();
 }
 
 
@@ -415,24 +414,42 @@ const gameSearchData = (dbId, selection) => ({
 , gameRequestTournaments: selection.tournaments
 })
 
-const defaultFetcher = (requester, url) => (dbId, selection) => dispatch => {
+const allGameSearchData = dbId => ({
+  gameRequestDB: dbId
+, gameRequestTournaments: []
+})
+
+const fetchGames = (dbId, tournaments) => dispatch => {
+  const requester = requestGames;
+  const url = "games";
+  const searchData = allGameSearchData(dbId);
+  dispatch(requester.receiving(dbId));
+  const handleDBResponse = data => dispatch(requester.received(dbId, data.data));
+  getRequestPromise(getUrl('api/' + url), searchData).then(handleDBResponse)
+}
+
+const defaultFetcher = (requester, url) => (dbId, baseSelection) => (dispatch, getState) => {
+  const state = getState();
+  const selection = getActiveSelection(state, baseSelection);
   dispatch(requester.receiving(dbId));
   const handleDBResponse = data => dispatch(requester.received(dbId, data.data));
   getRequestPromise(getUrl('api/' + url), gameSearchData(dbId, selection)).then(handleDBResponse)
 }
 
-const fetchGames = defaultFetcher(requestGames, 'games')
 const fetchMoveEvals = defaultFetcher(requestMoveEvals, 'moveEvaluations')
 const fetchGameEvaluations = defaultFetcher(requestGameEvals, 'gameEvaluations')
 const fetchMoveSummary = defaultFetcher(requestMoveSummary, 'moveSummary')
 
+// There is a selection object in the state that represents
+// the items that are visually selected.
+// To pull from the database, I submit an action that uses the player 
+// and opening data.
 
 
 // Upon selecting a database, first pull the player and tournament data. 
 // For each data point that is received, updated the selection.
 const fetchDataForDBSelection = (dbId, selection) => {
   return dispatch => {
-    dispatch(fetchGames(dbId, selection));
     dispatch(fetchMoveEvals(dbId, selection));
     dispatch(fetchGameEvaluations(dbId, selection));
     dispatch(fetchMoveSummary(dbId, selection));
@@ -476,10 +493,11 @@ const mapStateToProps = (state, ownProps) => ({
 , playerData: state.playerData
 , gamesData: state.gamesData
 , selection: state.selection
+, selectedGames: getSelectedGames(state).map(cleanGameData)
 })
 
 const mapDispatchToProps = (dispatch, ownProps) => ({ 
-  setDB: dbId => dispatch(selectDBAction(dbId))
+  setDB: dbId => dispatch(selectDBAction(dbId, fetchDataForDBSelection(dbId)))
 , updateSelection: (dbId, selection, newSelection) => {
     dispatch(selectionChangedAction(dbId, selection, newSelection))
   }

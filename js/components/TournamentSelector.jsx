@@ -9,7 +9,6 @@ export class TournamentSelector extends React.Component {
   }
   hasData = () => this.props.data.length > 0;
   getSelection = () => {
-    if (this.props.selected.length == this.props.data.length) return [];
     return this.props.selected;
   }
   render = () => {
@@ -35,4 +34,5 @@ export class TournamentSelector extends React.Component {
 
 TournamentSelector.defaultProps = {
   data: []
+, resetIfAll: true
 }

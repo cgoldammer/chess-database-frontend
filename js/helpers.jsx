@@ -134,3 +134,68 @@ export const getLocFromUrl = url => {
   }
   return {db: db, showType: showType, game: game}
 }
+
+const gameResult = resultInt => resultInt == -1 ? "0-1" : resultInt == 0 ? "1/2-1/2" : "1-0";
+
+export const cleanGameData = data => {
+  const getByAttribute = type => data => {
+    const results = data.filter(att => att.attribute == type)
+    return results.length > 0 ? results[0].value : ''
+  }
+  const cleaned = {
+    'id': data.gameDataGame.id
+  , 'whiteShort': playerNameShort(data.gameDataPlayerWhite)
+  , 'blackShort': playerNameShort(data.gameDataPlayerBlack)
+  , 'white': playerName(data.gameDataPlayerWhite)
+  , 'black': playerName(data.gameDataPlayerBlack)
+  , 'result': gameResult(data.gameDataGame.gameResult)
+  , 'tournament': data.gameDataTournament.name
+  , 'opening': ("gameDataOpening" in data && data.gameDataOpening != null) ? (data.gameDataOpening.variationName || "") : ""
+  , 'openingLine': ("gameDataOpeningLine" in data && data.gameDataOpeningLine != null) ? (data.gameDataOpeningLine.name || "") : ""
+  , 'pgn': data.gameDataGame.pgn
+  , 'date': getByAttribute("Date")(data.gameDataAttributes)
+  };
+  return cleaned
+}
+
+export const getGameDataOpenings = gameData => {
+  const getOpening = game => {
+    if (game.gameDataOpeningLine == null) return null
+    const data = {
+      name: game.gameDataOpeningLine.name
+    , id: game.gameDataOpeningLine.name
+    }
+    return data
+  }
+  return gameData.map(getOpening).filter(d => d != null).filter(d => d.name != undefined)
+}
+
+export const getOpenings = gameData => {
+  const getOpening = game => {
+    if (game.openingLine == "") return null
+    const data = {
+      name: game.openingLine
+    , id: game.openingLine
+    }
+    return data
+  }
+  return gameData.map(getOpening).filter(d => d != null).filter(d => d.name != undefined)
+}
+
+export const getActiveSelection = (state, baseSelection=null) => {
+  if (baseSelection == null) return null;
+  const allTournaments = state.tournamentData.data;
+  const allPlayers = state.playerData.data;
+  const allGames = state.gamesData.data;
+  const allOpenings = getGameDataOpenings(allGames);
+
+  const datas = {openings: allOpenings, players: allPlayers, tournaments: allTournaments}
+
+  var selection = {}
+  for (var el of ['tournaments', 'players', 'openings']){
+    const ids = datas[el].map(x => x.id);
+    selection[el] = baseSelection[el].length == 0 ? ids : baseSelection[el]
+  }
+  return selection;
+}
+

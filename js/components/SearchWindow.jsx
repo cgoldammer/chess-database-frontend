@@ -8,7 +8,7 @@ import { GamesTable } from './GamesTable.jsx';
 import { StatWindow } from './StatWindows.jsx';
 import { BlunderWindow } from './BlunderWindow.jsx';
 import { getRequest, postRequest } from '../api.js';
-import { avg, playerNameShort, playerName, resultPanels, updateLoc, getUrl} from '../helpers.jsx';
+import { avg, playerNameShort, playerName, resultPanels, updateLoc, getUrl, cleanGameData, getOpenings} from '../helpers.jsx';
 import { connect, Provider } from 'react-redux'
 import { store, getSelectedGames, updateUrl } from '../redux.jsx';
 import { SELECT_GAME, SELECT_SHOWTYPE } from '../reducers.jsx';
@@ -23,17 +23,19 @@ export class SearchChoice extends React.Component {
   }
   updateTournaments = tournaments => {
     if (tournaments == null) tournaments = []
-    if (tournaments.length == 0) tournaments = this.props.tournamentData;
-
     const newTournaments = tournaments == null ? [] : tournaments.map(t => t.id);
-    const updater = this.props.updateSelection(this.props.selectedDB.id, this.props.selection, {'tournaments': newTournaments});
+    this.props.updateSelection(this.props.selectedDB.id, this.props.selection, {'tournaments': newTournaments});
   }
   updatePlayers = players => {
     if (players == null) players = []
-    if (players.length == 0) players = this.props.playerData;
-
     const newPlayers = players.map(t => t.id);
-    const updater = this.props.updateSelection(this.props.selectedDB.id, this.props.selection, {'players': newPlayers});
+    this.props.updateSelection(this.props.selectedDB.id, this.props.selection, {'players': newPlayers});
+  }
+  updateOpenings = openings => {
+    const openingData = getOpenings(this.props.selectedGames)
+    if (openings == null) openings = []
+    const newOpenings = openings.map(op => op.id);
+    this.props.updateSelection(this.props.selectedDB.id, this.props.selection, {'openings': newOpenings});
   }
   render = () => {
     return (
@@ -50,32 +52,18 @@ export class SearchChoice extends React.Component {
           data={this.props.playerData} 
           callback={this.updatePlayers}
         />
+        <TournamentSelector 
+          name="Opening" 
+          selected={this.props.selection.openings} 
+          data={ getOpenings(this.props.selectedGames) } 
+          resetIfAll={ false }
+          callback={this.updateOpenings}
+        />
       </div>
     )
   }
 }
 
-const gameResult = resultInt => resultInt == -1 ? "0-1" : resultInt == 0 ? "1/2-1/2" : "1-0";
-
-const cleanGameData = data => {
-  const getByAttribute = type => data => {
-    const results = data.filter(att => att.attribute == type)
-    return results.length > 0 ? results[0].value : ''
-  }
-  const cleaned = {
-    'id': data.gameDataGame.id
-  , 'whiteShort': playerNameShort(data.gameDataPlayerWhite)
-  , 'blackShort': playerNameShort(data.gameDataPlayerBlack)
-  , 'white': playerName(data.gameDataPlayerWhite)
-  , 'black': playerName(data.gameDataPlayerBlack)
-  , 'result': gameResult(data.gameDataGame.gameResult)
-  , 'tournament': data.gameDataTournament.name
-  , 'opening': ("gameDataOpening" in data && data.gameDataOpening != null) ? (data.gameDataOpening.variationName || "") : ""
-  , 'pgn': data.gameDataGame.pgn
-  , 'date': getByAttribute("Date")(data.gameDataAttributes)
-  };
-  return cleaned
-}
 
 const getSelectedGame = (games, gameId) => {
   if (gameId == null){
@@ -290,7 +278,9 @@ export class SearchWindow extends React.Component {
             selectedDB={ this.props.selectedDB }
             playerData={this.props.playerData }
             tournamentData={this.props.tournamentData }
+            gamesData= { this.props.gamesData }
             selectedPlayers={this.state.selection.players}
+            selectedGames={ this.props.selectedGames }
             updateSelection = { this.props.updateSelection }
             tournamentData={this.props.tournamentData}/>
         </Row>

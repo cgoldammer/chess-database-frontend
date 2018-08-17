@@ -23,6 +23,7 @@ const defaultData = {
 export const defaultSelectionState = {
   tournaments: []
 , players: []
+, openings: []
 }
 
 const reduceSelectionChanged = (state=defaultSelectionState, action) => {

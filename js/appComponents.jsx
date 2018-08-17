@@ -1,83 +1,27 @@
 import React from 'react';
-import { HelpBlock, Jumbotron, Grid, Row, Col, Button, DropdownButton, MenuItem, FormControl, Breadcrumb, Modal } from 'react-bootstrap';
-import Chess from 'chess.js';
+import { HelpBlock, Jumbotron, Grid, Row, Button, FormControl, Breadcrumb, Modal, } from 'react-bootstrap';
 
-import { Menu } from './components/Menu.jsx';
-import { TournamentSelector } from "./components/MoveEvalPage.jsx";
-import { DBChooser } from './components/DBChooser.jsx';
-import { EvaluationWindow } from './components/AdminComponents.jsx';
-import { SearchWindow } from './components/SearchWindow.jsx';
-import { HOC, exposeRouter, objectIsEmpty, loginDummyUser, logout, getUser, resultPanels, updateLoc, getUrl, preparePlayerData, getUrlFromLoc, getLocFromUrl, defaultLoc, cleanGameData, getActiveSelection} from './helpers.jsx';
+import { Menu, } from './components/Menu.jsx';
+import { DBChooser, } from './components/DBChooser.jsx';
+import { EvaluationWindow, } from './components/AdminComponents.jsx';
+import { SearchWindow, } from './components/SearchWindow.jsx';
+import { objectIsEmpty, logout, updateLoc, getUrl, getLocFromUrl, defaultLoc, cleanGameData, getActiveSelection,} from './helpers.jsx';
 import axios from 'axios';
-import { connect, Provider } from 'react-redux'
-import { createStore, combineReducers, applyMiddleware } from 'redux';
-import thunkMiddleware from 'redux-thunk';
+import { connect, Provider, } from 'react-redux';
 
-import myData from '/home/cg/data/output/tests.json';
-import {testVar } from './api.js';
-import {getRequest, getRequestPromise, postRequest} from './api.js';
-import styles from './App.css';
+import {getRequestPromise, postRequest,} from './api.js';
 import statStyles from './components/StatWindows.css';
-import { store, updateUrl, getLoc, getSelectedGames } from './redux.jsx';
-import { selectGame, selectShowType } from './actions.jsx';
+import { store, updateUrl, getLoc, getSelectedGames, } from './redux.jsx';
+import { selectGame, selectShowType, } from './actions.jsx';
 
-import { rootReducer, FETCH_DB_DATA, FETCH_TOURNAMENT_DATA, FETCH_PLAYER_DATA, FETCH_GAME_DATA, FETCH_MOVE_EVAL_DATA, FETCH_GAME_EVAL_DATA, FETCH_MOVE_SUMMARY_DATA, STATUS_RECEIVING, STATUS_RECEIVED, SELECT_DB, SELECTION_CHANGED, defaultSelectionState, defaultShowType } from './reducers.jsx';
+import { FETCH_DB_DATA, FETCH_TOURNAMENT_DATA, FETCH_PLAYER_DATA, FETCH_GAME_DATA, FETCH_MOVE_EVAL_DATA, FETCH_GAME_EVAL_DATA, FETCH_MOVE_SUMMARY_DATA, STATUS_RECEIVING, STATUS_RECEIVED, SELECT_DB, SELECTION_CHANGED, } from './reducers.jsx';
 
-var debugFunctions = {}
+var debugFunctions = {};
 window.debugFunctions = debugFunctions;
 
 String.prototype.number = function (find) {
   return this.split(find).length - 1;
-}
-
-const mapOverObject = (obj, f) => {
-  var newObj = {};
-  Object.keys(obj).forEach(function(key) {
-      newObj[key] = f(obj[key]);
-  });
-  return newObj
-}
-
-const prepareData = function(data){
-  for (var x = 0; x < data.length; x++){
-    data[x].id = x;
-    var rand = Math.random();
-    var bestMove = data[x].best
-    var actualMove = data[x].move
-
-    if (rand < 0.5){
-      data[x].move1 = bestMove
-      data[x].move2 = actualMove
-    }
-    if (rand > 0.5){
-      data[x].move1 = actualMove
-      data[x].move2 = bestMove
-    }
-  }
-  return data
-}
-
-class AppSummary extends React.Component {
-  constructor(props) {
-    super(props);
-  }
-  render = () => {
-    const data = this.props.data;
-    const style = {
-      marginTop: 50,
-      marginBotton: 50
-    };
-    return (
-      <div style={ style }>
-        <div>Tournaments: {data.numberTournaments}</div>
-        <div>Games in the database: {data.numberGames}</div>
-        <div>Games that are fully evaluated by Stockfish: {data.numberGameEvals}</div>
-        <div>Number of moves that are evaluated: {data.numberMoveEvals}</div>
-      </div>
-    )
-  }
-}
-
+};
 
 class BreadcrumbNavigator extends React.Component {
   constructor(props) {
@@ -87,12 +31,12 @@ class BreadcrumbNavigator extends React.Component {
   render = () => {
     const crumb = (key, value, name) => <Breadcrumb.Item key={name} onClick={ this.sendLocation(key, value) }> {name} </Breadcrumb.Item>;
     const loc = this.props.loc;
-    const homeCrumb = crumb("db", null, "home");
+    const homeCrumb = crumb('db', null, 'home');
     var showCrumb = null;
     var gameCrumb = null;
-    const dbCrumb = loc.db != null ? crumb("db", loc.db, this.props.selectedDB.name) : null;
-    if (dbCrumb) showCrumb = loc.showType != null ? crumb("showType", loc.showType, loc.showType) : null;
-    if (showCrumb) gameCrumb = loc.game != null ? crumb("game", this.props.game, loc.game) : null;
+    const dbCrumb = loc.db != null ? crumb('db', loc.db, this.props.selectedDB.name) : null;
+    if (dbCrumb) showCrumb = loc.showType != null ? crumb('showType', loc.showType, loc.showType) : null;
+    if (showCrumb) gameCrumb = loc.game != null ? crumb('game', this.props.game, loc.game) : null;
     return (
       <Breadcrumb>
         { homeCrumb }
@@ -100,45 +44,44 @@ class BreadcrumbNavigator extends React.Component {
         { showCrumb }
         { gameCrumb }
       </Breadcrumb>
-    )
+    );
   }
 }
 
 
 const IntroWindow = () => (
-	<Jumbotron>
-		<h2 className={statStyles.statTitle}>Chess insights</h2>
-		<p>A database with evaluations of every single move. Free and Open-Source.</p>
-	</Jumbotron>
-)
+  <Jumbotron>
+    <h2 className={statStyles.statTitle}>Chess insights</h2>
+    <p>A database with evaluations of every single move. Free and Open-Source.</p>
+  </Jumbotron>
+);
 
 
 export class App extends React.Component {
   constructor(props) {
     super(props);
-    document.title = "Chess insights"
+    document.title = 'Chess insights';
     this.state = {
-      gamesData: []
-    , db: null
-    , tournamentData: []
-    , players: []
-    , summaryData: {}
-    , user: {}
-    , locationList: []
+      gamesData: [],
+      db: null,
+      tournamentData: [],
+      players: [],
+      summaryData: {},
+      user: {},
+      locationList: [],
     };
   }
   componentDidMount = () => {
     const initialLoc = () => {
       const urlLoc = getLocFromUrl(window.location.pathname.slice(1));
       this.props.setLoc(defaultLoc, urlLoc);
-    }
+    };
     store.dispatch(fetchDBData(initialLoc));
 
-    debugFunctions.login = () => loginDummyUser(updateUser);
     debugFunctions.logout = () => {
       logout(() => {});
-      this.updateUser({data: {}});
-    }
+      this.updateUser({data: {},});
+    };
     window.debugFunctions.user = () => this.state.user;
     window.debugFunctions = debugFunctions;
   }
@@ -146,61 +89,27 @@ export class App extends React.Component {
   fileUploadHandler = data => {
     const uploadDone = () => {
       this.updateDatabases();
-    }
+    };
     postRequest(getUrl('api/uploadDB'), data, uploadDone);
   }
   userIsLoggedIn = () => !objectIsEmpty(this.state.user)
-  navigateToLoc = oldLoc => () => {
-    const locList = this.state.loc;
-    if (locList.db == null){
-      if (locList.db != oldLoc.db) {
-        this.leaveDB();
-      }
-    }
-    else {
-      if (locList.db != oldLoc.db) {
-        const dbLoc = locList.db;
-        this.props.setDB(dbLoc);
-      }
-      if (locList.game != undefined) {
-        const game = locList.game
-        const showType = resultPanels.gameList;
-      }
-    }
-  }
   processSummaryResponse = (data) => {
-    this.setState({'summaryData': data.data});
-  }
-  routeForDB = (route) => {
-    routeStart = route[0];
-  }
-  locSetter = loc => {
-    const oldLoc = this.state.loc;
-    // If the location contains a game, and the game data is not set,
-    // then load the game data before setting the state
-    this.setState({loc: loc}, this.navigateToLoc(oldLoc))
-    hist.push('/' + getUrlFromLoc(loc));
-  }
-  leaveDB = () => {
-    const newLoc = updateLoc(this.state.loc, "db", null)
-
-    this.locSetter(newLoc);
+    this.setState({'summaryData': data.data,});
   }
   render = () => {
     var setDB = null;
     var fileDiv = null;
     if (this.props.selectedDB == null){
       setDB = (<div>
-				<IntroWindow/>
-				<DBChooser dbData={this.props.dbData} setDB={this.props.setDB}/>
-			</div>)
+        <IntroWindow/>
+        <DBChooser dbData={this.props.dbData} setDB={this.props.setDB}/>
+      </div>);
       if (this.userIsLoggedIn()){
-        fileDiv = <FileReader fileContentCallback={ this.fileUploadHandler }/>
+        fileDiv = <FileReader fileContentCallback={ this.fileUploadHandler }/>;
       }
     }
-    var appForDB = <div/>
+    var appForDB = <div/>;
     if (this.props.selectedDB){
-      const db = this.props.selectedDB;
       appForDB = <AppForDB
         selectedDB={this.props.selectedDB}
         selection={ this.props.selection }
@@ -223,21 +132,21 @@ export class App extends React.Component {
             { nav } 
           </Row>
           <Row>
-						<div className={statStyles.statHeader}>
-							{ setDB }
-							{ fileDiv }
-						</div>
-					</Row>
+            <div className={statStyles.statHeader}>
+              { setDB }
+              { fileDiv }
+            </div>
+          </Row>
           <Row>
             { appForDB }
           </Row>
         </Grid>
       </div>
-    )
+    );
   }
 }
 
-const fileReaderState = { showModal: false, file: 0, name: "", showTooBigWarning: false };
+const fileReaderState = { showModal: false, file: 0, name: '', showTooBigWarning: false, };
 
 export class FileReader extends React.Component {
   constructor(props) {
@@ -249,45 +158,45 @@ export class FileReader extends React.Component {
     const files = document.getElementById('input').files;
     if (files.length >= 0){
       const file = files[0];
-      this.setState({ file: file });
+      this.setState({ file: file, });
     }
   }
-  setWarning = val => this.setState({showTooBigWarning: val})
+  setWarning = val => this.setState({showTooBigWarning: val,})
 
   submitResultsCallback = () => {
-    const maxFileSize = 1000 * 1024;
-    var reader = new window.FileReader()
-    reader.onload = e => {
+    const maxFileSize = 200 * 1024;
+    var reader = new window.FileReader();
+    reader.onload = () => {
       const result = reader.result;
-      const data = { uploadName: this.state.name, uploadText: reader.result };
+      const data = { uploadName: this.state.name, uploadText: reader.result, };
       if (result.length >= maxFileSize){
-        this.setWarning(true)
+        this.setWarning(true);
       }
       else {
-        this.setWarning(false)
+        this.setWarning(false);
         this.props.fileContentCallback(data);
       }
-    }
+    };
     reader.readAsText(this.state.file);
   }
   closeModal = () => this.setState(fileReaderState);
-  showModal = () => this.setState({ showModal: true });
+  showModal = () => this.setState({ showModal: true, });
   validateForm = () => this.state.file && this.state.name.length > 0;
 
   render = () => {
-    var dbNameInput = <div/>
+    var dbNameInput = <div/>;
     if (this.state.file) {
       dbNameInput = (
         <div>
           <FormControl
-          type="text"
-          value={this.state.value}
-          placeholder="Name of the database"
-          onChange={(e) => this.setState({ name: e.target.value })}
-        />
-        { this.state.showTooBigWarning ? <HelpBlock style= {{ color: "red" }} > Max file size: 200KB </HelpBlock> : null }
+            type="text"
+            value={this.state.value}
+            placeholder="Name of the database"
+            onChange={(e) => this.setState({ name: e.target.value, })}
+          />
+          { this.state.showTooBigWarning ? <HelpBlock style= {{ color: 'red', }} > Max file size: 200KB </HelpBlock> : null }
           <Button onClick={ this.submitResultsCallback } disabled={ !this.validateForm() }>Submit</Button>
-        </div>)
+        </div>);
     }
     return (
       <div>
@@ -304,7 +213,7 @@ export class FileReader extends React.Component {
           </Modal.Footer>
         </Modal>
       </div>
-    )
+    );
   }
 }
 
@@ -317,9 +226,6 @@ class AppForDB extends React.Component {
   hasData = () => {
     return this.props.tournamentData.length > 0;
   }
-  hasSummary = () => {
-    return Object.keys(this.props.summaryData).length > 0;
-  }
   render = () => {
     const search = 
       <SearchWindow 
@@ -328,12 +234,8 @@ class AppForDB extends React.Component {
         updateSelection = { this.props.updateSelection }
         playerData={ this.props.playerData } 
         selectedGames={ this.props.selectedGames }
-        tournamentData={this.props.tournamentData}/>
-    var summary = <div/>
-    if (this.hasSummary()){
-      var summary = <AppSummary data={this.props.summaryData}/>
-    }
-    var adminWindow = isAdmin ? <EvaluationWindow db={this.props.db}/> : <div/>
+        tournamentData={this.props.tournamentData}/>;
+    var adminWindow = isAdmin ? <EvaluationWindow db={this.props.db}/> : <div/>;
 
     return (
       <div>
@@ -346,33 +248,33 @@ class AppForDB extends React.Component {
 
 AppForDB.defaultProps = {
   summaryData: {},
-  tournamentData: []
-}
+  tournamentData: [],
+};
 
 const allDefaultRequests = type => {
-  const defaultRequest = (type, status) => data => ({type: type, status: status, data: data})
-  var requests = {}
-  requests.receiving = defaultRequest(type, STATUS_RECEIVING)
-  requests.received = defaultRequest(type, STATUS_RECEIVED)
-  return requests
-}
+  const defaultRequest = (type, status) => data => ({type: type, status: status, data: data,});
+  var requests = {};
+  requests.receiving = defaultRequest(type, STATUS_RECEIVING);
+  requests.received = defaultRequest(type, STATUS_RECEIVED);
+  return requests;
+};
 
 const allDBRequests = type => {
-  const dbRequest = (type, status) => (dbId, data) => ({type: type, dbId: dbId, status: status, data: data})
+  const dbRequest = (type, status) => (dbId, data) => ({type: type, dbId: dbId, status: status, data: data,});
   return {
-    receiving: dbRequest(type, STATUS_RECEIVING)
-  , received: dbRequest(type, STATUS_RECEIVED)
-  }
-}
+    receiving: dbRequest(type, STATUS_RECEIVING),
+    received: dbRequest(type, STATUS_RECEIVED),
+  };
+};
 
 const requestDB = allDefaultRequests(FETCH_DB_DATA);
 
-const requestTournaments = allDBRequests(FETCH_TOURNAMENT_DATA)
-const requestPlayers = allDBRequests(FETCH_PLAYER_DATA)
-const requestGames = allDBRequests(FETCH_GAME_DATA)
-const requestMoveEvals = allDBRequests(FETCH_MOVE_EVAL_DATA)
-const requestGameEvals = allDBRequests(FETCH_GAME_EVAL_DATA)
-const requestMoveSummary = allDBRequests(FETCH_MOVE_SUMMARY_DATA)
+const requestTournaments = allDBRequests(FETCH_TOURNAMENT_DATA);
+const requestPlayers = allDBRequests(FETCH_PLAYER_DATA);
+const requestGames = allDBRequests(FETCH_GAME_DATA);
+const requestMoveEvals = allDBRequests(FETCH_MOVE_EVAL_DATA);
+const requestGameEvals = allDBRequests(FETCH_GAME_EVAL_DATA);
+const requestMoveSummary = allDBRequests(FETCH_MOVE_SUMMARY_DATA);
 
 
 const fetchPlayerData = dbId => dispatch => {
@@ -382,63 +284,63 @@ const fetchPlayerData = dbId => dispatch => {
     dispatch(requestPlayers.received(dbId, data.data));
     // const changeSelection = {players: data.data.map(d => d.id)};
     // dispatch(selectionChangedAction(dbId, oldSelection, changeSelection));
-  }
-  getRequestPromise(getUrl('api/players'), {searchDB: dbId})
-    .then(handleDBResponse)
-}
+  };
+  getRequestPromise(getUrl('api/players'), {searchDB: dbId,})
+    .then(handleDBResponse);
+};
 
-const selectionChanged = (newSelection, reset) => ({ type: SELECTION_CHANGED, selection: newSelection, reset: reset})
+const selectionChanged = (newSelection, reset) => ({ type: SELECTION_CHANGED, selection: newSelection, reset: reset,});
 
 const fetchTournamentData = (dbId, callback) => dispatch => {
   dispatch(requestTournaments.receiving(dbId));
   const handleDBResponse = data => {
     dispatch(requestTournaments.received(dbId, data.data));
     dispatch(callback(dbId));
-  }
-  getRequestPromise(getUrl('api/tournaments'), {searchDB: dbId})
-    .then(handleDBResponse)
-}
+  };
+  getRequestPromise(getUrl('api/tournaments'), {searchDB: dbId,})
+    .then(handleDBResponse);
+};
 
-const selectDB = dbId => ({type: SELECT_DB, dbId: dbId});
+const selectDB = dbId => ({type: SELECT_DB, dbId: dbId,});
 
 const selectDBAction = dbId => dispatch => {
   dispatch(selectDB(dbId));
   dispatch(fetchGames(dbId));
   dispatch(fetchTournamentData(dbId, fetchPlayerData));
   updateUrl();
-}
+};
 
 
 const gameSearchData = (dbId, selection) => ({
-  gameRequestDB: dbId
-, gameRequestTournaments: selection.tournaments
-})
+  gameRequestDB: dbId,
+  gameRequestTournaments: selection.tournaments,
+});
 
 const allGameSearchData = dbId => ({
-  gameRequestDB: dbId
-, gameRequestTournaments: []
-})
+  gameRequestDB: dbId,
+  gameRequestTournaments: [],
+});
 
-const fetchGames = (dbId, tournaments) => dispatch => {
+const fetchGames = dbId => dispatch => {
   const requester = requestGames;
-  const url = "games";
+  const url = 'games';
   const searchData = allGameSearchData(dbId);
   dispatch(requester.receiving(dbId));
   const handleDBResponse = data => dispatch(requester.received(dbId, data.data));
-  getRequestPromise(getUrl('api/' + url), searchData).then(handleDBResponse)
-}
+  getRequestPromise(getUrl('api/' + url), searchData).then(handleDBResponse);
+};
 
 const defaultFetcher = (requester, url) => (dbId, baseSelection) => (dispatch, getState) => {
   const state = getState();
   const selection = getActiveSelection(state, baseSelection);
   dispatch(requester.receiving(dbId));
   const handleDBResponse = data => dispatch(requester.received(dbId, data.data));
-  getRequestPromise(getUrl('api/' + url), gameSearchData(dbId, selection)).then(handleDBResponse)
-}
+  getRequestPromise(getUrl('api/' + url), gameSearchData(dbId, selection)).then(handleDBResponse);
+};
 
-const fetchMoveEvals = defaultFetcher(requestMoveEvals, 'moveEvaluations')
-const fetchGameEvaluations = defaultFetcher(requestGameEvals, 'gameEvaluations')
-const fetchMoveSummary = defaultFetcher(requestMoveSummary, 'moveSummary')
+const fetchMoveEvals = defaultFetcher(requestMoveEvals, 'moveEvaluations');
+const fetchGameEvaluations = defaultFetcher(requestGameEvals, 'gameEvaluations');
+const fetchMoveSummary = defaultFetcher(requestMoveSummary, 'moveSummary');
 
 // There is a selection object in the state that represents
 // the items that are visually selected.
@@ -453,8 +355,8 @@ const fetchDataForDBSelection = (dbId, selection) => {
     dispatch(fetchMoveEvals(dbId, selection));
     dispatch(fetchGameEvaluations(dbId, selection));
     dispatch(fetchMoveSummary(dbId, selection));
-  }
-}
+  };
+};
 
 const fetchData = (requester, receiver, url, callback=null) => {
   return dispatch => {
@@ -462,54 +364,54 @@ const fetchData = (requester, receiver, url, callback=null) => {
     const handleDBResponse = data => {
       dispatch(receiver(data.data));
       if (callback) callback();
-    }
+    };
     axios.get(getUrl(url)).then(handleDBResponse);
-  }
-}
+  };
+};
 
 const selectionChangedAction = (dbId, selectionOld, selection) => dispatch => {
-  const newSelection = { ...selectionOld, ...selection }
+  const newSelection = { ...selectionOld, ...selection, };
   dispatch(selectionChanged(newSelection, false));
   dispatch(fetchDataForDBSelection(dbId, newSelection));
-}
+};
 
-const fetchDBData = callback => fetchData(requestDB.receiving, requestDB.received, 'api/databases', callback)
+const fetchDBData = callback => fetchData(requestDB.receiving, requestDB.received, 'api/databases', callback);
 
 const getSelectedDB = (dbData, selectedId) => {
   if (selectedId && dbData.data.length > 0){
-    const matches = dbData.data.filter(db => db.id == selectedId)
-    if (matches.length == 0) return null
+    const matches = dbData.data.filter(db => db.id == selectedId);
+    if (matches.length == 0) return null;
     return matches[0];
   }
   return null;
-}
+};
 
-const mapStateToProps = (state, ownProps) => ({
-  dbData: state.dbData.data
-, selectedDB: getSelectedDB(state.dbData, state.selectedDB)
-, loc: getLoc(state)
-, players: state.players
-, tournamentData: state.tournamentData
-, playerData: state.playerData
-, gamesData: state.gamesData
-, selection: state.selection
-, selectedGames: getSelectedGames(state).map(cleanGameData)
-})
+const mapStateToProps = state => ({
+  dbData: state.dbData.data,
+  selectedDB: getSelectedDB(state.dbData, state.selectedDB),
+  loc: getLoc(state),
+  players: state.players,
+  tournamentData: state.tournamentData,
+  playerData: state.playerData,
+  gamesData: state.gamesData,
+  selection: state.selection,
+  selectedGames: getSelectedGames(state).map(cleanGameData),
+});
 
-const mapDispatchToProps = (dispatch, ownProps) => ({ 
-  setDB: dbId => dispatch(selectDBAction(dbId, fetchDataForDBSelection(dbId)))
-, updateSelection: (dbId, selection, newSelection) => {
-    dispatch(selectionChangedAction(dbId, selection, newSelection))
-  }
-, setLoc: (oldLoc, newLoc) => {
+const mapDispatchToProps = dispatch => ({ 
+  setDB: dbId => dispatch(selectDBAction(dbId, fetchDataForDBSelection(dbId))),
+  updateSelection: (dbId, selection, newSelection) => {
+    dispatch(selectionChangedAction(dbId, selection, newSelection));
+  },
+  setLoc: (oldLoc, newLoc) => {
     const selectAfterDB = () => {
       if (oldLoc.showType != newLoc.showType) dispatch(selectShowType(newLoc.showType));
       if (oldLoc.game != newLoc.game) dispatch(selectGame(newLoc.game));
       updateUrl();
-    }
-    if (oldLoc.db != newLoc.db) dispatch(selectDBAction(newLoc.db, selectAfterDB))
+    };
+    if (oldLoc.db != newLoc.db) dispatch(selectDBAction(newLoc.db, selectAfterDB));
     else selectAfterDB();
-  }
+  },
 });
 
 const AppConnected = connect(mapStateToProps, mapDispatchToProps)(App);

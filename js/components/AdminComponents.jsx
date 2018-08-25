@@ -1,32 +1,33 @@
-import React, { Component } from "react";
-import { Grid, Row, Col, Button, FormGroup, FormControl, ControlLabel, NavItem, Nav, Checkbox } from "react-bootstrap";
-import { axios, postRequest } from '../api.js';
-import qs from "qs";
-import ReactModal from 'react-modal';
+import React from 'react';
+import {Button, Checkbox,} from 'react-bootstrap';
+import {postRequest,} from '../api.js';
 
-import { getUrl } from '../helpers.jsx'
+import {getUrl,} from '../helpers.jsx';
 
-export class EvaluationWindow extends Component {
+export class EvaluationWindow extends React.Component {
   constructor(props) {
     super(props);
     this.state = { 
-      overwrite: false
-    }
+      overwrite: false,
+    };
   }
-  toggle = (selected) => this.setState({ overwrite: !this.state.overwrite });
+  toggle = () => this.setState({overwrite: !this.state.overwrite,});
 
   submit = () => {
     const callback = () => null;
-    const data = { evaluationDB: this.props.db, evaluationOverwrite: this.state.overwrite };
-    postRequest(getUrl('api/addEvaluations'), data, callback)
+    const data = {evaluationDB: this.props.db, 
+      evaluationOverwrite: this.state.overwrite,};
+    postRequest(getUrl('api/addEvaluations'), data, callback);
   }
 
   render = () => {
     return (
       <div>
-        <Checkbox checked={this.state.checkboxChecked} onChange={ this.toggle }>Overwrite evaluations?</Checkbox>
-        <Button onClick={ this.submit } >Add evaluations</Button>
+        <Checkbox
+          checked={this.state.checkboxChecked}
+          onChange={this.toggle}>Overwrite evaluations?</Checkbox>
+        <Button onClick={this.submit} >Add evaluations</Button>
       </div>
-    )
+    );
   }
 }

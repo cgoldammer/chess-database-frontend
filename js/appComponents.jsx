@@ -1,4 +1,4 @@
-import "regenerator-runtime/runtime";
+import 'regenerator-runtime/runtime';
 import React from 'react';
 import {HelpBlock, Jumbotron, 
   Grid, Row, Button, 
@@ -9,16 +9,13 @@ import {EvaluationWindow,} from './components/AdminComponents.jsx';
 import {SearchWindow,} from './components/SearchWindow.jsx';
 import {objectIsEmpty, logout, 
   updateLoc, getUrl, getLocFromUrl, defaultLoc, 
-  cleanGameData, getActiveSelection, createFullSelection, } from './helpers.jsx';
-import axios from 'axios';
+  createFullSelection,} from './helpers.jsx';
 import {connect, Provider,} from 'react-redux';
-
-import {getRequestPromise, postRequest,} from './api.js';
+import {postRequest,} from './api.js';
 import statStyles from './components/StatWindows.css';
-import {store, updateUrl, getLoc, getSelectedGames,} from './redux.jsx';
-import {selectGame, selectShowType, selectLogin, selectDB,} from './actions.jsx';
-
-import { put, takeEvery, all } from 'redux-saga/effects';
+import {store, updateUrl, getLoc,} from './redux.jsx';
+import {selectGame, selectShowType, selectLogin, selectDB, 
+  loginOrRegister, selectionChanged,} from './actions.jsx';
 
 import * as AT from './constants.js';
 
@@ -54,12 +51,14 @@ class BreadcrumbNavigator extends React.Component {
 
     var showCrumb = null;
     if (dbCrumb) {
-      showCrumb = loc.showType != null ? crumb('showType', loc.showType, loc.showType) : null;
+      showCrumb = loc.showType != null ? 
+        crumb('showType', loc.showType, loc.showType) : null;
     }
 
     var gameCrumb = null;
     if (showCrumb) {
-      gameCrumb = loc.game != null ? crumb('game', this.props.game, this.props.game) : null;
+      gameCrumb = loc.game != null ? 
+        crumb('game', this.props.game, this.props.game) : null;
     }
 
     return (
@@ -291,88 +290,6 @@ AppForDB.defaultProps = {
 };
 
 
-const fetchPlayerData = dbId => (dispatch, getState) => {
-  dispatch(requestPlayers.receiving(dbId));
-
-  const handleDBResponse = data => {
-    const selection = getState()['selection'];
-    dispatch(requestPlayers.received(dbId, data.data));
-    dispatch(fetchDataForDBSelection(dbId, selection));
-    // const changeSelection = {players: data.data.map(d => d.id)};
-    // dispatch(selectionChangedAction(dbId, oldSelection, changeSelection));
-  };
-  getRequestPromise(getUrl('api/players'), {searchDB: dbId,})
-    .then(handleDBResponse);
-};
-
-const selectionChanged = (fullSelection, reset) => ({type: AT.SELECTION_CHANGED, selection: fullSelection, reset: reset,});
-
-const fetchTournamentData = (dbId, callback) => dispatch => {
-  dispatch(requestTournaments.receiving(dbId));
-  const handleDBResponse = data => {
-    dispatch(requestTournaments.received(dbId, data.data));
-    dispatch(callback(dbId));
-  };
-  getRequestPromise(getUrl('api/tournaments'), {searchDB: dbId,})
-    .then(handleDBResponse);
-};
-
-
-const gameSearchData = (dbId, selection) => ({
-  gameRequestDB: dbId,
-  gameRequestTournaments: selection.tournaments,
-});
-
-const fetchGames = dbId => dispatch => {
-  const requester = requestGames;
-  const url = 'games';
-  const searchData = allGameSearchData(dbId);
-  dispatch(requester.receiving(dbId));
-  const handleDBResponse = data => dispatch(requester.received(dbId, data.data));
-  getRequestPromise(getUrl('api/' + url), searchData).then(handleDBResponse);
-};
-
-// eslint-disable-next-line max-len
-const defaultFetcher = (requester, url) => (dbId, baseSelection) => (dispatch, getState) => {
-  const state = getState();
-  const selection = getActiveSelection(state, baseSelection);
-  dispatch(requester.receiving(dbId));
-  const handleDBResponse = data => dispatch(requester.received(dbId, data.data));
-  const searchData = gameSearchData(dbId, selection);
-  getRequestPromise(getUrl('api/' + url), searchData).then(handleDBResponse);
-};
-
-// const fetchMoveEvals = defaultFetcher(requestMoveEvals, 'moveEvaluations');
-// const fetchGameEvaluations = defaultFetcher(requestGameEvals, 'gameEvaluations');
-// const fetchMoveSummary = defaultFetcher(requestMoveSummary, 'moveSummary');
-
-// There is a selection object in the state that represents
-// the items that are visually selected.
-// To pull from the database, I submit an action that uses the player 
-// and opening data.
-
-
-// Upon selecting a database, first pull the player and tournament data. 
-// For each data point that is received, updated the selection.
-const fetchDataForDBSelection = (dbId, selection) => {
-  return dispatch => {
-    dispatch(fetchMoveEvals(dbId, selection));
-    dispatch(fetchGameEvaluations(dbId, selection));
-    dispatch(fetchMoveSummary(dbId, selection));
-  };
-};
-
-const fetchData = (requester, receiver, url, callback=null) => {
-  return dispatch => {
-    dispatch(requester());
-    const handleDBResponse = data => {
-      dispatch(receiver(data.data));
-      if (callback) callback();
-    };
-    axios.get(getUrl(url)).then(handleDBResponse);
-  };
-};
-
 const getSelectedDB = (dbData, selectedId) => {
   if (selectedId && dbData.data.length > 0){
     const matches = dbData.data.filter(db => db.id == selectedId);
@@ -392,25 +309,29 @@ const mapStateToProps = state => ({
   tournamentData: state.tournamentData,
   playerData: state.playerData,
   gamesData: state.gamesData,
-  fullSelection: createFullSelection(state),
   loginError: state.loginError,
-  loginTypeSelected: state.loginTypeSelected
+  loginTypeSelected: state.loginTypeSelected,
 });
 
-const loginOrRegister = (data, url) => ({type:AT.LOGIN_OR_REGISTER, data: data, url: url})
 
 const mapDispatchToProps = dispatch => ({ 
   setDB: dbId => dispatch(selectDB(dbId)),
   putLoginOrRegister: (data, url) => dispatch(loginOrRegister(data, url)),
-  setUser: data => dispatch({type:AT.RECEIVE_USER, data:data}),
+  setUser: data => dispatch({type:AT.RECEIVE_USER, data:data,}),
   updateSelection: fullSelection => {
     dispatch(selectionChanged(fullSelection, false));
   },
   updateSelectLogin: loginType => dispatch(selectLogin(loginType)),
   setLoc: (oldLoc, newLoc) => {
-    if (oldLoc.db != newLoc.db) dispatch(selectDB(newLoc.db));
-    if (oldLoc.showType != newLoc.showType) dispatch(selectShowType(newLoc.dbId, newLoc.showType));
-    if (oldLoc.game != newLoc.game) dispatch(selectGame(newLoc.dbId, newLoc.game));
+    if (oldLoc.db != newLoc.db) {
+      dispatch(selectDB(newLoc.db));
+    }
+    if (oldLoc.showType != newLoc.showType) {
+      dispatch(selectShowType(newLoc.dbId, newLoc.showType));
+    }
+    if (oldLoc.game != newLoc.game) {
+      dispatch(selectGame(newLoc.dbId, newLoc.game));
+    }
     updateUrl(newLoc);
   },
 });

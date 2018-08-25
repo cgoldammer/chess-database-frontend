@@ -1,7 +1,5 @@
 import React from 'react';
-import { Grid, Row, Col, Button, DropdownButton, MenuItem, FormControl, Panel, ListGroup, ListGroupItem } from 'react-bootstrap';
-import styles from '../App.css';
-import { Link } from 'react-router-dom';
+import {Panel, ListGroup, ListGroupItem,} from 'react-bootstrap';
 
 export class DBChooser extends React.Component {
   constructor(props) {
@@ -12,7 +10,13 @@ export class DBChooser extends React.Component {
   }
   hasData = () => this.props.dbData.length > 0;
 
-  getButton = data => <ListGroupItem key={data.id} onClick={() => this.props.setDB(data.id)}><p style={{fontSize: "130%"}}>{data.name}</p></ListGroupItem>
+  getButton = data => (<ListGroupItem
+    key={data.id}
+    onClick={() => this.props.setDB(data.id)}>
+    <p style={{fontSize: '130%',}}>
+      {data.name}
+    </p>
+  </ListGroupItem>)
 
   render = () => {
     return (
@@ -22,10 +26,10 @@ export class DBChooser extends React.Component {
           { this.props.dbData.map(this.getButton) }
         </ListGroup>
       </Panel>
-    )
+    );
   }
 }
 
 DBChooser.defaultProps = {
-  dbData: []
-}
+  dbData: [],
+};

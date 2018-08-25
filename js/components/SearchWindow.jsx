@@ -8,7 +8,7 @@ import {StatWindow,} from './StatWindows.jsx';
 import {BlunderWindow,} from './BlunderWindow.jsx';
 import {getRequest,} from '../api.js';
 import {avg, playerName, resultPanels, 
-  getUrl, cleanGameData, getOpenings, createFullSelection, getSelectedGame, } from '../helpers.jsx';
+  getUrl, createFullSelection, getSelectedGame,} from '../helpers.jsx';
 import {connect, Provider,} from 'react-redux';
 import {store, updateUrl,} from '../redux.jsx';
 import {selectGame, selectShowType,} from '../actions.jsx';
@@ -124,6 +124,8 @@ const mapStateToPropsResultTabs = state => {
   const fullSelection = createFullSelection(state);
   const selectedGames = fullSelection ? fullSelection.selectedGamesForTable() : [];
   const activePlayers = fullSelection ? fullSelection.activePlayers() : [];
+  const selectedBlunders = getSelectedBlunders(state.moveEvalsData.data, 
+    selectedGames.map(g => g.id), activePlayers, state.playerData.data);
   
   const data = {
     playerData: state.playerData.data,
@@ -131,24 +133,24 @@ const mapStateToPropsResultTabs = state => {
     selectedGames: selectedGames,
     selectedGame: getSelectedGame(selectedGames, state.selectedGame),
     showType: state.showType,
-    selectedBlunders: getSelectedBlunders(state.moveEvalsData.data, selectedGames.map(g => g.id), activePlayers, state.playerData.data),
+    selectedBlunders: selectedBlunders,
     moveEvalsData: state.moveEvalsData.data,
     moveSummaryData: state.moveSummaryData.data,
     playerAverages: getPlayerAverages(state.gameEvalData.data, state.playerData.data),
   };
-  return data
-}
+  return data;
+};
 
 
 const mapDispatchToPropsResultTabs = dispatch => ({
   selectGame: (dbId, gameId) => {
     dispatch(selectGame(dbId, gameId));
-    const newLoc = {db: dbId, game: gameId, showType: resultPanels.gameList}
+    const newLoc = {db: dbId, game: gameId, showType: resultPanels.gameList,};
     updateUrl(newLoc);
   },
   selectShowType: (dbId, key) => {
     dispatch(selectShowType(dbId, key));
-    const newLoc = {db: dbId, showType: key, game: null};
+    const newLoc = {db: dbId, showType: key, game: null,};
     updateUrl(newLoc);
   },
 });

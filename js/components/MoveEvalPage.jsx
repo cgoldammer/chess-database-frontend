@@ -1,13 +1,10 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
-import {Jumbotron, Panel, Grid, Row, Col, Button, DropdownButton, MenuItem, ButtonGroup, ToggleButton, ToggleButtonGroup,} from 'react-bootstrap';
-
+import {Button,} from 'react-bootstrap';
 import d3 from 'd3';
 import {LineChart,} from 'react-d3-components';
 import Select from 'react-select';
 
 import {Legend,} from './Legend.jsx';
-import {testVar, axios, postRequest,} from '../api.js';
 import styles from './StatWindows.css';
 
 
@@ -33,23 +30,34 @@ export class MoveEvalGraph extends React.Component {
       showStdError: false,
     };
   }
-  toggleStdError = () => this.setState((state, props) => ({showStdError: !state.showStdError,}))
-  onChange = selected => this.setState({selectedPlayers: selected.map(x => ({value:x.value, name: x.label, index: x.index,})),})
+  toggleStdError = () => this.setState(state => ({showStdError: !state.showStdError,}))
+  onChange = selected => {
+    const getSelected = x => ({value:x.value, name: x.label, index: x.index,});
+    return this.setState({selectedPlayers: selected.map(getSelected),});
+  }
   hasData = () => this.props.moveSummaryData.length > 0;
-  getChartData = () => prepareForChart(this.props.moveSummaryData, this.state.selectedPlayers.map(p => p.value), this.state.showStdError)
+  getChartData = () => prepareForChart(this.props.moveSummaryData, 
+    this.state.selectedPlayers.map(p => p.value), this.state.showStdError)
   getAllPlayers = () => this.props.moveSummaryData.map(x => x.key)
-  getAllData = () => prepareForChart(this.props.moveSummaryData, this.getAllPlayers(), this.state.showStdError)
+  getAllData = () => prepareForChart(this.props.moveSummaryData, this.getAllPlayers(), 
+    this.state.showStdError)
   getExtents = () => extentsForData(this.getAllData())
-  getChartSeries = () => this.props.moveSummaryData.map((x) => ({field: 'eval' + x.key, name: x.player,}));
-  getSelectOptions = () => this.props.moveSummaryData.map((x, index) => ({value: x.key, label: x.player, index: index,}));
+  getChartSeries = () => {
+    const getSelected = x => ({field: 'eval' + x.key, name: x.player,});
+    return this.props.moveSummaryData.map(getSelected);
+  }
+  getSelectOptions = () => {
+    const getSelected = (x, index) => ({value: x.key, label: x.player, index: index,});
+    return this.props.moveSummaryData.map(getSelected);
+  }
   render = () => {
-    const margins = {left: 100, right: 100, top: 50, bottom: 50,};
     const extents = this.getExtents();
     window.color = colorScaleWithRepeat;
     const colorScaleForChart = colorScaleWithRepeat;
     const options = this.getSelectOptions();
-    const legend = <Legend colorScale={colorScale} selected={this.state.selectedPlayers}/>;
-    const data = this.getChartData();
+    const legend = <Legend 
+      colorScale={colorScale}
+      selected={this.state.selectedPlayers}/>;
 
     const dashFunc = function(label){
       if (isConfIntLabel(label)){
@@ -78,15 +86,26 @@ export class MoveEvalGraph extends React.Component {
       />;
 
       const {selectedPlayers,} = this.state;
-      const toggleButton = this.state.selectedPlayers.length > 0 ? (<div><Button onClick={this.toggleStdError}>Toggle standard errors</Button></div>) : null;
+      const toggleButton = this.state.selectedPlayers.length > 0 ?
+        (<div>
+          <Button onClick={this.toggleStdError}>Toggle standard errors
+          </Button>
+        </div>) : null;
       return (
         <div className={styles.statHeader}>
           <h2 className={styles.statTitle}>Evaluation by Move</h2>
           <div className={styles.statContent}>
-            <p>For each game, we find out the average evaluation of their position by a certain move. In principle, this can potentially be used to detect whether a certain player tends to win their game through the opening or the endgame.</p>
+            <p>For each game, we find out the average evaluation of their 
+            position by a certain move. In principle, this can potentially 
+            be used to detect whether a certain player tends to win 
+            their game through the opening or the endgame.</p>
           </div>
           <Row style={{margin: '0px 0px',}}>
-            <Select multi={true} value={selectedPlayers.map(p => p.value)} onChange={this.onChange} options={options}/>
+            <Select 
+              multi={true}
+              value={selectedPlayers.map(p => p.value)}
+              onChange={this.onChange}
+              options={options}/>
           </Row>
           <Row style={{margin: '0px 0px',}}>
             {chartArea} 

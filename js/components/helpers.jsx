@@ -1,5 +1,5 @@
-
-export const defaultGetRows = (movetext, newlineChar) => { // eslint-diable-line no-unused-vars
+// eslint-disable-next-line no-unused-vars
+export const defaultGetRows = (movetext, newlineChar) => { 
   newlineChar;
   let ms = movetext;
   if (!ms) {
@@ -9,6 +9,7 @@ export const defaultGetRows = (movetext, newlineChar) => { // eslint-diable-line
   ms = ms.replace(/(\{[^}]+\})+?/g, '');
 
   /* delete recursive annotation variations */
+  //eslint-disable-next-line no-useless-escape
   const ravRegex = /(\([^\(\)]+\))+?/g;
   while (ravRegex.test(ms)) {
     ms = ms.replace(ravRegex, '');
@@ -26,6 +27,7 @@ export const defaultGetRows = (movetext, newlineChar) => { // eslint-diable-line
   /* Split into rows */
   const rows = [];
   const rowRegex = /\d+\.\s?\S+(?:\s+\S+)?/g;
+  //eslint-disable-next-line no-constant-condition
   while (true) {
     const result = rowRegex.exec(ms);
     if (!result) {break;}

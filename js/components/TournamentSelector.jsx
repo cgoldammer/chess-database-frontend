@@ -9,14 +9,15 @@ export class TournamentSelector extends React.Component {
   }
   data = () => {
     const data = this.props.fullSelection.allData[this.props.selectionName];
-    return data
+    return data;
   }
   hasData = () => this.props.data().length > 0;
   getSelection = () => {
     return this.props.fullSelection.uiSelection[this.props.selectionName];
   }
   update = values => {
-    const newSelection = this.props.fullSelection.updateUISelection(this.props.selectionName, values);
+    const sel = this.props.fullSelection;
+    const newSelection = sel.updateUISelection(this.props.selectionName, values);
     this.props.callback(newSelection);
   }
   render = () => {

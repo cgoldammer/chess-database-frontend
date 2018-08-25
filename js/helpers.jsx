@@ -1,4 +1,3 @@
-import qs from 'qs';
 import axios from 'axios';
 
 export const objectIsEmpty = obj =>
@@ -161,9 +160,9 @@ const removeDuplicates = (myArr, prop) => {
   return myArr.filter((obj, pos, arr) => {
     return arr.map(mapObj => mapObj[prop]).indexOf(obj[prop]) === pos;
   });
-}
+};
 
-export const removeMissing = d => d != null && d.name != undefined
+export const removeMissing = d => d != null && d.name != undefined;
 
 export const getGameDataOpenings = gameData => {
   const getOpening = game => {
@@ -174,7 +173,7 @@ export const getGameDataOpenings = gameData => {
     };
     return data;
   };
-  return removeDuplicates(gameData.map(getOpening).filter(removeMissing), 'name')
+  return removeDuplicates(gameData.map(getOpening).filter(removeMissing), 'name');
 };
 
 export const getOpenings = gameData => {
@@ -196,7 +195,7 @@ export const getActiveIds = type => (uiSelection, allData) => {
   const allIds = allData[type].map(t => t.id);
   const uiTournaments = uiSelection[type];
 
-  return uiTournaments.length == 0 ? allIds : uiTournaments
+  return uiTournaments.length == 0 ? allIds : uiTournaments;
 };
 
 export const getSelectedGame = (games, gameId) => {
@@ -215,19 +214,19 @@ export class FullSelection {
   constructor(dbId, uiSelection, allData){
     this.uiSelection = uiSelection;
     this.allData = allData;
-    this.dbId = dbId
+    this.dbId = dbId;
   }
 
   updateUISelection = (name, values) => {
-    var newUISelection = {...this.uiSelection}
+    var newUISelection = {...this.uiSelection,};
     const newValues = values.map(v => v.id);
-    newUISelection[name] = newValues
+    newUISelection[name] = newValues;
     const fs = new FullSelection(this.dbId, newUISelection, this.allData);
-    return fs
+    return fs;
   }
 
-  activeTournaments = () => getActiveIds("tournaments")(this.uiSelection, this.allData)
-  activePlayers = () => getActiveIds("players")(this.uiSelection, this.allData)
+  activeTournaments = () => getActiveIds('tournaments')(this.uiSelection, this.allData)
+  activePlayers = () => getActiveIds('players')(this.uiSelection, this.allData)
 
   searchData = () => {
     const selection = this.activeTournaments();
@@ -249,10 +248,12 @@ export class FullSelection {
     if (selection == null) return [];
     var cleaned = this.allData.games;
 
-    const selectedTournaments = selection.tournaments.length > 0 ? selection.tournaments : allTournaments;
+    const selectedTournaments = selection.tournaments.length > 0 ? 
+      selection.tournaments : allTournaments;
     const isInSelectedTournament = value => selectedTournaments.indexOf(value) > -1;
     if (selectedTournaments.length > 0){
-      const isSelectedTournament = gameData => isInSelectedTournament(gameData.tournament.id);
+      const isSelectedTournament = gameData => 
+        isInSelectedTournament(gameData.tournament.id);
       cleaned = cleaned.filter(isSelectedTournament);
     }
 
@@ -291,17 +292,19 @@ export const createFullSelection = state => {
   const allGames = state.gamesData.data;
   const allOpenings = getGameDataOpenings(allGames);
 
-  if (allTournaments.length == 0 || allPlayers.length == 0 || allGames.length == 0) return null;
+  if (allTournaments.length == 0 || allPlayers.length == 0 || allGames.length == 0) {
+    return null;
+  }
 
   const allData = {
-    'tournaments': allTournaments
-  , 'players': allPlayers
-  , 'games': allGames
-  , 'openings': allOpenings
+    'tournaments': allTournaments,
+    'players': allPlayers,
+    'games': allGames,
+    'openings': allOpenings,
   };
 
   const fs = new FullSelection(state.selectedDB, state.selection, allData);
 
-  return fs
-}
+  return fs;
+};
 

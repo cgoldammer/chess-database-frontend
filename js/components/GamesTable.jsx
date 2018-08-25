@@ -1,26 +1,26 @@
 import React from 'react';
-import { ChessApp } from './ChessApp.jsx';
-import { Grid, Row, Col } from 'react-bootstrap';
+import {ChessApp,} from './ChessApp.jsx';
+import {Row, Col,} from 'react-bootstrap';
 import BootstrapTable from 'react-bootstrap-table-next';
 import paginationFactory from 'react-bootstrap-table2-paginator';
-import { objectIsEmpty, updateLoc } from '../helpers.jsx';
-import Media from "react-media";
+import Media from 'react-media';
 import styles from './GamesTable.css';
 import statStyles from './StatWindows.css';
 
 const columns = {
-	id: {dataField: 'id', text: 'Id', hidden: true}
-, white: {dataField: 'whiteShort', text: 'White'}
-, black: {dataField: 'blackShort', text: 'Black'}
-, result: {dataField: 'result', text: 'Result'}
-, tournament: {dataField: 'tournament', text: 'Tournament'}
-, date: {dataField: 'date', text: 'Date'}
-}
+  id: {dataField: 'id', text: 'Id', hidden: true,},
+  white: {dataField: 'whiteShort', text: 'White',},
+  black: {dataField: 'blackShort', text: 'Black',},
+  result: {dataField: 'result', text: 'Result',},
+  tournament: {dataField: 'tournament', text: 'Tournament',},
+  date: {dataField: 'date', text: 'Date',},
+};
 
 const getColumns = screenIsSmall => {
-	const selected = screenIsSmall ? ["id", "white", "black", "result"] : Object.keys(columns);
-	return selected.map(column => columns[column]);
-}
+  const columnsSmall = ['id', 'white', 'black', 'result',];
+  const selected = screenIsSmall ? columnsSmall : Object.keys(columns);
+  return selected.map(column => columns[column]);
+};
 
 export class GamesTable extends React.Component {
   constructor(props) {
@@ -32,17 +32,23 @@ export class GamesTable extends React.Component {
       clickToSelect: true,
       onSelect: this._onRowSelect.bind(this),
       bgColor: 'pink',
-      hideSelectColumn: true
-    }
+      hideSelectColumn: true,
+    };
   }
   gameIsSelected = () => this.props.selectedGame != null;
   onRowSelect = (e, row) => {
     this.props.selectGame(this.props.selectedDB, row.id);
   }
   getView = (data, board, screenIsBig) => {
-    var view = <div/>
-    const rowEvents = { onClick: this.onRowSelect }
-    const table = <div className={styles.table}><BootstrapTable keyField="id" data={ data } rowEvents={rowEvents} columns={getColumns(!screenIsBig)} pagination={ paginationFactory() }/></div>
+    var view = <div/>;
+    const rowEvents = {onClick: this.onRowSelect,};
+    const bsTable = <BootstrapTable
+      keyField="id"
+      data={data}
+      rowEvents={rowEvents}
+      columns={getColumns(!screenIsBig)}
+      pagination={paginationFactory()}/>;
+    const table = <div className={styles.table}>{bsTable}</div>;
     if (!screenIsBig){
       if(this.gameIsSelected()){
         view = board;
@@ -59,9 +65,9 @@ export class GamesTable extends React.Component {
         <Col xsOffset={2} xs={5}>
           { board }
         </Col>
-      </Row>)
+      </Row>);
     }
-    return view
+    return view;
   }
   render() {
     const data = this.props.gamesData;
@@ -70,17 +76,17 @@ export class GamesTable extends React.Component {
     if (this.gameIsSelected()){
       const game = this.props.selectedGame;
       board = (
-				<div style={{display: 'flex', justifyContent: 'center'}}>
-					<ChessApp game={ game }/>
-				</div>
-			);
+        <div style={{display: 'flex', justifyContent: 'center',}}>
+          <ChessApp game={game}/>
+        </div>
+      );
     }
 
     const result = matches => this.getView(data, board, !matches);
     return (<div className={statStyles.statHeader}>
-			<Media query="(max-width: 992px)">
-				{ result }
-			</Media>
-		</div>)
+      <Media query="(max-width: 992px)">
+        { result }
+      </Media>
+    </div>);
   }
 }

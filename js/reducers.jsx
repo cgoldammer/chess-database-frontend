@@ -2,6 +2,8 @@ import {combineReducers,} from 'redux';
 import {resultPanels, playerName, getActiveSelection} from './helpers.jsx';
 import * as AT from './constants.js';
 
+export const defaultShowType = resultPanels.gameList;
+
 const defaultData = {
   fetching: false,
   data: [],
@@ -38,7 +40,6 @@ const reduceDefault = (type, defaultState, getValue) => (state=defaultState, act
 }
 
 
-export const defaultShowType = resultPanels.gameList;
 const extractShowType = action => action.showType == null ? defaultShowType : action.showType;
 const reduceShowType = reduceDefault(AT.SELECT_SHOWTYPE, defaultShowType, extractShowType)
 

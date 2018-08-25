@@ -1,7 +1,7 @@
 import {createStore, applyMiddleware, compose,} from 'redux';
 import {rootReducer, defaultShowType,} from './reducers.jsx';
 import thunkMiddleware from 'redux-thunk';
-import {getUrl, getUrlFromLoc, getGameDataOpenings, getActiveIds,} from './helpers.jsx';
+import {getUrl, getUrlFromLoc, getGameDataOpenings, getActiveIds, defaultLoc,} from './helpers.jsx';
 import {createBrowserHistory,} from 'history';
 const hist = createBrowserHistory();
 import createSagaMiddleware from 'redux-saga';
@@ -10,7 +10,6 @@ import { getRequestPromise } from './api.js';
 import * as AT from './constants.js';
 import qs from "qs";
 import axios from 'axios';
-
 import {selectLogin} from './actions.jsx';
 
 const allDefaultRequests = (typeFetch, typeReceived) => {
@@ -42,11 +41,20 @@ function* fetchDBData(action) {
   try {
     const data = yield call(getRequestPromise, fullUrl);
     yield put(requestDB.received(data.data));
+
+    const newLoc = getLocFromUrl(window.location.pathname.slice(1));
+    const oldLoc = defaultLoc;
+
+    // if (oldLoc.db != newLoc.db) yield put(selectDB(newLoc.db));
+    // if (oldLoc.showType != newLoc.showType) yield put(selectShowType(newLoc.showType));
+    // if (oldLoc.game != newLoc.game) yield put(selectGame(newLoc.game));
+
   }
   catch (error) {
     yield put(requestDB.error(error));
   }
 }
+
 
 const searchDataDB = action => allSearchData(action.dbId);
 const searchDataGames = action => allGameSearchData(action.dbId);
@@ -128,6 +136,10 @@ function* fetchStatsForTournaments(action) {
   yield put({type: AT.FETCH_MOVE_EVAL_DATA, dbId: action.dbId, tournaments: ids})
 }
 
+function* updateSelectGame(action){
+
+}
+
 var fetcherData = {}
 fetcherData[AT.FETCH_DB_DATA] = fetchDBData;
 fetcherData[AT.FETCH_PLAYER_DATA] = fetchPlayerData;
@@ -165,6 +177,8 @@ function* getDataForDB(action) {
   yield put(requestPlayers.receiving(null, action.dbId))
   yield put(requestTournaments.receiving(null, action.dbId))
   yield put(requestGames.receiving(null, action.dbId))
+  const newLoc = {db: action.dbId, game: null, showType: defaultShowType}
+  updateUrl(newLoc);
 }
 
 function* pullDataForNewSelection(action){
@@ -197,8 +211,8 @@ export const getLoc = state => {
 };
 
 
-export const updateUrl = () => {
+export const updateUrl = newLoc => {
   const currentUrl = window.location.pathname.slice(1);
-  const newUrl = getUrlFromLoc(getLoc(store.getState()));
+  const newUrl = getUrlFromLoc(newLoc);
   if (newUrl != currentUrl) hist.push('/' + newUrl);
 };

@@ -45,8 +45,6 @@ loginData[loginConsts.login] = {url: 'login', name: 'Log in',};
 export const loginOrRegisterUser = (loginType, email, password, putRequestUser) => {
   const data = {email: email, password: password,};
   const url = getUrl(loginData[loginType].url);
-  console.log("About to logi n");
-  console.log(data);
   putRequestUser(data, url);
 };
 
@@ -251,14 +249,12 @@ export class FullSelection {
     if (selection == null) return [];
     var cleaned = this.allData.games;
 
-    console.log("SELECTED: " + cleaned.length)
     const selectedTournaments = selection.tournaments.length > 0 ? selection.tournaments : allTournaments;
     const isInSelectedTournament = value => selectedTournaments.indexOf(value) > -1;
     if (selectedTournaments.length > 0){
       const isSelectedTournament = gameData => isInSelectedTournament(gameData.tournament.id);
       cleaned = cleaned.filter(isSelectedTournament);
     }
-    console.log("SELECTED: " + cleaned.length)
 
     const selectedPlayers = selection.players.length > 0 ? selection.players : allPlayers;
     const isInSelected = value => selectedPlayers.indexOf(value) > -1;
@@ -270,7 +266,6 @@ export class FullSelection {
       };
       cleaned = cleaned.filter(isSelectedPlayer);
     }
-    console.log("SELECTED: " + cleaned.length)
     
     const opening = selection.openings;
     const selectedOpenings = opening.length > 0 ? opening : allOpenings;
@@ -282,7 +277,6 @@ export class FullSelection {
       };
       cleaned = cleaned.filter(isSelectedOpening);
     }
-    console.log("SELECTED: " + cleaned.length)
     return cleaned;
   }
 

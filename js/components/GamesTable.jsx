@@ -37,7 +37,7 @@ export class GamesTable extends React.Component {
   }
   gameIsSelected = () => this.props.selectedGame != null;
   onRowSelect = (e, row) => {
-    this.props.selectGame(row.id);
+    this.props.selectGame(this.props.selectedDB, row.id);
   }
   getView = (data, board, screenIsBig) => {
     var view = <div/>

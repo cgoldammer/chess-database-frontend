@@ -16,7 +16,7 @@ import {connect, Provider,} from 'react-redux';
 import {getRequestPromise, postRequest,} from './api.js';
 import statStyles from './components/StatWindows.css';
 import {store, updateUrl, getLoc, getSelectedGames,} from './redux.jsx';
-import {selectGame, selectShowType, selectLogin} from './actions.jsx';
+import {selectGame, selectShowType, selectLogin, selectDB,} from './actions.jsx';
 
 import { put, takeEvery, all } from 'redux-saga/effects';
 
@@ -47,9 +47,9 @@ class BreadcrumbNavigator extends React.Component {
     const homeCrumb = crumb('db', null, 'home');
 
     var dbCrumb = null;
-    if (loc.db != null){
-      const selectedDB = this.props.selectedDB.name;
-      dbCrumb = crumb('db', loc.db, selectedDB);
+    if (loc.db != null && this.props.fullSelectedDB != null){
+      const selectedDB = this.props.fullSelectedDB;
+      dbCrumb = crumb('db', loc.db, selectedDB.name);
     }
 
     var showCrumb = null;
@@ -92,6 +92,7 @@ export class App extends React.Component {
       const urlLoc = getLocFromUrl(window.location.pathname.slice(1));
       this.props.setLoc(defaultLoc, urlLoc);
     };
+    initialLoc();
 
     debugFunctions.logout = () => {
       logout(() => {});
@@ -114,7 +115,7 @@ export class App extends React.Component {
   render = () => {
     var setDB = null;
     var fileDiv = null;
-    if (this.props.selectedDB == null){
+    if (this.props.fullSelectedDB == null){
       setDB = (<div>
         <IntroWindow/>
         <DBChooser dbData={this.props.dbData} setDB={this.props.setDB}/>
@@ -124,9 +125,9 @@ export class App extends React.Component {
       }
     }
     var appForDB = <div/>;
-    if (this.props.selectedDB){
+    if (this.props.fullSelectedDB){
       appForDB = <AppForDB
-        selectedDB={this.props.selectedDB}
+        fullSelectedDB={this.props.fullSelectedDB}
         fullSelection={this.props.fullSelection}
         selection={this.props.selection}
         updateSelection={this.props.updateSelection}
@@ -141,11 +142,9 @@ export class App extends React.Component {
     }
     const nav = <BreadcrumbNavigator
       loc={this.props.loc}
-      selectedDB={this.props.selectedDB}
+      fullSelectedDB={this.props.fullSelectedDB}
       setLoc={this.props.setLoc}/>;
     
-    console.log("USER")
-    console.log(this.props.user);
     return (
 
       <div>
@@ -269,7 +268,7 @@ class AppForDB extends React.Component {
     const search = (this.props.fullSelection == null) ? null : (
       <SearchWindow 
         fullSelection={this.props.fullSelection}
-        selectedDB={this.props.selectedDB} 
+        fullSelectedDB={this.props.fullSelectedDB} 
         selection={this.props.selection}
         updateSelection={this.props.updateSelection}
         playerData={this.props.playerData} 
@@ -318,21 +317,11 @@ const fetchTournamentData = (dbId, callback) => dispatch => {
     .then(handleDBResponse);
 };
 
-const selectDB = dbId => ({type: AT.SELECT_DB, dbId: dbId,});
-
-const selectDBAction = dbId => dispatch => {
-  dispatch(selectDB(dbId));
-  dispatch(fetchGames(dbId));
-  dispatch(fetchTournamentData(dbId, fetchPlayerData));
-  updateUrl();
-};
-
 
 const gameSearchData = (dbId, selection) => ({
   gameRequestDB: dbId,
   gameRequestTournaments: selection.tournaments,
 });
-
 
 const fetchGames = dbId => dispatch => {
   const requester = requestGames;
@@ -395,7 +384,7 @@ const getSelectedDB = (dbData, selectedId) => {
 
 const mapStateToProps = state => ({
   dbData: state.dbData.data,
-  selectedDB: getSelectedDB(state.dbData, state.selectedDB),
+  fullSelectedDB: getSelectedDB(state.dbData, state.selectedDB),
   fullSelection: createFullSelection(state),
   loc: getLoc(state),
   players: state.players,
@@ -419,13 +408,10 @@ const mapDispatchToProps = dispatch => ({
   },
   updateSelectLogin: loginType => dispatch(selectLogin(loginType)),
   setLoc: (oldLoc, newLoc) => {
-    const selectAfterDB = () => {
-      if (oldLoc.showType != newLoc.showType) dispatch(selectShowType(newLoc.showType));
-      if (oldLoc.game != newLoc.game) dispatch(selectGame(newLoc.game));
-      updateUrl();
-    };
-    if (oldLoc.db != newLoc.db) dispatch(selectDBAction(newLoc.db, selectAfterDB));
-    else selectAfterDB();
+    if (oldLoc.db != newLoc.db) dispatch(selectDB(newLoc.db));
+    if (oldLoc.showType != newLoc.showType) dispatch(selectShowType(newLoc.dbId, newLoc.showType));
+    if (oldLoc.game != newLoc.game) dispatch(selectGame(newLoc.dbId, newLoc.game));
+    updateUrl(newLoc);
   },
 });
 

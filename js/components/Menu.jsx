@@ -43,7 +43,6 @@ export class Menu extends Component {
 
   show = () => {
     const showType = this.props.loginTypeSelected;
-    console.log("LOGIN ERROR"+ this.props.loginError);
 		var inside = null
 		if (showType == menuConsts.register || showType == menuConsts.login){
 			inside = (
@@ -77,9 +76,6 @@ export class Menu extends Component {
   userIsLoggedIn = () => this.props.user != null;
 
   render = () => {
-
-    console.log("USER")
-    console.log(this.props.user)
 		var nav = null;
     var loginWindow = null;
     if (this.props.loginTypeSelected != null){
@@ -308,7 +304,6 @@ export class Login extends Component {
   }
   handleSubmit = event => {
     event.preventDefault();
-    console.log("Submitted");
     loginOrRegisterUser(this.props.loginType, this.state.email, this.state.password, this.props.putLoginOrRegister);
   }
 	setToResetPassword = () => this.setState({ resetPasswordForm: true });

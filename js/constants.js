@@ -1,3 +1,5 @@
+import {resultPanels} from './helpers.jsx';
+
 export const FETCH_DB_DATA = 'FETCH_DB_DATA';
 export const RECEIVE_DB_DATA = 'RECEIVE_DB_DATA';
 
@@ -34,3 +36,4 @@ export const RECEIVE_USER = 'RECEIVE_USER';
 
 export const STATUS_RECEIVED = 'RECEIVED';
 export const STATUS_ERROR = 'ERROR';
+

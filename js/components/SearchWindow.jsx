@@ -8,7 +8,7 @@ import {StatWindow,} from './StatWindows.jsx';
 import {BlunderWindow,} from './BlunderWindow.jsx';
 import {getRequest,} from '../api.js';
 import {avg, playerName, resultPanels, 
-  getUrl, cleanGameData, getOpenings, createFullSelection, getSelectedGame} from '../helpers.jsx';
+  getUrl, cleanGameData, getOpenings, createFullSelection, getSelectedGame, } from '../helpers.jsx';
 import {connect, Provider,} from 'react-redux';
 import {store, updateUrl,} from '../redux.jsx';
 import {selectGame, selectShowType,} from '../actions.jsx';
@@ -49,12 +49,9 @@ export class SearchChoice extends React.Component {
 
 const getSelectedBlunders = (data, gameIds, playerIds, playerData) => {
   var cleaned = data;
-  console.log("GAMES: " + cleaned.length);
-  console.log("players: " + playerIds);
 
   const isInGameList = moveEval => gameIds.indexOf(moveEval.game.id) > -1;
   cleaned = cleaned.filter(isInGameList);
-  console.log("GAMES: " + cleaned.length);
 
   const isInSelected = value => playerIds.indexOf(value) > -1;
   if (!isInSelected){
@@ -68,7 +65,6 @@ const getSelectedBlunders = (data, gameIds, playerIds, playerData) => {
     return matchForWhite || matchForBlack;
   };
   cleaned = cleaned.filter(isSelectedPlayer);
-  console.log("GAMES after pla: " + cleaned.length);
 
   var playersMap = {};
   for (var player of playerData){
@@ -126,8 +122,8 @@ const getPlayerAverages = (evaluations, players) => {
 
 const mapStateToPropsResultTabs = state => {
   const fullSelection = createFullSelection(state);
-  const selectedGames = fullSelection.selectedGamesForTable();
-  const activePlayers = fullSelection.activePlayers()
+  const selectedGames = fullSelection ? fullSelection.selectedGamesForTable() : [];
+  const activePlayers = fullSelection ? fullSelection.activePlayers() : [];
   
   const data = {
     playerData: state.playerData.data,
@@ -145,13 +141,15 @@ const mapStateToPropsResultTabs = state => {
 
 
 const mapDispatchToPropsResultTabs = dispatch => ({
-  selectGame: gameId => {
-    dispatch(selectGame(gameId));
-    updateUrl();
+  selectGame: (dbId, gameId) => {
+    dispatch(selectGame(dbId, gameId));
+    const newLoc = {db: dbId, game: gameId, showType: resultPanels.gameList}
+    updateUrl(newLoc);
   },
-  selectShowType: key => {
-    dispatch(selectShowType(key));
-    updateUrl();
+  selectShowType: (dbId, key) => {
+    dispatch(selectShowType(dbId, key));
+    const newLoc = {db: dbId, showType: key, game: null};
+    updateUrl(newLoc);
   },
 });
 
@@ -178,6 +176,7 @@ class ResultTabs extends React.Component {
     }
     const gamesTable = 
       <GamesTable
+        selectedDB={this.props.selectedDB}
         gamesData={this.props.selectedGames}
         selectedGame={this.props.selectedGame}
         selectGame={this.props.selectGame}
@@ -195,7 +194,7 @@ class ResultTabs extends React.Component {
     if (showTabs){ 
       tabs = (<Tabs
         activeKey={this.props.showType}
-        onSelect={this.props.selectShowType}
+        onSelect={key => this.props.selectShowType(this.props.selectedDB, key)}
         id="db-tabs">
         <Tab
           eventKey={resultPanels.gameList}

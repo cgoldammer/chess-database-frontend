@@ -1,7 +1,8 @@
 import qs from 'qs';
 import axios from 'axios';
 
-export const objectIsEmpty = (obj) => obj == null || Object.keys(obj).length === 0 && obj.constructor === Object; 
+export const objectIsEmpty = obj =>
+  obj == null || Object.keys(obj).length === 0 && obj.constructor === Object; 
 
 export const avg = vals => {
   var total = 0;
@@ -12,10 +13,15 @@ export const avg = vals => {
 };
 
 const shortLengthMax = 10;
-const shortenName = name => name.length <= shortLengthMax ? name : name.substring(0, shortLengthMax - 3) + '...';
+const shortenName = name => {
+  const shortened = name.substring(0, shortLengthMax - 3);
+  return name.length <= shortLengthMax ? name : shortened + '...';
+};
 
 export const playerName = player => player.firstName + ' ' + player.lastName;
-export const playerNameShort = player => shortenName(player.firstName) + ' ' + shortenName(player.lastName);
+
+export const playerNameShort = player => 
+  shortenName(player.firstName) + ' ' + shortenName(player.lastName);
 
 export const preparePlayerData = player => {
   var newPlayer = Object.assign(player); 
@@ -23,8 +29,9 @@ export const preparePlayerData = player => {
   return newPlayer;
 };
 
-/* Helper functions for logging in and out. This is extracted out into this module because we want
-to be able to call this function for debugging in addition to calling it at part of a login window */
+/* Helper functions for logging in and out. This is extracted out into this module
+ * because we want to be able to call this function for debugging in addition to 
+ * calling it at part of a login window */
 export const loginConsts = {
   register: 1,
   login: 2,
@@ -34,15 +41,22 @@ export var loginData = {};
 loginData[loginConsts.register] = {url: 'register', name: 'Register',};
 loginData[loginConsts.login] = {url: 'login', name: 'Log in',};
 
-export const loginOrRegisterUser = (loginType, email, password, callback, failCallback) => {
+// eslint-disable-next-line max-len
+export const loginOrRegisterUser = (loginType, email, password, putRequestUser) => {
   const data = {email: email, password: password,};
   const url = getUrl(loginData[loginType].url);
-  axios.post(url, qs.stringify(data)).then(callback).catch(failCallback);
+  console.log("About to logi n");
+  console.log(data);
+  putRequestUser(data, url);
 };
 
-export const loginDummyUser = callback => loginOrRegisterUser(loginConsts.login, 'a@a.com', 'a', callback);
-export const logout = callback => axios.get(getUrl('logout')).then(callback).catch(() => {});
-export const getUser = callback => axios.get(getUrl('api/user')).then(callback).catch(() => {});
+export const getIgnore = (url, callback) => 
+  axios.get(getUrl(url)).then(callback).catch(() => {});
+
+export const loginDummyUser = callback => 
+  loginOrRegisterUser(loginConsts.login, 'a@a.com', 'a', callback);
+export const logout = callback => getIgnore('logout', callback);
+export const getUser = callback => getIgnore('api/user', callback);
 
 export const resultPanels = {
   gameList: 'Games',
@@ -51,7 +65,7 @@ export const resultPanels = {
 };
 
 export const updateLoc = (loc, name, value) => {
-  var newLoc = { ...loc,}; 
+  var newLoc = {...loc,}; 
   newLoc[name] = value;
   if (name == 'db' && value == null){
     newLoc = defaultLoc;
@@ -115,13 +129,20 @@ export const getLocFromUrl = url => {
   return {db: db, showType: showType, game: game,};
 };
 
-const gameResult = resultInt => resultInt == -1 ? '0-1' : resultInt == 0 ? '1/2-1/2' : '1-0';
+const gameResult = resultInt => 
+  resultInt == -1 ? '0-1' : resultInt == 0 ? '1/2-1/2' : '1-0';
 
 export const cleanGameData = data => {
   const getByAttribute = type => data => {
     const results = data.filter(att => att.attribute == type);
     return results.length > 0 ? results[0].value : '';
   };
+
+  const readOpening = (varName, name) => {
+    const found = varName in data && data.gameDataOpening != null;
+    return found ? (data[varName][name] || '') : '';
+  };
+
   const cleaned = {
     'id': data.gameDataGame.id,
     'whiteShort': playerNameShort(data.gameDataPlayerWhite),
@@ -130,13 +151,21 @@ export const cleanGameData = data => {
     'black': playerName(data.gameDataPlayerBlack),
     'result': gameResult(data.gameDataGame.gameResult),
     'tournament': data.gameDataTournament.name,
-    'opening': ('gameDataOpening' in data && data.gameDataOpening != null) ? (data.gameDataOpening.variationName || '') : '',
-    'openingLine': ('gameDataOpeningLine' in data && data.gameDataOpeningLine != null) ? (data.gameDataOpeningLine.name || '') : '',
+    'opening': readOpening('gameDataOpening', 'variationName'),
+    'openingLine': readOpening('gameDataOpeningLine' ,'name'),
     'pgn': data.gameDataGame.pgn,
     'date': getByAttribute('Date')(data.gameDataAttributes),
   };
   return cleaned;
 };
+
+const removeDuplicates = (myArr, prop) => {
+  return myArr.filter((obj, pos, arr) => {
+    return arr.map(mapObj => mapObj[prop]).indexOf(obj[prop]) === pos;
+  });
+}
+
+export const removeMissing = d => d != null && d.name != undefined
 
 export const getGameDataOpenings = gameData => {
   const getOpening = game => {
@@ -147,10 +176,11 @@ export const getGameDataOpenings = gameData => {
     };
     return data;
   };
-  return gameData.map(getOpening).filter(d => d != null).filter(d => d.name != undefined);
+  return removeDuplicates(gameData.map(getOpening).filter(removeMissing), 'name')
 };
 
 export const getOpenings = gameData => {
+  if (gameData == null) return null;
   const getOpening = game => {
     if (game.openingLine == '') return null;
     const data = {
@@ -159,23 +189,125 @@ export const getOpenings = gameData => {
     };
     return data;
   };
-  return gameData.map(getOpening).filter(d => d != null).filter(d => d.name != undefined);
+  return removeDuplicates(gameData.map(getOpening).filter(removeMissing), 'name');
 };
 
-export const getActiveSelection = (state, baseSelection=null) => {
-  if (baseSelection == null) return null;
+
+export const getActiveIds = type => (uiSelection, allData) => {
+  if (allData == null) return null;
+  const allIds = allData[type].map(t => t.id);
+  const uiTournaments = uiSelection[type];
+
+  return uiTournaments.length == 0 ? allIds : uiTournaments
+};
+
+export const getSelectedGame = (games, gameId) => {
+  if (gameId == null){
+    return null;
+  }
+  const matches = games.filter(g => g.id == gameId);
+  if (matches.length == 0){
+    return null;
+  }
+  return matches[0];
+};
+
+
+export class FullSelection {
+  constructor(dbId, uiSelection, allData){
+    this.uiSelection = uiSelection;
+    this.allData = allData;
+    this.dbId = dbId
+  }
+
+  updateUISelection = (name, values) => {
+    var newUISelection = {...this.uiSelection}
+    const newValues = values.map(v => v.id);
+    newUISelection[name] = newValues
+    const fs = new FullSelection(this.dbId, newUISelection, this.allData);
+    return fs
+  }
+
+  activeTournaments = () => getActiveIds("tournaments")(this.uiSelection, this.allData)
+  activePlayers = () => getActiveIds("players")(this.uiSelection, this.allData)
+
+  searchData = () => {
+    const selection = this.activeTournaments();
+
+    const gameSearchData = {
+      gameRequestDB: this.dbId,
+      gameRequestTournaments: selection.tournaments,
+    };
+    return gameSearchData;
+  }
+
+  selectedGames = () => {
+    const allPlayers = this.allData.players.map(x => x.id);
+    const allTournaments = this.allData.tournaments.map(x => x.id);
+    const allOpenings = this.allData.openings.map(x => x.id);
+
+    const selection = this.uiSelection;
+
+    if (selection == null) return [];
+    var cleaned = this.allData.games;
+
+    console.log("SELECTED: " + cleaned.length)
+    const selectedTournaments = selection.tournaments.length > 0 ? selection.tournaments : allTournaments;
+    const isInSelectedTournament = value => selectedTournaments.indexOf(value) > -1;
+    if (selectedTournaments.length > 0){
+      const isSelectedTournament = gameData => isInSelectedTournament(gameData.gameDataTournament.id);
+      cleaned = cleaned.filter(isSelectedTournament);
+    }
+    console.log("SELECTED: " + cleaned.length)
+
+    const selectedPlayers = selection.players.length > 0 ? selection.players : allPlayers;
+    const isInSelected = value => selectedPlayers.indexOf(value) > -1;
+    if (selectedPlayers.length > 0){
+      const isSelectedPlayer = gameData => {
+        const white = gameData.gameDataPlayerBlack.id;
+        const black = gameData.gameDataPlayerWhite.id;
+        return isInSelected(white) || isInSelected(black);
+      };
+      cleaned = cleaned.filter(isSelectedPlayer);
+    }
+    console.log("SELECTED: " + cleaned.length)
+    
+    const opening = selection.openings;
+    const selectedOpenings = opening.length > 0 ? opening : allOpenings;
+    const isInSelectedOpening = value => selectedOpenings.indexOf(value) > -1;
+    if (selection.openings.length > 0){
+      const isSelectedOpening = gameData => {
+        if (gameData.gameDataOpeningLine == null) return false;
+        return isInSelectedOpening(gameData.gameDataOpeningLine.name);
+      };
+      cleaned = cleaned.filter(isSelectedOpening);
+    }
+    console.log("SELECTED: " + cleaned.length)
+    return cleaned;
+  }
+
+  selectedGamesForTable = () => this.selectedGames().map(cleanGameData);
+}
+
+export const createFullSelection = state => {
+  if (state.selectedDB == null) return null;
+
   const allTournaments = state.tournamentData.data;
   const allPlayers = state.playerData.data;
   const allGames = state.gamesData.data;
   const allOpenings = getGameDataOpenings(allGames);
 
-  const datas = {openings: allOpenings, players: allPlayers, tournaments: allTournaments,};
+  if (allTournaments.length == 0 || allPlayers.length == 0 || allGames.length == 0) return null;
 
-  var selection = {};
-  for (var el of ['tournaments', 'players', 'openings',]){
-    const ids = datas[el].map(x => x.id);
-    selection[el] = baseSelection[el].length == 0 ? ids : baseSelection[el];
-  }
-  return selection;
-};
+  const allData = {
+    'tournaments': allTournaments
+  , 'players': allPlayers
+  , 'games': allGames
+  , 'openings': allOpenings
+  };
+
+  const fs = new FullSelection(state.selectedDB, state.selection, allData);
+
+  return fs
+}
 

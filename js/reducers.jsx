@@ -1,103 +1,93 @@
-import { combineReducers } from 'redux';
-import { resultPanels, playerName } from './helpers.jsx';
-
-export const FETCH_DB_DATA = 'FETCH_DB_DATA';
-export const FETCH_PLAYER_DATA = 'FETCH_PLAYER_DATA';
-export const FETCH_TOURNAMENT_DATA = 'FETCH_TOURNAMENT_DATA';
-export const FETCH_GAME_DATA = 'FETCH_GAME_DATA';
-export const FETCH_MOVE_EVAL_DATA = 'FETCH_MOVE_EVAL_DATA';
-export const FETCH_GAME_EVAL_DATA = 'FETCH_GAME_EVAL_DATA';
-export const FETCH_MOVE_SUMMARY_DATA = 'FETCH_MOVE_SUMMARY_DATA';
-export const SELECT_DB = 'SELECT_DB';
-export const STATUS_RECEIVING = 'RECEIVING';
-export const STATUS_RECEIVED = 'RECEIVED';
-export const SELECTION_CHANGED = 'SELECTION_CHANGED';
-export const SELECT_SHOWTYPE = 'SELECT_SHOWTYPE';
-export const SELECT_GAME = 'SELECT_GAME';
+import {combineReducers,} from 'redux';
+import {resultPanels, playerName, getActiveSelection} from './helpers.jsx';
+import * as AT from './constants.js';
 
 const defaultData = {
-  fetching: false
-, data: []
-}
+  fetching: false,
+  data: [],
+};
 
 export const defaultSelectionState = {
-  tournaments: []
-, players: []
-, openings: []
-}
+  tournaments: [],
+  players: [],
+  openings: [],
+};
 
-const reduceSelectionChanged = (state=defaultSelectionState, action) => {
-  switch(action.type){
-    case SELECTION_CHANGED:
-      if (action.reset){
-        return defaultSelectionState
-      }
-      return action.selection;
-  }
-  return state;
-}
-
-const reduceDataDefault = (actionType, defaultState=defaultData, cleaner=null) => {
+const reduceDataDefault = (actionFetch, actionReceive, defaultState=defaultData, cleaner=null) => {
   return (state=defaultState, action) => {
     switch (action.type) {
-      case actionType:
-        if (action.status == STATUS_RECEIVING) {
-          return ({ fetching: true, data: [] });
-        }
-        if (action.status == STATUS_RECEIVED) {
-          const data = action.data
-          if (cleaner) {
-            var data = data.map(cleaner);
-          }
-          return ({ fetching: false, data: data });
-        }
+    case actionFetch:
+      return ({fetching: true, data: [],});
+    case actionReceive:
+      var data = action.data;
+      if (cleaner) {
+        data = data.map(cleaner);
+      }
+      return ({fetching: false, data: data,});
     }
-    return state
-  }
-}
+    return state;
+  };
+};
 
-export const defaultShowType = resultPanels.gameList;
-const reduceShowType = (state=defaultShowType, action) => {
-  switch (action.type){
-    case SELECT_SHOWTYPE:
-      return action.showType == null ? defaultShowType : action.showType
-  }
-  return state;
-}
-
-const reduceSelectedGame = (state=null, action) => {
-  switch (action.type){
-    case SELECT_GAME:
-      return action.gameId
-  }
-  return state;
-}
-
-const reduceSelectDB = (state=null, action) => {
-  switch (action.type){
-    case SELECT_DB:
-      return action.dbId
+const reduceDefault = (type, defaultState, getValue) => (state=defaultState, action) => {
+  switch(action.type){
+    case type:
+      return getValue(action);
   }
   return state
 }
 
-const reduceGameData = reduceDataDefault(FETCH_GAME_DATA)
-const reduceMoveEvalData = reduceDataDefault(FETCH_MOVE_EVAL_DATA)
-const reduceGameEvalData = reduceDataDefault(FETCH_GAME_EVAL_DATA)
-const reduceMoveSummaryData = reduceDataDefault(FETCH_MOVE_SUMMARY_DATA)
 
-const addPlayerName = player => ({...player, ...{name: playerName(player)}})
+export const defaultShowType = resultPanels.gameList;
+const extractShowType = action => action.showType == null ? defaultShowType : action.showType;
+const reduceShowType = reduceDefault(AT.SELECT_SHOWTYPE, defaultShowType, extractShowType)
+
+const extractSelection = action => {
+  if (action.reset){
+    return defaultSelectionState;
+  }
+  const selection = action.selection;
+  return selection.uiSelection;
+}
+const reduceSelectionChanged = reduceDefault(AT.SELECTION_CHANGED, defaultSelectionState, extractSelection)
+
+const reduceLoginError = (state=null, action) => {
+  switch(action.type){
+    case AT.LOGIN_OR_REGISTER_FAILED:
+      return action.error.data
+    case AT.LOGIN_OR_REGISTER_SUCCEEDED:
+      return null;
+  }
+  return null;
+}
+
+const reduceUser = reduceDefault(AT.RECEIVE_USER, null, action => action.data);
+const reduceSelectedGame = reduceDefault(AT.SELECT_GAME, null, action => action.gameId)
+const reduceSelectDB = reduceDefault(AT.SELECT_DB, null, action => action.dbId);
+const reduceSelectLogin = reduceDefault(AT.SELECT_LOGIN_WINDOW, null, action => action.data)
+
+const reduceGameData = reduceDataDefault(AT.FETCH_GAME_DATA, AT.RECEIVE_GAME_DATA);
+const reduceDBData = reduceDataDefault(AT.FETCH_DB_DATA, AT.RECEIVE_DB_DATA);
+const reduceMoveEvalData = reduceDataDefault(AT.FETCH_MOVE_EVAL_DATA, AT.RECEIVE_MOVE_EVAL_DATA);
+const reduceGameEvalData = reduceDataDefault(AT.FETCH_GAME_EVAL_DATA, AT.RECEIVE_GAME_EVAL_DATA);
+const reduceMoveSummaryData = reduceDataDefault(AT.FETCH_MOVE_SUMMARY_DATA);
+
+
+const addPlayerName = player => ({...player, ...{name: playerName(player),},});
 
 export const rootReducer = combineReducers({
-  dbData: reduceDataDefault(FETCH_DB_DATA)
-, tournamentData: reduceDataDefault(FETCH_TOURNAMENT_DATA)
-, playerData: reduceDataDefault(FETCH_PLAYER_DATA, defaultData, addPlayerName)
-, selectedDB: reduceSelectDB
-, selection: reduceSelectionChanged
-, gamesData: reduceGameData
-, moveEvalsData: reduceMoveEvalData
-, showType: reduceShowType
-, selectedGame: reduceSelectedGame
-, moveSummaryData: reduceMoveSummaryData
-, gameEvalData: reduceGameEvalData
-})
+  dbData: reduceDBData,
+  tournamentData: reduceDataDefault(AT.FETCH_TOURNAMENT_DATA, AT.RECEIVE_TOURNAMENT_DATA),
+  playerData: reduceDataDefault(AT.FETCH_PLAYER_DATA, AT.RECEIVE_PLAYER_DATA, defaultData, addPlayerName),
+  selectedDB: reduceSelectDB,
+  selection: reduceSelectionChanged,
+  gamesData: reduceGameData,
+  moveEvalsData: reduceMoveEvalData,
+  showType: reduceShowType,
+  selectedGame: reduceSelectedGame,
+  moveSummaryData: reduceMoveSummaryData,
+  gameEvalData: reduceGameEvalData,
+  user: reduceUser,
+  loginError: reduceLoginError,
+  loginTypeSelected: reduceSelectLogin,
+});

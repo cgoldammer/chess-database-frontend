@@ -1,88 +1,62 @@
 import React from 'react';
 
-import { Panel, Grid, Row, Col, Button, DropdownButton, MenuItem, FormControl, Breadcrumb, Modal, Tabs, Tab } from 'react-bootstrap';
-import { Redirect } from 'react-router'
+import {Row, Tabs, Tab,} from 'react-bootstrap';
 
-import { TournamentSelector } from './TournamentSelector.jsx';
-import { GamesTable } from './GamesTable.jsx';
-import { StatWindow } from './StatWindows.jsx';
-import { BlunderWindow } from './BlunderWindow.jsx';
-import { getRequest, postRequest } from '../api.js';
-import { avg, playerNameShort, playerName, resultPanels, updateLoc, getUrl, cleanGameData, getOpenings} from '../helpers.jsx';
-import { connect, Provider } from 'react-redux'
-import { store, getSelectedGames, updateUrl } from '../redux.jsx';
-import { SELECT_GAME, SELECT_SHOWTYPE } from '../reducers.jsx';
-import { selectGame, selectShowType } from '../actions.jsx';
-
-const defaultSearch = { tournaments:[] };
+import {TournamentSelector,} from './TournamentSelector.jsx';
+import {GamesTable,} from './GamesTable.jsx';
+import {StatWindow,} from './StatWindows.jsx';
+import {BlunderWindow,} from './BlunderWindow.jsx';
+import {getRequest,} from '../api.js';
+import {avg, playerName, resultPanels, 
+  getUrl, cleanGameData, getOpenings, createFullSelection, getSelectedGame} from '../helpers.jsx';
+import {connect, Provider,} from 'react-redux';
+import {store, updateUrl,} from '../redux.jsx';
+import {selectGame, selectShowType,} from '../actions.jsx';
 
 /* A search window is used to select games from the database */
 export class SearchChoice extends React.Component {
   constructor(props) {
     super(props);
   }
-  updateTournaments = tournaments => {
-    if (tournaments == null) tournaments = []
-    const newTournaments = tournaments == null ? [] : tournaments.map(t => t.id);
-    this.props.updateSelection(this.props.selectedDB.id, this.props.selection, {'tournaments': newTournaments});
-  }
-  updatePlayers = players => {
-    if (players == null) players = []
-    const newPlayers = players.map(t => t.id);
-    this.props.updateSelection(this.props.selectedDB.id, this.props.selection, {'players': newPlayers});
-  }
-  updateOpenings = openings => {
-    const openingData = getOpenings(this.props.selectedGames)
-    if (openings == null) openings = []
-    const newOpenings = openings.map(op => op.id);
-    this.props.updateSelection(this.props.selectedDB.id, this.props.selection, {'openings': newOpenings});
-  }
+
   render = () => {
     return (
       <div>
         <TournamentSelector 
           name="Tournament" 
-          selected={this.props.selection.tournaments} 
-          data={this.props.tournamentData} 
-          callback={this.updateTournaments}
+          fullSelection={this.props.fullSelection}
+          selectionName="tournaments"
+          callback={this.props.updateSelection}
         />
         <TournamentSelector 
           name="Player" 
-          selected={this.props.selection.players} 
-          data={this.props.playerData} 
-          callback={this.updatePlayers}
+          fullSelection={this.props.fullSelection}
+          selectionName="players"
+          callback={this.props.updateSelection}
         />
         <TournamentSelector 
           name="Opening" 
-          selected={this.props.selection.openings} 
-          data={ getOpenings(this.props.selectedGames) } 
-          resetIfAll={ false }
-          callback={this.updateOpenings}
+          fullSelection={this.props.fullSelection}
+          selectionName="openings"
+          resetIfAll={false}
+          callback={this.props.updateSelection}
         />
       </div>
-    )
+    );
   }
 }
 
 
-const getSelectedGame = (games, gameId) => {
-  if (gameId == null){
-    return null;
-  }
-  const matches = games.filter(g => g.id == gameId);
-  if (matches.length == 0){
-    return null;
-  }
-  return matches[0];
-}
+const getSelectedBlunders = (data, gameIds, playerIds, playerData) => {
+  var cleaned = data;
+  console.log("GAMES: " + cleaned.length);
+  console.log("players: " + playerIds);
 
+  const isInGameList = moveEval => gameIds.indexOf(moveEval.moveEvalsGame.id) > -1;
+  cleaned = cleaned.filter(isInGameList);
+  console.log("GAMES: " + cleaned.length);
 
-const maxLength = 10;
-const getSelectedBlunders = state => {
-  var cleaned = state.moveEvalsData.data.slice(0, maxLength);
-
-  const selectedIds = state.selection.players;
-  const isInSelected = value => selectedIds.indexOf(value) > -1;
+  const isInSelected = value => playerIds.indexOf(value) > -1;
   if (!isInSelected){
     return [];
   }
@@ -92,11 +66,12 @@ const getSelectedBlunders = state => {
     const matchForWhite = isInSelected(game.playerWhiteId) && ev.isWhite;
     const matchForBlack = isInSelected(game.playerBlackId) && (!ev.isWhite);
     return matchForWhite || matchForBlack;
-  }
-  cleaned = cleaned.filter(isSelectedPlayer)
+  };
+  cleaned = cleaned.filter(isSelectedPlayer);
+  console.log("GAMES after pla: " + cleaned.length);
 
-  var playersMap = {}
-  for (var player of state.playerData.data){
+  var playersMap = {};
+  for (var player of playerData){
     playersMap[player.id] = player;
   }
   const addPlayerName = moveEval => {
@@ -104,15 +79,17 @@ const getSelectedBlunders = state => {
     const playerWhite = playersMap[game.playerWhiteId];
     const playerBlack = playersMap[game.playerBlackId];
 
-    return {...moveEval, ...{'playerWhite': playerWhite, 'playerBlack': playerBlack}}
-  }
-  return cleaned.map(addPlayerName);
-}
+    return {...moveEval, ...{'playerWhite': playerWhite, 'playerBlack': playerBlack,},};
+  };
+
+  const maxNumber = 50;
+  return cleaned.map(addPlayerName).slice(0, maxNumber);
+};
 
 /* This function returns a list that can be displayed as a table */
 const getPlayerAverages = (evaluations, players) => {
   if (players.length == 0){
-    return []
+    return [];
   }
   const getPlayerById = id => players.filter(p => p.id == id)[0];
 
@@ -121,7 +98,7 @@ const getPlayerAverages = (evaluations, players) => {
     const gameEvals = dat[1];
     const player = getPlayerById(playerId);
     const getEvals = ev => ev[0];
-    const filterForResult = result => gameEvals.filter(ge => ge[1] == result)
+    const filterForResult = result => gameEvals.filter(ge => ge[1] == result);
     const avgEval = Math.floor(avg(gameEvals.map(getEvals)));
 
     const wins = filterForResult(100);
@@ -130,119 +107,131 @@ const getPlayerAverages = (evaluations, players) => {
     const losses = filterForResult(0);
     const avgLossEval = Math.floor(avg(losses.map(getEvals)));
 
-    const combineWithNumber = (av, num) => "" + av + " (" + num + " game" + (num > 1 ? "s" : "") + ")";
+    const withNumber = (av, num) => 
+      '' + av + ' (' + num + ' game' + (num > 1 ? 's' : '') + ')';
 
     const data = { 
-      playerId: playerId
-    , name: playerName(player)
-    ,	number: gameEvals.length
-    , avgEval: isNaN(avgEval) ? "" : avgEval
-    , avgWinEval: isNaN(avgWinEval) ? "" : combineWithNumber(avgWinEval, wins.length)
-    , avgLossEval: isNaN(avgLossEval) ? "" : combineWithNumber(avgLossEval, losses.length)
-    }
-    return data
-  }
+      playerId: playerId,
+      name: playerName(player),
+      number: gameEvals.length,
+      avgEval: isNaN(avgEval) ? '' : avgEval,
+      avgWinEval: isNaN(avgWinEval) ? '' : withNumber(avgWinEval, wins.length),
+      avgLossEval: isNaN(avgLossEval) ? '' : withNumber(avgLossEval, losses.length),
+    };
+    return data;
+  };
   return evaluations.map(cleanPlayerData);
+};
+
+
+const mapStateToPropsResultTabs = state => {
+  const fullSelection = createFullSelection(state);
+  const selectedGames = fullSelection.selectedGamesForTable();
+  const activePlayers = fullSelection.activePlayers()
+  
+  const data = {
+    playerData: state.playerData.data,
+    selectedDB: state.selectedDB,
+    selectedGames: selectedGames,
+    selectedGame: getSelectedGame(selectedGames, state.selectedGame),
+    showType: state.showType,
+    selectedBlunders: getSelectedBlunders(state.moveEvalsData.data, selectedGames.map(g => g.id), activePlayers, state.playerData.data),
+    moveEvalsData: state.moveEvalsData.data,
+    moveSummaryData: state.moveSummaryData.data,
+    playerAverages: getPlayerAverages(state.gameEvalData.data, state.playerData.data),
+  };
+  return data
 }
 
-// TODO: Need to fix performance here. Huge overhead.
-const mapStateToPropsResultTabs = (state, ownProps) => ({
-  playerData: state.playerData.data
-, selectedDB: state.selectedDB
-, selection: state.selection
-, selectedGames: getSelectedGames(state).map(cleanGameData)
-, selectedGame: getSelectedGame(getSelectedGames(state).map(cleanGameData), state.selectedGame)
-, showType: state.showType
-, selectedBlunders: getSelectedBlunders(state)
-, moveEvalsData: state.moveEvalsData.data
-, moveSummaryData: state.moveSummaryData.data
-, playerAverages: getPlayerAverages(state.gameEvalData.data, state.playerData.data)
-})
 
-
-const mapDispatchToPropsResultTabs = (dispatch, ownProps) => ({
+const mapDispatchToPropsResultTabs = dispatch => ({
   selectGame: gameId => {
-    dispatch(selectGame(gameId))
+    dispatch(selectGame(gameId));
     updateUrl();
-  }
-, selectShowType: key => {
+  },
+  selectShowType: key => {
     dispatch(selectShowType(key));
     updateUrl();
-  }
-})
+  },
+});
 
 
 class ResultTabs extends React.Component {
   constructor(props){
     super(props);
   }
-  setPlayers = data => this.setState({players: data.data});
+  setPlayers = data => this.setState({players: data.data,});
   componentDidMount = () => {
-    const playerRequest = { searchDB: this.props.dbSelected };
-    getRequest(getUrl('api/players'), playerRequest, this.setPlayers)
+    const playerRequest = {searchDB: this.props.dbSelected,};
+    getRequest(getUrl('api/players'), playerRequest, this.setPlayers);
   }
-  /* This is a hack. Multiple windows here load their own data upon mounting. We do this because
-   * it runs faster than pulling the state up, since if we'd pull the state up, we'd have to
-   * obtain data even for windows we aren't rendering. However, this means that the component
-   * will get stale whenever the selections change. To avoid that, we pass a key
-   * to these components that's unique in whatever is selected right now, so a change
-   * in the selection rebuilds the component.
-  */
-  getGamesHash = () => JSON.stringify(this.props.selectedGames.map(g => g.id)) + JSON.stringify(this.props.selection)
+  /* This is a hack. Multiple windows here load their own data upon mounting. 
+   * We do this because it runs faster than pulling the state up, since if we'd pull 
+   * the state up, we'd have to obtain data even for windows we aren't rendering. 
+   * However, this means that the component will get stale whenever the selections 
+   * change. To avoid that, we pass a key to these components that's unique in 
+   * whatever is selected right now, so a change in the selection rebuilds 
+   * the component.  */
   render = () => {
-    if (this.props.selectedGames.length == 0){
-      return null
+    if (this.props.selectedGameslength == 0){
+      return null;
     }
     const gamesTable = 
       <GamesTable
         gamesData={this.props.selectedGames}
         selectedGame={this.props.selectedGame}
-        selectGame={ this.props.selectGame }
-      />
+        selectGame={this.props.selectGame}
+      />;
 
-    const showTabs = this.props.playerData.length > 0
-    var tabs = <div/>
+    const showTabs = this.props.playerData.length > 0;
+    var tabs = <div/>;
     const blunderWindow = this.props.moveEvalsData.fetching ? null :
       <BlunderWindow 
-        selection={ this.props.selection }
-        key={ this.getGamesHash() } 
-        players={ this.props.playerData } 
-        gamesData={ this.props.selectedGames } 
-        db={ this.props.selectedDB } 
-        selectedBlunders={this.props.selectedBlunders}/>
+        selection={this.props.selection}
+        players={this.props.playerData} 
+        gamesData={this.props.selectedGames} 
+        db={this.props.selectedDB} 
+        selectedBlunders={this.props.selectedBlunders}/>;
     if (showTabs){ 
-      tabs = (<Tabs activeKey={this.props.showType} onSelect={this.props.selectShowType} id="db-tabs">
-          <Tab eventKey={ resultPanels.gameList } title={ resultPanels.gameList }>
-            { gamesTable }
-          </Tab>
-          <Tab eventKey={ resultPanels.statistics } title={ resultPanels.statistics }>
-            <StatWindow 
-              key= {this.getGamesHash() } 
-              db={this.props.selectedDB} 
-              selection={this.props.selection} 
-              players={ this.props.playerData } 
-              gamesData={this.props.selectedGames}
-              playerAverages={this.props.playerAverages}
-              moveSummaryData={this.props.moveSummaryData}
-              />
-          </Tab>
-          <Tab eventKey={ resultPanels.blunders } title={ resultPanels.blunders }>
-            { blunderWindow }
-          </Tab>
-        </Tabs>)
+      tabs = (<Tabs
+        activeKey={this.props.showType}
+        onSelect={this.props.selectShowType}
+        id="db-tabs">
+        <Tab
+          eventKey={resultPanels.gameList}
+          title={resultPanels.gameList}>
+          { gamesTable }
+        </Tab>
+        <Tab 
+          eventKey={resultPanels.statistics} 
+          title={resultPanels.statistics}>
+          <StatWindow 
+            db={this.props.selectedDB} 
+            selection={this.props.selection} 
+            players={this.props.playerData} 
+            gamesData={this.props.selectedGames}
+            playerAverages={this.props.playerAverages}
+            moveSummaryData={this.props.moveSummaryData}
+          />
+        </Tab>
+        <Tab eventKey={resultPanels.blunders} title={resultPanels.blunders}>
+          { blunderWindow }
+        </Tab>
+      </Tabs>);
     }
-    return tabs
+    return tabs;
   }
     setMoveSummary = data => {
-      this.setState({moveData: data.data});
+      this.setState({moveData: data.data,});
     }
 }
 
-const ResultTabsConnected = connect(mapStateToPropsResultTabs, mapDispatchToPropsResultTabs)(ResultTabs);
+const ResultTabsConnected = connect(mapStateToPropsResultTabs, 
+  mapDispatchToPropsResultTabs)(ResultTabs);
 
 const startingStateForSearch = {
-  selection: { tournaments: [], players: [] },
-  gamesData: []
+  selection: {tournaments: [], players: [],},
+  gamesData: [],
 };
 
 /* The SearchWindow allows filtering games in the database and then shows the
@@ -256,39 +245,32 @@ export class SearchWindow extends React.Component {
     const selected = this.state.selection.tournaments;
     return selected;
   }
-  getGameSearchData = () => {
-    const data = { 
-      gameRequestDB: this.props.selectedDB
-    , gameRequestTournaments: this.getSelectedTournaments()
-    };
-    return data
-  }
   render = () => {
     var resultRow = <div/>;
     resultRow = (
-      <Provider store={ store }>
+      <Provider store={store}>
         <ResultTabsConnected/>
       </Provider>
-    )
+    );
     return (
       <div>
-        <Row style={{ marginLeft: 0, marginRight: 0 }}>
+        <Row style={{marginLeft: 0, marginRight: 0,}}>
           <SearchChoice
-            selection={ this.props.selection }
-            selectedDB={ this.props.selectedDB }
-            playerData={this.props.playerData }
-            tournamentData={this.props.tournamentData }
-            gamesData= { this.props.gamesData }
+            fullSelection={this.props.fullSelection}
+            selectedDB={this.props.selectedDB}
+            playerData={this.props.playerData}
+            tournamentData={this.props.tournamentData}
+            gamesData={this.props.gamesData}
             selectedPlayers={this.state.selection.players}
-            selectedGames={ this.props.selectedGames }
-            updateSelection = { this.props.updateSelection }
+            selectedGames={this.props.selectedGames}
+            updateSelection={this.props.updateSelection}
             tournamentData={this.props.tournamentData}/>
         </Row>
-        <Row style={{ marginLeft: 0, marginRight: 0 }}>
+        <Row style={{marginLeft: 0, marginRight: 0,}}>
           { resultRow }
         </Row>
       </div>
-    )
+    );
   }
 }
 

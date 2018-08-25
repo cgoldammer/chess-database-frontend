@@ -1,8 +1,6 @@
 import React, { Component } from "react";
 import ReactDOM from 'react-dom';
 import { Tooltip, Overlay, FieldGroup, HelpBlock, Label, Navbar, Grid, Row, Col, Button, FormGroup, FormControl, ControlLabel, NavItem, Nav, Modal } from "react-bootstrap";
-import axios from 'axios';
-import qs from "qs";
 import ReactModal from 'react-modal';
 
 ReactModal.setAppElement('body');
@@ -30,32 +28,37 @@ const menuConsts = {
 export class Menu extends Component {
   constructor(props) {
     super(props);
-    this.state = { 
-      typeSelected: 0 
-    }
   }
 
-  unsetTypeSelected = () => this.setState({ typeSelected: 0 });
+  unsetTypeSelected = () => this.props.updateSelectLogin(null);
   userIsLoggedIn = () => !objectIsEmpty(this.props.user)
 
   logoutCallback = () => {
     const handleLogout = () => {
-      this.props.userCallback({data: {}});
       this.unsetTypeSelected();
+      this.props.setUser(null);
     }
     logout(handleLogout);
   }
 
   show = () => {
-    const showType = this.state.typeSelected;
+    const showType = this.props.loginTypeSelected;
+    console.log("LOGIN ERROR"+ this.props.loginError);
 		var inside = null
 		if (showType == menuConsts.register || showType == menuConsts.login){
 			inside = (
-				<Login loginType={ showType } logoutCallback={this.logoutCallback} userCallback={ this.props.userCallback } unsetTypeSelected = { this.unsetTypeSelected } />
+				<Login
+          loginType={ showType }
+          loginError={this.props.loginError}
+          putLoginOrRegister={this.props.putLoginOrRegister}
+          unsetTypeSelected = { this.unsetTypeSelected } />
 			);
 		}
     if (showType == menuConsts.details){
-			inside = <UserDetail logoutCallback = { this.logoutCallback } user= { this.props.user } unsetTypeSelected = { this.unsetTypeSelected } />
+			inside = <UserDetail
+        logoutCallback = { this.logoutCallback }
+        user= { this.props.user }
+        unsetTypeSelected = { this.unsetTypeSelected } />
 		} 
     if (showType == menuConsts.about) {
 			inside = <About unsetTypeSelected = { this.unsetTypeSelected } />
@@ -64,19 +67,22 @@ export class Menu extends Component {
 			inside = <Feedback unsetTypeSelected = { this.unsetTypeSelected } />
 		} 
     return (
-      <Modal show={ this.state.typeSelected != '' }>
+      <Modal show={ this.props.loginTypeSelected != null }>
         { inside }
       </Modal>
     )
   }
 
-  updateTypeSelected = type => this.setState({typeSelected: type})
-  userIsLoggedIn = () => !objectIsEmpty(this.props.user)
+  updateTypeSelected = type => this.props.updateSelectLogin(type);
+  userIsLoggedIn = () => this.props.user != null;
 
   render = () => {
+
+    console.log("USER")
+    console.log(this.props.user)
 		var nav = null;
     var loginWindow = null;
-    if (this.state.typeSelected > 0){
+    if (this.props.loginTypeSelected != null){
       loginWindow = this.show()
     }
     if (this.userIsLoggedIn()) {
@@ -118,7 +124,7 @@ export class Menu extends Component {
 					<Navbar.Text>{userText}</Navbar.Text>
 				)
 				nav = (<div>
-					<Nav pullRight>
+					<Nav pullRight onSelect={this.props.updateSelectLogin}>
 						<NavItem eventKey={menuConsts.login}>
 							Log in
 						</NavItem>
@@ -138,7 +144,9 @@ export class Menu extends Component {
       var allUserElements = null;
     }
 		const menu = (
-			<Navbar inverse collapseOnSelect style={{ marginBottom: 0, borderRadius: 0 }} onSelect={ this.updateTypeSelected }>
+			<Navbar inverse collapseOnSelect
+        style={{ marginBottom: 0, borderRadius: 0 }}
+        onSelect={ this.props.updateSelectLogin }>
 				<Navbar.Header>
 					<Navbar.Brand>
 						{appName}
@@ -280,9 +288,7 @@ export class Login extends Component {
     this.state = {
       email: ""
     , password: ""
-    , failMessage: null
 		, resetPasswordForm: false
-		, incorrectPassword: false
     };
   }
 
@@ -294,37 +300,30 @@ export class Login extends Component {
     this.setState({
       [event.target.id]: event.target.value
     });
-    this.setState({ failMessage: null });
   }
 
   registerCallback = data => {
     getUser(this.props.userCallback);
     this.props.unsetTypeSelected();
   }
-  failCallback = data => {
-		const text = data.response.data;
-		if (text.includes("password")){
-			this.setState({ incorrectPassword: true });
-		}
-    this.showFail(text);
-  }
-  showFail = data => this.setState({failMessage: data})
-
   handleSubmit = event => {
     event.preventDefault();
-    loginOrRegisterUser(this.props.loginType, this.state.email, this.state.password, this.registerCallback, this.failCallback);
+    console.log("Submitted");
+    loginOrRegisterUser(this.props.loginType, this.state.email, this.state.password, this.props.putLoginOrRegister);
   }
 	setToResetPassword = () => this.setState({ resetPasswordForm: true });
 	sendPasswordChangeEmail = event => {
     event.preventDefault();
-		const url = getUrl('sendPasswordResetEmail?email=' + this.state.email);
-	  axios.post(url).then(this.props.unsetTypeSelected).catch(() => {});
+    // Disabled for now until I think through how we can avoid spamming.
+    // Note: Also disabled on the backend.
+		// const url = getUrl('sendPasswordResetEmail?email=' + this.state.email);
+	  // axios.post(url).then(this.props.unsetTypeSelected).catch(() => {});
 	}
 
   render() {
     const name = loginData[this.props.loginType].name;
 		
-		const resetButton = !this.state.incorrectPassword ? null : <Button block bsSize="large" onClick={ this.setToResetPassword }>Forgot password?</Button>
+		const resetButton = !this.props.loginError ? null : <Button block bsSize="large" onClick={ this.setToResetPassword }>Forgot password?</Button>
 		var modalBody = (
 			<div>
 				<form onSubmit={this.handleSubmit}>
@@ -345,7 +344,7 @@ export class Login extends Component {
 							type="password"
 						/>
 					</FormGroup>
-					{ this.state.failMessage ? <HelpBlock bsStyle="warning" style= {{ color: "red" }} > { this.state.failMessage } </HelpBlock> : null }
+					{ this.props.loginError ? <HelpBlock bsStyle="warning" style= {{ color: "red" }} > { this.props.loginError } </HelpBlock> : null }
 					<Button
 						block
 						bsSize="large"

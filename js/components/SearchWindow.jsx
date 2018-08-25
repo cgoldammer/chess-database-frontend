@@ -52,7 +52,7 @@ const getSelectedBlunders = (data, gameIds, playerIds, playerData) => {
   console.log("GAMES: " + cleaned.length);
   console.log("players: " + playerIds);
 
-  const isInGameList = moveEval => gameIds.indexOf(moveEval.moveEvalsGame.id) > -1;
+  const isInGameList = moveEval => gameIds.indexOf(moveEval.game.id) > -1;
   cleaned = cleaned.filter(isInGameList);
   console.log("GAMES: " + cleaned.length);
 
@@ -61,8 +61,8 @@ const getSelectedBlunders = (data, gameIds, playerIds, playerData) => {
     return [];
   }
   const isSelectedPlayer = moveEval => {
-    const game = moveEval.moveEvalsGame;
-    const ev = moveEval.moveEvalsMoveEval;
+    const game = moveEval.game;
+    const ev = moveEval.moveEval;
     const matchForWhite = isInSelected(game.playerWhiteId) && ev.isWhite;
     const matchForBlack = isInSelected(game.playerBlackId) && (!ev.isWhite);
     return matchForWhite || matchForBlack;
@@ -75,7 +75,7 @@ const getSelectedBlunders = (data, gameIds, playerIds, playerData) => {
     playersMap[player.id] = player;
   }
   const addPlayerName = moveEval => {
-    const game = moveEval.moveEvalsGame;
+    const game = moveEval.game;
     const playerWhite = playersMap[game.playerWhiteId];
     const playerBlack = playersMap[game.playerBlackId];
 

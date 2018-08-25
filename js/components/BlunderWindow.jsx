@@ -20,7 +20,7 @@ export class BlunderPosition extends React.Component {
     super(props);
   }
 
-  getCurrentEval = () => this.props.data.moveEvalsMoveEval
+  getCurrentEval = () => this.props.data.moveEval
   gameString = () => {
     const data = this.props.data;
     return playerName(data.playerWhite) + " - " + playerName(data.playerBlack);
@@ -39,9 +39,9 @@ export class BlunderPosition extends React.Component {
   }
   render = () => {
     const data = this.props.data;
-    const evaluation = data.moveEvalsMoveEval;
+    const evaluation = data.moveEval;
     const fen = evaluation.fen.substring(4);
-    const loss = data.moveEvalsMoveLoss;
+    const loss = data.moveLoss;
     const board = <Chessdiagram fen={fen} flip={this.props.flip} squareSize={squareSize} lightSquareColor={lightSquareColor} darkSquareColor={darkSquareColor}/>
     return (
       <div>

@@ -139,22 +139,22 @@ export const cleanGameData = data => {
   };
 
   const readOpening = (varName, name) => {
-    const found = varName in data && data.gameDataOpening != null;
+    const found = varName in data && data.opening != null;
     return found ? (data[varName][name] || '') : '';
   };
 
   const cleaned = {
-    'id': data.gameDataGame.id,
-    'whiteShort': playerNameShort(data.gameDataPlayerWhite),
-    'blackShort': playerNameShort(data.gameDataPlayerBlack),
-    'white': playerName(data.gameDataPlayerWhite),
-    'black': playerName(data.gameDataPlayerBlack),
-    'result': gameResult(data.gameDataGame.gameResult),
-    'tournament': data.gameDataTournament.name,
-    'opening': readOpening('gameDataOpening', 'variationName'),
-    'openingLine': readOpening('gameDataOpeningLine' ,'name'),
-    'pgn': data.gameDataGame.pgn,
-    'date': getByAttribute('Date')(data.gameDataAttributes),
+    'id': data.game.id,
+    'whiteShort': playerNameShort(data.playerWhite),
+    'blackShort': playerNameShort(data.playerBlack),
+    'white': playerName(data.playerWhite),
+    'black': playerName(data.playerBlack),
+    'result': gameResult(data.game.gameResult),
+    'tournament': data.tournament.name,
+    'opening': readOpening('opening', 'variationName'),
+    'openingLine': readOpening('openingLine' ,'name'),
+    'pgn': data.game.pgn,
+    'date': getByAttribute('Date')(data.attributes),
   };
   return cleaned;
 };
@@ -169,10 +169,10 @@ export const removeMissing = d => d != null && d.name != undefined
 
 export const getGameDataOpenings = gameData => {
   const getOpening = game => {
-    if (game.gameDataOpeningLine == null) return null;
+    if (game.openingLine == null) return null;
     const data = {
-      name: game.gameDataOpeningLine.name,
-      id: game.gameDataOpeningLine.name,
+      name: game.openingLine.name,
+      id: game.openingLine.name,
     };
     return data;
   };
@@ -255,7 +255,7 @@ export class FullSelection {
     const selectedTournaments = selection.tournaments.length > 0 ? selection.tournaments : allTournaments;
     const isInSelectedTournament = value => selectedTournaments.indexOf(value) > -1;
     if (selectedTournaments.length > 0){
-      const isSelectedTournament = gameData => isInSelectedTournament(gameData.gameDataTournament.id);
+      const isSelectedTournament = gameData => isInSelectedTournament(gameData.tournament.id);
       cleaned = cleaned.filter(isSelectedTournament);
     }
     console.log("SELECTED: " + cleaned.length)
@@ -264,8 +264,8 @@ export class FullSelection {
     const isInSelected = value => selectedPlayers.indexOf(value) > -1;
     if (selectedPlayers.length > 0){
       const isSelectedPlayer = gameData => {
-        const white = gameData.gameDataPlayerBlack.id;
-        const black = gameData.gameDataPlayerWhite.id;
+        const white = gameData.playerBlack.id;
+        const black = gameData.playerWhite.id;
         return isInSelected(white) || isInSelected(black);
       };
       cleaned = cleaned.filter(isSelectedPlayer);
@@ -277,8 +277,8 @@ export class FullSelection {
     const isInSelectedOpening = value => selectedOpenings.indexOf(value) > -1;
     if (selection.openings.length > 0){
       const isSelectedOpening = gameData => {
-        if (gameData.gameDataOpeningLine == null) return false;
-        return isInSelectedOpening(gameData.gameDataOpeningLine.name);
+        if (gameData.openingLine == null) return false;
+        return isInSelectedOpening(gameData.openingLine.name);
       };
       cleaned = cleaned.filter(isSelectedOpening);
     }

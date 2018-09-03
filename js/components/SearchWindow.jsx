@@ -50,7 +50,7 @@ export class SearchChoice extends React.Component {
 const getSelectedBlunders = (data, gameIds, playerIds, playerData) => {
   var cleaned = data;
 
-  const isInGameList = moveEval => gameIds.indexOf(moveEval.game.id) > -1;
+  const isInGameList = moveEval => moveEval ? gameIds.indexOf(moveEval.game.id) > -1 : null;
   cleaned = cleaned.filter(isInGameList);
 
   const isInSelected = value => playerIds.indexOf(value) > -1;
@@ -131,7 +131,8 @@ const mapStateToPropsResultTabs = state => {
     playerData: state.playerData.data,
     selectedDB: state.selectedDB,
     selectedGames: selectedGames,
-    selectedGame: getSelectedGame(selectedGames, state.selectedGame),
+    selectedGame: getSelectedGame(selectedGames, state.selectedGame, 
+        state.gamesFullEvaluations.data),
     showType: state.showType,
     selectedBlunders: selectedBlunders,
     moveEvalsData: state.moveEvalsData.data,
@@ -176,6 +177,7 @@ class ResultTabs extends React.Component {
     if (this.props.selectedGameslength == 0){
       return null;
     }
+
     const gamesTable = 
       <GamesTable
         selectedDB={this.props.selectedDB}

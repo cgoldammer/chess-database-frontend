@@ -15,6 +15,22 @@ export const defaultSelectionState = {
   openings: [],
 };
 
+const defaultFullEvaluationState = {'fetching': false, data: {}};
+const reduceFullEvaluations = (state=defaultFullEvaluationState, action) => {
+  switch (action.type){
+    case AT.FETCH_GAME_EVALUATION_DATA:
+      return {...state, ...{'fetching': true}}
+    case AT.RECEIVE_GAME_EVALUATION_DATA:
+      const data = state.data;
+      const received = action.data.map(ev => ev.moveEval);
+      const id = action.data[0].game.id;
+      var updateData = {}
+      updateData[id] = received;
+      return {...state, ...{'data': {...data, ...updateData}}}
+  }
+  return state
+}
+
 // eslint-disable-next-line max-len
 const reduceDataDefault = (actionFetch, actionReceive, defaultState=defaultData, cleaner=null) => {
   return (state=defaultState, action) => {
@@ -65,6 +81,8 @@ const reduceLoginError = (state=null, action) => {
   return state;
 };
 
+
+
 const reduceUser = reduceDefault(AT.RECEIVE_USER, null, action => action.data);
 const reduceSelectedGame = reduceDefault(AT.SELECT_GAME, null, action => action.gameId);
 const reduceSelectDB = reduceDefault(AT.SELECT_DB, null, action => action.dbId);
@@ -77,7 +95,8 @@ const reduceMoveEvalData = reduceDataDefault(AT.FETCH_MOVE_EVAL_DATA,
   AT.RECEIVE_MOVE_EVAL_DATA);
 const reduceGameEvalData = reduceDataDefault(AT.FETCH_GAME_EVAL_DATA, 
   AT.RECEIVE_GAME_EVAL_DATA);
-const reduceMoveSummaryData = reduceDataDefault(AT.FETCH_MOVE_SUMMARY_DATA);
+const reduceMoveSummaryData = reduceDataDefault(AT.FETCH_MOVE_SUMMARY_DATA, 
+    AT.RECEIVE_MOVE_SUMMARY_DATA);
 
 
 const addPlayerName = player => ({...player, ...{name: playerName(player),},});
@@ -94,6 +113,7 @@ export const rootReducer = combineReducers({
   moveEvalsData: reduceMoveEvalData,
   showType: reduceShowType,
   selectedGame: reduceSelectedGame,
+  gamesFullEvaluations: reduceFullEvaluations,
   moveSummaryData: reduceMoveSummaryData,
   gameEvalData: reduceGameEvalData,
   user: reduceUser,

@@ -3,6 +3,7 @@ import {Button,} from 'react-bootstrap';
 import d3 from 'd3';
 import {LineChart,} from 'react-d3-components';
 import Select from 'react-select';
+import {Row, } from 'react-bootstrap';
 
 import {Legend,} from './Legend.jsx';
 import styles from './StatWindows.css';

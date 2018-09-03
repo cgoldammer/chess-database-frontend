@@ -198,7 +198,7 @@ export const getActiveIds = type => (uiSelection, allData) => {
   return uiTournaments.length == 0 ? allIds : uiTournaments;
 };
 
-export const getSelectedGame = (games, gameId) => {
+export const getSelectedGame = (games, gameId, evaluations) => {
   if (gameId == null){
     return null;
   }
@@ -206,7 +206,13 @@ export const getSelectedGame = (games, gameId) => {
   if (matches.length == 0){
     return null;
   }
-  return matches[0];
+  var result = matches[0];
+  const id = result.id;
+  result['evaluations'] = null;
+  if (id in evaluations){
+    result['evaluations'] = evaluations[id];
+  }
+  return result
 };
 
 
@@ -307,4 +313,21 @@ export const createFullSelection = state => {
 
   return fs;
 };
+
+export const formatEval = ev => ' (' + (ev / 100).toFixed(2) + ')';
+
+export const annotateMoves = (moves, evals) => {
+  var movesNew = moves.map(m => m);
+  for (var ev of evals){
+    var moveEval = movesNew[ev.moveNumber - 1].map(m => m);
+    if (ev.isWhite) {
+      moveEval[1] += formatEval(ev.eval);
+    }
+    else {
+      moveEval[2] += formatEval(ev.eval);
+    }
+    movesNew[ev.moveNumber - 1] = moveEval
+  }
+  return movesNew;
+}
 

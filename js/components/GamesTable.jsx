@@ -70,6 +70,7 @@ export class GamesTable extends React.Component {
     return view;
   }
   render() {
+
     const data = this.props.gamesData;
     var board = null;
 

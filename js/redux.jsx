@@ -9,7 +9,7 @@ import {getRequestPromise,} from './api.js';
 import * as AT from './constants.js';
 import qs from 'qs';
 import axios from 'axios';
-import {selectLogin,} from './actions.jsx';
+import {selectLogin, loginError, dataForGame} from './actions.jsx';
 
 const allDefaultRequests = (typeFetch, typeReceived) => {
   const defaultRequest = (type, status=null) => (data, dbId=null) => {
@@ -93,16 +93,19 @@ const fetchPlayerData = fetchData('players', requestPlayers, searchDataDB);
 
 const requestGameEvals = allDefaultRequests(AT.FETCH_GAME_EVAL_DATA, 
   AT.RECEIVE_GAME_EVAL_DATA);
-const fetchGameEvals = fetchData('gameEvaluations', requestGameEvals, dataForSelection);
+const fetchGameEvals = fetchData('gameEvaluations', requestGameEvals, dataForMoveEvals);
 
 const requestMoveEvals = allDefaultRequests(AT.FETCH_MOVE_EVAL_DATA, 
   AT.RECEIVE_MOVE_EVAL_DATA);
 const fetchMoveEvals = fetchData('moveEvaluations', requestMoveEvals, dataForMoveEvals);
 
+const requestMoveSummaries = allDefaultRequests(AT.FETCH_MOVE_SUMMARY_DATA, 
+  AT.RECEIVE_MOVE_SUMMARY_DATA);
+const fetchMoveSummaries = fetchData('moveSummary', requestMoveSummaries, dataForMoveEvals);
+
 const requestGames = allDefaultRequests(AT.FETCH_GAME_DATA, AT.RECEIVE_GAME_DATA);
 const fetchGames = fetchData('games', requestGames, searchDataGames);
 
-const loginError = error => ({type: AT.LOGIN_OR_REGISTER_FAILED, error:error,});
 
 const tryLogin = () => ({type: AT.LOGIN_OR_REGISTER_SUCCEEDED,});
 
@@ -130,23 +133,47 @@ function* sendFetchUser() {
 function* fetchStatsForTournaments(action) {
   const ids = action.data.map(t => t.id);
   yield put({type: AT.FETCH_MOVE_EVAL_DATA, dbId: action.dbId, tournaments: ids,});
+  yield put({type: AT.FETCH_GAME_EVAL_DATA, dbId: action.dbId, tournaments: ids,});
+  yield put({type: AT.FETCH_MOVE_SUMMARY_DATA, dbId: action.dbId, tournaments: ids,});
+}
+
+function* updateAfterReceivingUser() {
+  yield put(requestDB.receiving());
+}
+
+function* loadDataForGame(action) {
+  yield put(dataForGame(action.dbId, action.gameId));
+}
+
+function* fetchGameEvaluations(action) {
+  const fullUrl = getUrl('api/moveEvaluationsFromIds');
+  const parameters = {idValues: [action.gameId]}
+  try {
+    const data = yield call(getRequestPromise, fullUrl, parameters);
+    yield put({type: AT.RECEIVE_GAME_EVALUATION_DATA, data: data.data});
+  }
+  catch (error) {
+    yield put({type: AT.STATUS_ERROR, error: error});
+  }
+
 }
 
 var fetcherData = {};
 fetcherData[AT.FETCH_DB_DATA] = fetchDBData;
 fetcherData[AT.FETCH_PLAYER_DATA] = fetchPlayerData;
 fetcherData[AT.SELECT_DB] = getDataForDB;
-fetcherData[AT.SELECTION_CHANGED] = pullDataForNewSelection;
 fetcherData[AT.FETCH_GAME_DATA] = fetchGames;
 fetcherData[AT.FETCH_TOURNAMENT_DATA] = fetchTournamentData;
 fetcherData[AT.FETCH_GAME_EVAL_DATA] = fetchGameEvals;
 fetcherData[AT.FETCH_MOVE_EVAL_DATA] = fetchMoveEvals;
+fetcherData[AT.FETCH_MOVE_SUMMARY_DATA] = fetchMoveSummaries;
 fetcherData[AT.LOGIN_OR_REGISTER] = handleLogin;
 fetcherData[AT.LOGIN_OR_REGISTER_SUCCEEDED] = sendFetchUser;
 fetcherData[AT.FETCH_USER] = fetchUser;
 fetcherData[AT.RECEIVE_TOURNAMENT_DATA] = fetchStatsForTournaments;
-
-
+fetcherData[AT.RECEIVE_USER] = updateAfterReceivingUser;
+fetcherData[AT.SELECT_GAME] = loadDataForGame;
+fetcherData[AT.FETCH_GAME_EVALUATION_DATA] = fetchGameEvaluations;
 
 const getFetcher = (type, response) => {
   function* fetcher(){
@@ -171,10 +198,6 @@ function* getDataForDB(action) {
   yield put(requestGames.receiving(null, action.dbId));
   const newLoc = {db: action.dbId, game: null, showType: defaultShowType,};
   updateUrl(newLoc);
-}
-
-function* pullDataForNewSelection(action){
-  yield put({type: AT.FETCH_GAME_EVAL_DATA, selection: action.selection,});
 }
 
 export function* rootSaga() {

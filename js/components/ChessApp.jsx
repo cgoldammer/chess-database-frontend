@@ -3,7 +3,8 @@ import ReactTable from 'react-table';
 import styles from './ChessApp.css';
 import {Table, ButtonGroup, Button,} from 'react-bootstrap';
 import Chessdiagram from 'react-chessdiagram'; 
-import {defaultGetRows, calculateMoveNumber,} from './helpers.jsx';
+import {defaultGetRows, calculateMoveNumber, } from './helpers.jsx';
+import {annotateMoves, } from '../helpers.jsx';
 
 const lightSquareColor = '#f2f2f2';
 const darkSquareColor = '#bfbfbf';
@@ -31,6 +32,7 @@ class GameOverview extends React.Component {
     super(props);
   }
   render = () => {
+
     const game = this.props.game;
     const whitePlayerName = game.white;
     const blackPlayerName = game.black;
@@ -68,12 +70,20 @@ export class ChessApp extends React.Component {
   constructor(props){
     super(props);
     this.state = {startMove: 0,};
-    this.moves = defaultGetRows(props.game.pgn);
   }
   setToEnd = () => this.setMove(this.moves.length);
   setMove = move => this.setState({startMove: move,});
   rowMapper = row => ({moveNumber: row[0], white: row[1], black: row[2],});
-  getData = () => this.moves.map(this.rowMapper);
+  getData = () => {
+    const game = this.props.game;
+    var moves = defaultGetRows(game.pgn);
+
+    if (game.evaluations) {
+      moves = annotateMoves(moves, game.evaluations);
+    }
+
+    return moves.map(this.rowMapper);
+  }
   changeMove = (num) => () => {
     const transformer = (prevState,) => {
       const next = prevState.startMove + num;
@@ -101,6 +111,7 @@ export class ChessApp extends React.Component {
   
   render = () => {
     const data = this.getData();
+
     return (
       <div>
         <GameOverview game={this.props.game}/>

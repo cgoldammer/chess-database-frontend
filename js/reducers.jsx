@@ -23,10 +23,14 @@ const reduceFullEvaluations = (state=defaultFullEvaluationState, action) => {
     case AT.RECEIVE_GAME_EVALUATION_DATA:
       const data = state.data;
       const received = action.data.map(ev => ev.moveEval);
-      const id = action.data[0].game.id;
-      var updateData = {}
-      updateData[id] = received;
-      return {...state, ...{'data': {...data, ...updateData}}}
+      console.log(action);
+      if (action.data.length > 0){
+        const id = action.data[0].game.id;
+        var updateData = {}
+        updateData[id] = received;
+        return {...state, ...{'data': {...data, ...updateData}}}
+      }
+      return state
   }
   return state
 }

@@ -74,10 +74,14 @@ export class ChessApp extends React.Component {
   setToEnd = () => this.setMove(this.moves.length);
   setMove = move => this.setState({startMove: move,});
   rowMapper = row => ({moveNumber: row[0], white: row[1], black: row[2],});
+  getMoves = () => {
+    const game = this.props.game;
+    return defaultGetRows(game.pgn);
+  }
+
   getData = () => {
     const game = this.props.game;
-    var moves = defaultGetRows(game.pgn);
-
+    var moves = this.getMoves().map(m => m);
     if (game.evaluations) {
       moves = annotateMoves(moves, game.evaluations);
     }
@@ -87,7 +91,8 @@ export class ChessApp extends React.Component {
   changeMove = (num) => () => {
     const transformer = (prevState,) => {
       const next = prevState.startMove + num;
-      if (next >= 0 && next <= this.moves.length){
+      const moves = this.getMoves()
+      if (next >= 0 && next <= moves.length){
         return {startMove: next,};
       }
     };

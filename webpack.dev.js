@@ -23,7 +23,7 @@ devExports = {
     watchOptions: { aggregateTimeout: 300, poll: 1000 },
     proxy: {
       "/snap_dev": {
-        target: "http://0.0.0.0:8000",
+        target: "http://0.0.0.0:8100",
         pathRewrite: {"^/snap_dev": ""}
       }
     },

@@ -3,7 +3,7 @@ const webpack = require('webpack');
 const common = require('./webpack.common.js');
 
 const features = {
-  SHOWUSERS: false
+  SHOWUSERS: true
 , BACKENDURL: 'snap_prod'
 , ISADMIN: false
 , MIN_DATA_QUALITY: true

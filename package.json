@@ -43,7 +43,7 @@
     "webpack-dev-server": "^3.1.0"
   },
   "dependencies": {
-    "axios": "^0.16.2",
+    "axios": "^0.24.0",
     "axios-mock-adapter": "^1.9.0",
     "babel-core": "^6.24.0",
     "babel-polyfill": "^6.23.0",
@@ -64,6 +64,7 @@
     "react-flexbox-grid": "^2.0.0",
     "react-media": "^1.8.0",
     "react-modal": "^3.4.4",
+    "react-notifications": "^1.4.3",
     "react-redux": "^5.0.7",
     "react-router-dom": "^4.2.2",
     "react-select": "^1.1.0",

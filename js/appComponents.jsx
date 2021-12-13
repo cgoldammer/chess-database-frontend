@@ -16,6 +16,8 @@ import statStyles from './components/StatWindows.css';
 import {store, updateUrl, getLoc,} from './redux.jsx';
 import {selectGame, selectShowType, selectLogin, selectDB, 
   loginOrRegister, selectionChanged,} from './actions.jsx';
+import {NotificationContainer, NotificationManager} from 'react-notifications';
+import {requestDB,} from './redux.jsx';
 
 import * as AT from './constants.js';
 
@@ -103,7 +105,7 @@ export class App extends React.Component {
 
   fileUploadHandler = data => {
     const uploadDone = () => {
-      this.updateDatabases();
+      this.props.updateDatabases();
     };
     postRequest(getUrl('api/uploadDB'), data, uploadDone);
   }
@@ -169,6 +171,7 @@ export class App extends React.Component {
             { appForDB }
           </Row>
         </Grid>
+        <NotificationContainer/>
       </div>
     );
   }
@@ -176,6 +179,8 @@ export class App extends React.Component {
 
 const fileReaderState = {showModal: false, file: 0, name: '', showTooBigWarning: false,};
 
+const maxFileSizeKB = 1000;
+const maxFileSize = maxFileSizeKB * 1024;
 export class FileReader extends React.Component {
   constructor(props) {
     super(props);
@@ -186,13 +191,25 @@ export class FileReader extends React.Component {
     const files = document.getElementById('input').files;
     if (files.length >= 0){
       const file = files[0];
-      this.setState({file: file,});
+      this.setState({file: file, showName: false});
+      console.log(file.size);
+
+      if (file.size >= maxFileSize){
+        console.log("bad");
+        this.setWarning(true);
+        this.setShow(false);
+      }
+      else {
+        console.log("good");
+        this.setWarning(false);
+        this.setShow(true);
+      }
     }
   }
   setWarning = val => this.setState({showTooBigWarning: val,})
+  setShow = show => this.setState({showName: show})
 
   submitResultsCallback = () => {
-    const maxFileSize = 1000 * 1024;
     var reader = new window.FileReader();
     reader.onload = () => {
       const result = reader.result;
@@ -203,6 +220,10 @@ export class FileReader extends React.Component {
       else {
         this.setWarning(false);
         this.props.fileContentCallback(data);
+        this.closeModal();
+        NotificationManager.info('Processing right now. Your databases will upload in a few seconds. Evaluations added in the background.', 'Processing', 5000);
+
+
       }
     };
     reader.readAsText(this.state.file);
@@ -213,7 +234,7 @@ export class FileReader extends React.Component {
 
   render = () => {
     var dbNameInput = <div/>;
-    if (this.state.file) {
+    if (this.state.showName) {
       dbNameInput = (
         <div>
           <FormControl
@@ -222,11 +243,6 @@ export class FileReader extends React.Component {
             placeholder="Name of the database"
             onChange={(e) => this.setState({name: e.target.value,})}
           />
-          { this.state.showTooBigWarning ? 
-            <HelpBlock style={{color: 'red',}}>
-              Max file size: 200KB
-            </HelpBlock> : null
-          }
           <Button
             onClick={this.submitResultsCallback}
             disabled={!this.validateForm()}>
@@ -242,6 +258,11 @@ export class FileReader extends React.Component {
           <Modal.Body>
             <input type="file" onChange={this.setFileCallback} id="input"/>
             <p> Note: The file must be in PGN format. </p>
+            { this.state.showTooBigWarning ? 
+              <HelpBlock style={{color: 'red',}}>
+                Max file size: {maxFileSizeKB} KB
+              </HelpBlock> : null
+            }
             { dbNameInput }
           </Modal.Body>
           <Modal.Footer>
@@ -334,6 +355,9 @@ const mapDispatchToProps = dispatch => ({
     }
     updateUrl(newLoc);
   },
+  updateDatabases: () => {
+    dispatch(requestDB.receiving());
+  }
 });
 
 const AppConnected = connect(mapStateToProps, mapDispatchToProps)(App);

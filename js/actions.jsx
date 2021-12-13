@@ -12,4 +12,4 @@ export const loginOrRegister = (data, url) =>
   ({type:AT.LOGIN_OR_REGISTER, data: data, url: url,});
 export const selectionChanged = (fullSelection, reset) => 
   ({type: AT.SELECTION_CHANGED, selection: fullSelection, reset: reset,});
-const loginError = error => ({type: AT.LOGIN_OR_REGISTER_FAILED, error:error,});
+export const loginError = error => ({type: AT.LOGIN_OR_REGISTER_FAILED, error:error,});

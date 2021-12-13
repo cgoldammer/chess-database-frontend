@@ -24,7 +24,7 @@ const allDefaultRequests = (typeFetch, typeReceived) => {
   };
 };
 
-const requestDB = allDefaultRequests(AT.FETCH_DB_DATA, AT.RECEIVE_DB_DATA);
+export const requestDB = allDefaultRequests(AT.FETCH_DB_DATA, AT.RECEIVE_DB_DATA);
 
 const allSearchData = dbId => ({searchDB: dbId,});
 
@@ -147,7 +147,7 @@ function* loadDataForGame(action) {
 
 function* fetchGameEvaluations(action) {
   const fullUrl = getUrl('api/moveEvaluationsFromIds');
-  const parameters = {idValues: [action.gameId]}
+  const parameters = {idDB: action.dbId, idValues: [action.gameId]}
   try {
     const data = yield call(getRequestPromise, fullUrl, parameters);
     yield put({type: AT.RECEIVE_GAME_EVALUATION_DATA, data: data.data});

@@ -7,6 +7,8 @@ export const postRequest = (url, data, callback) => {
 };
 
 export const getRequest = (url, data, callback) => {
+  console.log("url")
+  console.log(url);
   axios.get(url, {params: {data: data,},}).then(callback).catch();
 };
 

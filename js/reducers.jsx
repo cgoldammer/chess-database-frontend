@@ -23,7 +23,6 @@ const reduceFullEvaluations = (state=defaultFullEvaluationState, action) => {
     case AT.RECEIVE_GAME_EVALUATION_DATA:
       const data = state.data;
       const received = action.data.map(ev => ev.moveEval);
-      console.log(action);
       if (action.data.length > 0){
         const id = action.data[0].game.id;
         var updateData = {}
@@ -81,6 +80,8 @@ const reduceLoginError = (state=null, action) => {
     return action.error.data;
   case AT.LOGIN_OR_REGISTER_SUCCEEDED:
     return null;
+  case AT.SELECT_LOGIN_WINDOW:
+    return null
   }
   return state;
 };

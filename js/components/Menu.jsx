@@ -30,7 +30,7 @@ export class Menu extends Component {
   }
 
   unsetTypeSelected = () => this.props.updateSelectLogin(null);
-  userIsLoggedIn = () => !objectIsEmpty(this.props.user)
+  userIsLoggedIn = () => this.props.showUserElements && !objectIsEmpty(this.props.user)
 
   logoutCallback = () => {
     const handleLogout = () => {
@@ -72,7 +72,7 @@ export class Menu extends Component {
   }
 
   updateTypeSelected = type => this.props.updateSelectLogin(type);
-  userIsLoggedIn = () => this.props.user != null;
+  userIsLoggedIn = () => this.props.showUserElements && this.props.user != null;
 
   render = () => {
     var nav = null;

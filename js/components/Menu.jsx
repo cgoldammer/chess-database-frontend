@@ -227,26 +227,14 @@ export class Feedback extends Component {
         <Modal.Header><Modal.Title>Feedback</Modal.Title></Modal.Header>
         <Modal.Body>
           <div>
-            <FormGroup>
-              <ControlLabel>Your feedback</ControlLabel>
-              <FormControl 
-                componentClass='textarea' 
-                placeholder='Enter your feedback here' 
-                onChange={this.setContent}/>
-            </FormGroup>
-            <FormGroup>
-              <ControlLabel>Your email (optional)</ControlLabel>
-              <FormControl type='email' onChange={this.setEmail}/>
-            </FormGroup>
+            <p className={styles.description}> 
+              Update Jan 2 2022: Feedback form is broken because Amazon changed something. While I am fixing this, please:
+            </p>
+            <p className={styles.description}> 
+              <a href='mailto:goldammer.christian@gmail.com?Subject=Chess%20insights' target='_top'>Send me an email!</a> 
+            </p>
           </div>
         </Modal.Body>
-        <Modal.Footer>
-          <Button bsStyle='success' 
-            onClick={this.submit} 
-            ref={button => {this.target=button;}}>Submit</Button>
-          <Button bsStyle='warning' 
-            onClick={this.props.unsetTypeSelected}>Cancel</Button>
-        </Modal.Footer>
       </div>
     );
   }
@@ -277,10 +265,8 @@ export class About extends Component {
             </p>
             <p className={styles.description}>
               The database is completely free and open-source. Here is the code for the 
-              <a href='https://github.com/cgoldammer/chess-database-backend' 
-                target='_blank'>backend</a> and the 
-              <a href='https://github.com/cgoldammer/chess-database-frontend' 
-                target='_blank'>frontend</a>.
+              <a href='https://github.com/cgoldammer/chess-database-backend' target='_blank'>backend</a> and the 
+              <a href='https://github.com/cgoldammer/chess-database-frontend' target='_blank'>frontend</a>.
             </p>
             <p className={styles.description}> 
               <a href='mailto:goldammer.christian@gmail.com?Subject=Chess%20insights' 

@@ -8,8 +8,8 @@ echo "Starting deploy"
 npm run test
 npm run build
 
-CURRENTDIR=~code/chess-database-frontend
-SERVEDIR=~/serve_content/chessinsights
+CURRENTDIR=~/code/chess-database-frontend
+SERVEDIR=~/serve_content/chess-database-frontend
 
 cd $CURRENTDIR
 rm -rf $SERVEDIR

@@ -120,9 +120,16 @@ function* handleLogin(action){
   }
 }
 
+const dbErrorMessage = "Database is down temporarily; Please check in later - usually this takes a few minutes at most"
+
 function* fetchUser(){
-  const data = yield call(axios.get, getUrl('api/user'));
-  yield put({type:AT.RECEIVE_USER, data:data.data,});
+  try {
+    const data = yield call(axios.get, getUrl('api/user'));
+    yield put({type:AT.RECEIVE_USER, data:data.data,});
+    yield put({type:AT.RECEIVE_USER_ERROR, data: {isError: false}});
+  } catch(e) {
+    yield put({type:AT.RECEIVE_USER_ERROR, data: {isError: true, name: dbErrorMessage}});
+  }
 }
 
 function* sendFetchUser() {
@@ -140,6 +147,7 @@ function* fetchStatsForTournaments(action) {
 function* updateAfterReceivingUser() {
   yield put(requestDB.receiving());
 }
+
 
 function* loadDataForGame(action) {
   yield put(dataForGame(action.dbId, action.gameId));

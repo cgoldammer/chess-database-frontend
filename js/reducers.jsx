@@ -87,6 +87,7 @@ const reduceLoginError = (state=null, action) => {
 };
 
 
+const reduceAppWarnings = reduceDefault(AT.RECEIVE_USER_ERROR, {isError: false}, action => action.data);
 
 const reduceUser = reduceDefault(AT.RECEIVE_USER, null, action => action.data);
 const reduceSelectedGame = reduceDefault(AT.SELECT_GAME, null, action => action.gameId);
@@ -124,4 +125,5 @@ export const rootReducer = combineReducers({
   user: reduceUser,
   loginError: reduceLoginError,
   loginTypeSelected: reduceSelectLogin,
+  appWarnings: reduceAppWarnings,
 });

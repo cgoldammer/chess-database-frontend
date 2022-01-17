@@ -47,13 +47,20 @@ export const loginOrRegisterUser = (loginType, email, password, putRequestUser) 
   putRequestUser(data, url);
 };
 
+export const getWithError = (url, callbackSuccess, callbackError) =>
+  axios.get(getUrl(url)).then(callbackSuccess).catch(callbackError);
+
 export const getIgnore = (url, callback) => 
   axios.get(getUrl(url)).then(callback).catch(() => {});
+
+
 
 export const loginDummyUser = callback => 
   loginOrRegisterUser(loginConsts.login, 'a@a.com', 'a', callback);
 export const logout = callback => getIgnore('logout', callback);
-export const getUser = callback => getIgnore('api/user', callback);
+
+
+export const getUser = (callbackSuccess, callbackError) => getWithError('api/user', callbackSuccess, callbackError);
 
 export const resultPanels = {
   gameList: 'Games',

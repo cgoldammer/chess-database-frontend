@@ -2,6 +2,7 @@ import React, {Component,} from 'react';
 import {HelpBlock, Navbar, Row, Col, Button, FormGroup, FormControl, 
   ControlLabel, NavItem, Nav, Modal,} from 'react-bootstrap';
 import ReactModal from 'react-modal';
+import statStyles from '../components/StatWindows.css';
 
 ReactModal.setAppElement('body');
 
@@ -137,7 +138,7 @@ export class Menu extends Component {
       }
     }
     const menu = (
-      <Navbar inverse collapseOnSelect
+      <Navbar fluid inverse collapseOnSelect
         style={{marginBottom: 0, borderRadius: 0,}}
         onSelect={this.props.updateSelectLogin}>
         <Navbar.Header>
@@ -278,9 +279,9 @@ export class About extends Component {
             <p className={styles.description}>
               The database is completely free and open-source. Here is the code for the 
               <a href='https://github.com/cgoldammer/chess-database-backend' 
-                target='_blank'>backend</a> and the 
+                target='_blank'> backend</a> and the 
               <a href='https://github.com/cgoldammer/chess-database-frontend' 
-                target='_blank'>frontend</a>.
+                target='_blank'> frontend</a>.
             </p>
             <p className={styles.description}> 
               <a href='mailto:goldammer.christian@gmail.com?Subject=Chess%20insights' 
@@ -316,8 +317,12 @@ export class Login extends Component {
     });
   }
 
+  respondToError = () => {
+    console.log("ERROR")
+  }
+
   registerCallback = () => {
-    getUser(this.props.userCallback);
+    getUser(this.props.userCallback, this.respondToError);
     this.props.unsetTypeSelected();
   }
   handleSubmit = event => {

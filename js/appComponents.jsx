@@ -82,6 +82,12 @@ const IntroWindow = () => (
   </Jumbotron>
 );
 
+const Warnings = (props) => (
+  <Jumbotron>
+    <h2 className={statStyles.statTitle}>{props.appWarnings}</h2>
+  </Jumbotron>
+);
+
 
 export class App extends React.Component {
   constructor(props) {
@@ -145,34 +151,41 @@ export class App extends React.Component {
       loc={this.props.loc}
       fullSelectedDB={this.props.fullSelectedDB}
       setLoc={this.props.setLoc}/>;
+
+    var warnWindow = <div/>
+    if (this.props.appWarnings.isError) {
+      warnWindow = <Warnings appWarnings={this.props.appWarnings.name}/>
+    }
     
     return (
-
-      <div>
-        <Menu
-          putLoginOrRegister={this.props.putLoginOrRegister}
-          user={this.props.user} 
-          setUser={this.props.setUser}
-          loginError={this.props.loginError}
-          updateSelectLogin={this.props.updateSelectLogin}
-          loginTypeSelected={this.props.loginTypeSelected}
-          showUserElements={this.props.features.showUsers}/>
-        <Grid fluid>
-          <Row >
-            { nav } 
-          </Row>
-          <Row>
-            <div className={statStyles.statHeader}>
-              { setDB }
-              { fileDiv }
-            </div>
-          </Row>
-          <Row>
-            { appForDB }
-          </Row>
-        </Grid>
+      <Grid fluid>
+        <Row>
+          <Menu
+            putLoginOrRegister={this.props.putLoginOrRegister}
+            user={this.props.user} 
+            setUser={this.props.setUser}
+            loginError={this.props.loginError}
+            updateSelectLogin={this.props.updateSelectLogin}
+            loginTypeSelected={this.props.loginTypeSelected}
+            showUserElements={this.props.features.showUsers}/>
+        </Row>
+        <Row >
+          { nav } 
+        </Row>
+        <Row>
+          <div className={statStyles.statHeader}>
+            { setDB }
+            { fileDiv }
+          </div>
+        </Row>
+        <Row>
+          { warnWindow }
+        </Row>
+        <Row>
+          { appForDB }
+        </Row>
         <NotificationContainer/>
-      </div>
+      </Grid>
     );
   }
 }
@@ -332,6 +345,7 @@ const mapStateToProps = state => ({
   gamesData: state.gamesData,
   loginError: state.loginError,
   loginTypeSelected: state.loginTypeSelected,
+  appWarnings: state.appWarnings
 });
 
 

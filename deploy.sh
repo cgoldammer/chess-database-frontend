@@ -16,4 +16,3 @@ rm -rf $SERVEDIR
 mkdir $SERVEDIR
 cp -r $CURRENTDIR/lib $SERVEDIR
 cp -r $CURRENTDIR/index_prod.html $SERVEDIR
-cp -r $CURRENTDIR/css $SERVEDIR

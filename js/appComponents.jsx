@@ -4,7 +4,7 @@ import {HelpBlock, Jumbotron,
   Grid, Row, Button, 
   FormControl, Breadcrumb, Modal,} from 'react-bootstrap';
 import {Menu,} from './components/Menu.jsx';
-import {DBChooser,} from './components/DBChooser.jsx';
+import {DBChooserAll,} from './components/DBChooser.jsx';
 import {EvaluationWindow,} from './components/AdminComponents.jsx';
 import {SearchWindow,} from './components/SearchWindow.jsx';
 import {objectIsEmpty, logout, 
@@ -13,6 +13,7 @@ import {objectIsEmpty, logout,
 import {connect, Provider,} from 'react-redux';
 import {postRequest,} from './api.js';
 import statStyles from './components/StatWindows.css';
+import overallStyles from './OverallStyles.css';
 import {store, updateUrl, getLoc,} from './redux.jsx';
 import {selectGame, selectShowType, selectLogin, selectDB, 
   loginOrRegister, selectionChanged,} from './actions.jsx';
@@ -48,7 +49,7 @@ class BreadcrumbNavigator extends React.Component {
     var dbCrumb = null;
     if (loc.db != null && this.props.fullSelectedDB != null){
       const selectedDB = this.props.fullSelectedDB;
-      dbCrumb = crumb('db', loc.db, selectedDB.name);
+      dbCrumb = crumb('db', loc.db, selectedDB.dB.name);
     }
 
     var showCrumb = null;
@@ -75,10 +76,13 @@ class BreadcrumbNavigator extends React.Component {
 }
 
 
-const IntroWindow = () => (
+const IntroWindow = (props) => (
   <Jumbotron>
-    <h2 className={statStyles.statTitle}>Chess insights</h2>
-    <p>A database with evaluations of every single move. Free and Open-Source.</p>
+    <h1 className={statStyles.statTitle}>Chess insights</h1>
+    <h3 className="text-center">Evaluate every single move! Free and Open-Source.</h3>
+    { props.isLoggedIn == false &&
+      <p className="text-center">Create an account to upload your own databases.</p>
+    }
   </Jumbotron>
 );
 
@@ -124,8 +128,8 @@ export class App extends React.Component {
     var fileDiv = null;
     if (this.props.fullSelectedDB == null){
       setDB = (<div>
-        <IntroWindow/>
-        <DBChooser dbData={this.props.dbData} setDB={this.props.setDB}/>
+        <IntroWindow isLoggedIn = {this.userIsLoggedIn()} />
+        <DBChooserAll dbData={this.props.dbData} setDB={this.props.setDB}/>
       </div>);
       if (this.userIsLoggedIn()){
         fileDiv = <FileReader fileContentCallback={this.fileUploadHandler}/>;
@@ -264,8 +268,8 @@ export class FileReader extends React.Component {
         </div>);
     }
     return (
-      <div>
-        <Button onClick={this.showModal}>Upload database</Button>
+      <div className="text-center">
+        <Button size="lg" onClick={this.showModal} className={overallStyles.largeButton}>Upload Database</Button>
         <Modal show={this.state.showModal}>
           <Modal.Header>Upload external database</Modal.Header>
           <Modal.Body>
@@ -326,7 +330,7 @@ AppForDB.defaultProps = {
 
 const getSelectedDB = (dbData, selectedId) => {
   if (selectedId && dbData.data.length > 0){
-    const matches = dbData.data.filter(db => db.id == selectedId);
+    const matches = dbData.data.filter(db => db.numbers.id == selectedId);
     if (matches.length == 0) return null;
     return matches[0];
   }

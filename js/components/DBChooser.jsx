@@ -1,5 +1,6 @@
 import React from 'react';
-import {Panel, ListGroup, ListGroupItem,} from 'react-bootstrap';
+import {Row, Col, Panel, ListGroup, ListGroupItem,} from 'react-bootstrap';
+import overallStyles from '../OverallStyles.css';
 
 export class DBChooser extends React.Component {
   constructor(props) {
@@ -13,9 +14,14 @@ export class DBChooser extends React.Component {
   getButton = data => (<ListGroupItem
     key={data.id}
     onClick={() => this.props.setDB(data.id)}>
-    <p style={{fontSize: '130%',}}>
-      {data.name}
-    </p>
+    <Row>
+      <Col xs={6} md={9}>
+        <p className={overallStyles.header}> {data.name} </p>
+      </Col>
+      <Col xs={6} md={3}>
+        <p className={overallStyles.subHeader}> {data.games} games </p>
+      </Col>
+    </Row>
   </ListGroupItem>)
 
   render = () => {

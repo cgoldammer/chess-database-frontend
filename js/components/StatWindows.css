@@ -18,5 +18,6 @@
   margin: 0 auto;
 }
 
-.mainHeader {
+.emphasizeText {
+  text-size: 130%
 }

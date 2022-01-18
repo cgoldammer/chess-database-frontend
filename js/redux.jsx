@@ -36,7 +36,7 @@ const allGameSearchData = dbId => ({
 const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
 
 function* fetchDBData() {
-  const fullUrl = getUrl('api/databases');
+  const fullUrl = getUrl('api/databaseStats');
   try {
     const data = yield call(getRequestPromise, fullUrl);
     yield put(requestDB.received(data.data));
